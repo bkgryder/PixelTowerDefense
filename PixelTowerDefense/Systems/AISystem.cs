@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Components;
 using PixelTowerDefense.Utils;
+using PixelTowerDefense;
 
 namespace PixelTowerDefense.Systems
 {
@@ -19,7 +20,7 @@ namespace PixelTowerDefense.Systems
                         if (e.WanderTimer <= 0)
                         {
                             e.Dir = rng.NextFloat(-1f, 1f) < 0 ? -1 : 1;
-                            e.WanderTimer = rng.NextFloat(1f, 3f);
+                            e.WanderTimer = rng.NextFloat(GameConstants.WanderTimeMin, GameConstants.WanderTimeMax);
                         }
                         break;
                     case EnemyState.Stunned:
@@ -29,7 +30,7 @@ namespace PixelTowerDefense.Systems
                             e.State = EnemyState.Walking;
                             e.Angle = 0f;
                             e.AngularVel = 0f;
-                            e.WanderTimer = rng.NextFloat(0.5f, 2.5f);
+                            e.WanderTimer = rng.NextFloat(GameConstants.StunWanderTimeMin, GameConstants.StunWanderTimeMax);
                             e.Dir = rng.NextFloat(-1f, 1f) < 0 ? -1 : 1;
                         }
                         break;

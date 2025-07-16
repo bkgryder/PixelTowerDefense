@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using PixelTowerDefense.Components;
 using PixelTowerDefense.Utils;
+using PixelTowerDefense;
 
 namespace PixelTowerDefense.Systems
 {
@@ -20,9 +21,9 @@ namespace PixelTowerDefense.Systems
 
         public float CamX { get; private set; }
         public float CamY { get; private set; }
-        public float Zoom { get; private set; } = 1f;
+        public float Zoom { get; private set; } = GameConstants.DefaultZoom;
 
-        public InputSystem(float camX = 0, float camY = 0, float zoom = 1f)
+        public InputSystem(float camX = 0, float camY = 0, float zoom = GameConstants.DefaultZoom)
         {
             CamX = camX;
             CamY = camY;
@@ -35,11 +36,11 @@ namespace PixelTowerDefense.Systems
             var ms = Mouse.GetState();
 
             if (Edge(kb, Keys.OemPlus) || Edge(kb, Keys.Add))
-                Zoom = MathHelper.Clamp(Zoom * 2f, 0.5f, 8f);
+                Zoom = MathHelper.Clamp(Zoom * GameConstants.ZoomInFactor, GameConstants.MinZoom, GameConstants.MaxZoom);
             if (Edge(kb, Keys.OemMinus) || Edge(kb, Keys.Subtract))
-                Zoom = MathHelper.Clamp(Zoom * 0.5f, 0.5f, 8f);
+                Zoom = MathHelper.Clamp(Zoom * GameConstants.ZoomOutFactor, GameConstants.MinZoom, GameConstants.MaxZoom);
 
-            float camSp = 400f / Zoom;
+            float camSp = GameConstants.CameraSpeed / Zoom;
             if (kb.IsKeyDown(Keys.W)) CamY -= camSp * dt;
             if (kb.IsKeyDown(Keys.S)) CamY += camSp * dt;
             if (kb.IsKeyDown(Keys.A)) CamX -= camSp * dt;
@@ -55,7 +56,7 @@ namespace PixelTowerDefense.Systems
 
             if (!_dragging && mPress)
             {
-                float minDist = 2f;
+                float minDist = GameConstants.GrabDistance;
                 for (int i = enemies.Count - 1; i >= 0; i--)
                 {
                     var e = enemies[i];
@@ -77,14 +78,14 @@ namespace PixelTowerDefense.Systems
             if (_dragging && _dragIdx >= 0 && _dragIdx < enemies.Count)
             {
                 var e = enemies[_dragIdx];
-                float l = _dragPart * 1.5f;
+                float l = _dragPart * GameConstants.DragPartOffset;
                 Vector2 grabVec = new Vector2(MathF.Cos(e.Angle) * l, MathF.Sin(e.Angle) * l);
 
-                float spring = 16f, damping = 8f;
+                float spring = GameConstants.DragSpring, damping = GameConstants.DragDamping;
                 float targetAngle = MathF.Atan2(mouseWorldF.Y - e.Pos.Y, mouseWorldF.X - e.Pos.X);
                 if (_dragPart != 0)
                 {
-                    targetAngle -= MathF.Asin(_dragPart * 1.5f / 3f);
+                    targetAngle -= MathF.Asin(_dragPart * GameConstants.DragPartOffset / GameConstants.EnemyHeight);
                 }
                 float angleDiff = targetAngle - e.Angle;
                 angleDiff = (angleDiff + MathF.PI) % (MathF.PI * 2) - MathF.PI;
@@ -93,7 +94,7 @@ namespace PixelTowerDefense.Systems
                 e.Angle += e.AngularVel * dt;
 
                 e.Pos = mouseWorldF - grabVec;
-                e.Vel = (mouseWorldF - _dragPrevMouseWorld) / Math.Max(dt, 0.001f);
+                e.Vel = (mouseWorldF - _dragPrevMouseWorld) / Math.Max(dt, GameConstants.DragEpsilon);
                 _launchVel = e.Vel;
                 _dragPrevMouseWorld = mouseWorldF;
 
@@ -103,7 +104,7 @@ namespace PixelTowerDefense.Systems
                 {
                     e.State = EnemyState.Launched;
                     e.Vel = _launchVel;
-                    e.AngularVel = _launchVel.X * 0.05f;
+                    e.AngularVel = _launchVel.X * GameConstants.LaunchAngularFactor;
                     e.MaxAirY = e.Pos.Y;
                     enemies[_dragIdx] = e;
                     _dragging = false; _dragIdx = -1;
