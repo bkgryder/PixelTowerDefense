@@ -2,11 +2,9 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace PixelTowerDefense.Components
+namespace PixelTowerDefense.Entities
 {
-    public enum EnemyState { Walking, Launched, Stunned }
-
-    public struct Enemy
+    public class Enemy
     {
         public Vector2 Pos, Vel;
         public float Angle, AngularVel;

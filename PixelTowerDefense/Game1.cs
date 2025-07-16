@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using PixelTowerDefense.Components;
+using PixelTowerDefense.Entities;
 using PixelTowerDefense.Systems;
 using PixelTowerDefense.Utils;
 
