@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using PixelTowerDefense.Entities;
-using PixelTowerDefense.Utils;
+using PixelTowerDefense.Helpers;
 using PixelTowerDefense;
 
 namespace PixelTowerDefense.Systems
