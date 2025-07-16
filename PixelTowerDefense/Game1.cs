@@ -10,10 +10,10 @@ namespace PixelTowerDefense
     {
         // Arena bounds and constants
         private const int ENEMY_W = 1, ENEMY_H = 3;
-        private const int FLOOR_Y = 400, ARENA_LEFT = 0, ARENA_RIGHT = 100, ARENA_TOP = 100;
+        private const int FLOOR_Y = 100, ARENA_LEFT = 0, ARENA_RIGHT = 100, ARENA_TOP = 0;
         private const float GRAVITY = 98.0f, WANDER_SPEED = 10f;
         private const float FALL_EXPLODE_THRESHOLD = 24f; // Explode if fall distance > this
-        private const float FALL_STUN_THRESHOLD = 7f;     // Stun if fall distance > this
+        private const float FALL_STUN_THRESHOLD = 4f;     // Stun if fall distance > this
         private const float STUN_TIME = 1.5f;             // Seconds to stay stunned
 
         // Engine/State
@@ -23,7 +23,7 @@ namespace PixelTowerDefense
         private List<Enemy> _enemies = new();
         private List<Pixel> _pixels = new();
         private Random _rng = new();
-        private float _camX, _camY, _zoom = 1f;
+        private float _camX, _camY, _zoom = 4f;
         private KeyboardState _prevKb;
         private MouseState _prevMs;
         private bool _dragging;
@@ -125,7 +125,7 @@ namespace PixelTowerDefense
                 {
                     e.State = EnemyState.Launched;
                     e.Vel = _launchVel;
-                    e.AngularVel = _launchVel.X * 0.05f;
+                    e.AngularVel = _launchVel.X * 0.005f;
                     e.MaxAirY = e.Pos.Y;
                     _enemies[_dragIdx] = e;
                     _dragging = false; _dragIdx = -1;
