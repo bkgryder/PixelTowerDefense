@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Components;
 using PixelTowerDefense.Utils;
+using PixelTowerDefense;
 
 namespace PixelTowerDefense.Systems
 {
@@ -16,50 +17,50 @@ namespace PixelTowerDefense.Systems
                 switch (e.State)
                 {
                     case EnemyState.Walking:
-                        e.Pos.X += e.Dir * GameConfig.WanderSpeed * dt;
-                        if (e.Pos.X < GameConfig.ArenaLeft) { e.Pos.X = GameConfig.ArenaLeft; e.Dir = 1; }
-                        if (e.Pos.X > GameConfig.ArenaRight) { e.Pos.X = GameConfig.ArenaRight; e.Dir = -1; }
+                        e.Pos.X += e.Dir * GameConstants.WanderSpeed * dt;
+                        if (e.Pos.X < GameConstants.ArenaLeft) { e.Pos.X = GameConstants.ArenaLeft; e.Dir = 1; }
+                        if (e.Pos.X > GameConstants.ArenaRight) { e.Pos.X = GameConstants.ArenaRight; e.Dir = -1; }
                         e.Angle = 0f;
                         e.AngularVel = 0f;
                         break;
 
                     case EnemyState.Launched:
-                        e.Vel.Y += GameConfig.Gravity * dt;
+                        e.Vel.Y += GameConstants.Gravity * dt;
                         e.Pos += e.Vel * dt;
                         e.Angle += e.AngularVel * dt;
 
                         if (e.Pos.Y < e.MaxAirY) e.MaxAirY = e.Pos.Y;
 
                         Vector2 head = e.GetPartPos(-1);
-                        if (head.Y < GameConfig.ArenaTop)
+                        if (head.Y < GameConstants.ArenaTop)
                         {
-                            float dy = GameConfig.ArenaTop - head.Y;
+                            float dy = GameConstants.ArenaTop - head.Y;
                             e.Pos.Y += dy;
-                            e.Vel.Y *= -0.6f;
-                            e.AngularVel *= 0.7f;
+                            e.Vel.Y *= GameConstants.WallBounce;
+                            e.AngularVel *= GameConstants.WallAngularDamping;
                         }
                         Vector2 feet = e.GetPartPos(1);
-                        if (feet.Y > GameConfig.FloorY)
+                        if (feet.Y > GameConstants.FloorY)
                         {
-                            float fallDist = GameConfig.FloorY - e.MaxAirY;
-                            if (fallDist > GameConfig.FallExplodeThreshold)
+                            float fallDist = GameConstants.FloorY - e.MaxAirY;
+                            if (fallDist > GameConstants.FallExplodeThreshold)
                             {
                                 ExplodeEnemy(e, pixels);
                                 enemies.RemoveAt(i);
                                 continue;
                             }
-                            else if (fallDist > GameConfig.FallStunThreshold)
+                            else if (fallDist > GameConstants.FallStunThreshold)
                             {
-                                e.Pos.Y = GameConfig.FloorY - 1f;
+                                e.Pos.Y = GameConstants.FloorY - 1f;
                                 e.State = EnemyState.Stunned;
-                                e.StunTimer = GameConfig.StunTime;
+                                e.StunTimer = GameConstants.StunTime;
                                 e.Angle = MathHelper.PiOver2;
                                 e.AngularVel = 0f;
                                 e.Vel = Vector2.Zero;
                             }
                             else
                             {
-                                e.Pos.Y = GameConfig.FloorY - 1f;
+                                e.Pos.Y = GameConstants.FloorY - 1f;
                                 e.State = EnemyState.Walking;
                                 e.Angle = 0f;
                                 e.AngularVel = 0f;
@@ -68,24 +69,24 @@ namespace PixelTowerDefense.Systems
                         }
                         Vector2 leftMost = e.GetPartPos(-1);
                         Vector2 rightMost = e.GetPartPos(1);
-                        if (leftMost.X < GameConfig.ArenaLeft)
+                        if (leftMost.X < GameConstants.ArenaLeft)
                         {
-                            float dx = GameConfig.ArenaLeft - leftMost.X;
+                            float dx = GameConstants.ArenaLeft - leftMost.X;
                             e.Pos.X += dx;
-                            e.Vel.X *= -0.6f;
-                            e.AngularVel *= 0.7f;
+                            e.Vel.X *= GameConstants.WallBounce;
+                            e.AngularVel *= GameConstants.WallAngularDamping;
                         }
-                        if (rightMost.X > GameConfig.ArenaRight)
+                        if (rightMost.X > GameConstants.ArenaRight)
                         {
-                            float dx = rightMost.X - GameConfig.ArenaRight;
+                            float dx = rightMost.X - GameConstants.ArenaRight;
                             e.Pos.X -= dx;
-                            e.Vel.X *= -0.6f;
-                            e.AngularVel *= 0.7f;
+                            e.Vel.X *= GameConstants.WallBounce;
+                            e.AngularVel *= GameConstants.WallAngularDamping;
                         }
                         break;
 
                     case EnemyState.Stunned:
-                        e.Pos.Y = GameConfig.FloorY - 1f;
+                        e.Pos.Y = GameConstants.FloorY - 1f;
                         e.Angle = MathHelper.PiOver2;
                         e.AngularVel = 0f;
                         break;
@@ -99,13 +100,13 @@ namespace PixelTowerDefense.Systems
             for (int i = pixels.Count - 1; i >= 0; i--)
             {
                 var p = pixels[i];
-                p.Vel.Y += GameConfig.Gravity * dt;
+                p.Vel.Y += GameConstants.Gravity * dt;
                 p.Pos += p.Vel * dt;
 
-                if (p.Pos.X < GameConfig.ArenaLeft) { p.Pos.X = GameConfig.ArenaLeft; p.Vel.X *= -0.5f; }
-                if (p.Pos.X > GameConfig.ArenaRight - 1) { p.Pos.X = GameConfig.ArenaRight - 1; p.Vel.X *= -0.5f; }
-                if (p.Pos.Y < GameConfig.ArenaTop) { p.Pos.Y = GameConfig.ArenaTop; p.Vel.Y *= -0.5f; }
-                if (p.Pos.Y >= GameConfig.FloorY - 1) { p.Pos.Y = GameConfig.FloorY - 1; p.Vel = Vector2.Zero; }
+                if (p.Pos.X < GameConstants.ArenaLeft) { p.Pos.X = GameConstants.ArenaLeft; p.Vel.X *= GameConstants.PixelBounce; }
+                if (p.Pos.X > GameConstants.ArenaRight - 1) { p.Pos.X = GameConstants.ArenaRight - 1; p.Vel.X *= GameConstants.PixelBounce; }
+                if (p.Pos.Y < GameConstants.ArenaTop) { p.Pos.Y = GameConstants.ArenaTop; p.Vel.Y *= GameConstants.PixelBounce; }
+                if (p.Pos.Y >= GameConstants.FloorY - 1) { p.Pos.Y = GameConstants.FloorY - 1; p.Vel = Vector2.Zero; }
 
                 pixels[i] = p;
             }

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using PixelTowerDefense.Components;
+using PixelTowerDefense;
 
 namespace PixelTowerDefense.Systems
 {
@@ -22,10 +23,10 @@ namespace PixelTowerDefense.Systems
             sb.Begin(transformMatrix: cam);
 
             int thickness = 2;
-            sb.Draw(_px, new Rectangle(GameConfig.ArenaLeft, GameConfig.ArenaTop, GameConfig.ArenaRight - GameConfig.ArenaLeft, thickness), Color.DimGray);
-            sb.Draw(_px, new Rectangle(GameConfig.ArenaLeft, GameConfig.FloorY, GameConfig.ArenaRight - GameConfig.ArenaLeft, thickness), Color.DimGray);
-            sb.Draw(_px, new Rectangle(GameConfig.ArenaLeft, GameConfig.ArenaTop, thickness, GameConfig.FloorY - GameConfig.ArenaTop), Color.DimGray);
-            sb.Draw(_px, new Rectangle(GameConfig.ArenaRight - thickness, GameConfig.ArenaTop, thickness, GameConfig.FloorY - GameConfig.ArenaTop), Color.DimGray);
+            sb.Draw(_px, new Rectangle(GameConstants.ArenaLeft, GameConstants.ArenaTop, GameConstants.ArenaRight - GameConstants.ArenaLeft, thickness), Color.DimGray);
+            sb.Draw(_px, new Rectangle(GameConstants.ArenaLeft, GameConstants.FloorY, GameConstants.ArenaRight - GameConstants.ArenaLeft, thickness), Color.DimGray);
+            sb.Draw(_px, new Rectangle(GameConstants.ArenaLeft, GameConstants.ArenaTop, thickness, GameConstants.FloorY - GameConstants.ArenaTop), Color.DimGray);
+            sb.Draw(_px, new Rectangle(GameConstants.ArenaRight - thickness, GameConstants.ArenaTop, thickness, GameConstants.FloorY - GameConstants.ArenaTop), Color.DimGray);
 
             foreach (var p in pixels) sb.Draw(_px, p.Bounds, p.Col);
 
