@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Entities;
-using PixelTowerDefense.Utils;
+using PixelTowerDefense.Helpers;
 using PixelTowerDefense;
 
 namespace PixelTowerDefense.Systems
