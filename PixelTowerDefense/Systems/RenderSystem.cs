@@ -6,6 +6,9 @@ using PixelTowerDefense;
 
 namespace PixelTowerDefense.Systems
 {
+    /// <summary>
+    /// Renders the arena, enemies and particles using a simple sprite batch.
+    /// </summary>
     public class RenderSystem : System.IDisposable
     {
         private readonly Texture2D _px;

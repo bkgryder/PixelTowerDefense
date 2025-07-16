@@ -6,6 +6,9 @@ using PixelTowerDefense;
 
 namespace PixelTowerDefense.Systems
 {
+    /// <summary>
+    /// Updates simple AI behaviors such as wandering and recovering from stun.
+    /// </summary>
     public class AISystem
     {
         public void Update(float dt, List<Enemy> enemies, System.Random rng)

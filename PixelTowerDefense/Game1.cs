@@ -9,6 +9,9 @@ using PixelTowerDefense.Helpers;
 
 namespace PixelTowerDefense
 {
+    /// <summary>
+    /// Main MonoGame <see cref="Game"/> implementation hosting the game loop and systems.
+    /// </summary>
     public class Game1 : Game
     {
         private readonly GraphicsDeviceManager _gfx;

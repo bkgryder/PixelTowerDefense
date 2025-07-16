@@ -4,6 +4,10 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace PixelTowerDefense.Entities
 {
+    /// <summary>
+    /// Represents a simple enemy composed of three pixel parts that can be
+    /// walked, launched and stunned.
+    /// </summary>
     public class Enemy
     {
         public Vector2 Pos, Vel;
@@ -28,6 +32,11 @@ namespace PixelTowerDefense.Entities
             StunTimer = 0f;
         }
 
+        /// <summary>
+        /// Gets the world position of one of the enemy's body parts.
+        /// </summary>
+        /// <param name="part">-1 for head, 0 for body, 1 for feet.</param>
+        /// <returns>Position of the requested body part.</returns>
         public Vector2 GetPartPos(int part)
         {
             float l = part * 1.0f;

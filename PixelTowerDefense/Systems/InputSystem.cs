@@ -9,6 +9,9 @@ using PixelTowerDefense;
 
 namespace PixelTowerDefense.Systems
 {
+    /// <summary>
+    /// Handles player input, camera movement and enemy dragging/launching logic.
+    /// </summary>
     public class InputSystem
     {
         private KeyboardState _prevKb;

@@ -6,6 +6,9 @@ using PixelTowerDefense;
 
 namespace PixelTowerDefense.Systems
 {
+    /// <summary>
+    /// Applies physics simulation for enemies and pixel particles.
+    /// </summary>
     public class PhysicsSystem
     {
         public void UpdateEnemies(float dt, List<Enemy> enemies, List<Pixel> pixels)
