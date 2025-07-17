@@ -23,4 +23,3 @@ C:\Users\212698858\Documents\GitHub\PixelTowerDefense\PixelTowerDefense\obj\Debu
 C:\Users\212698858\Documents\GitHub\PixelTowerDefense\PixelTowerDefense\obj\Debug\net8.0\PixelTowerDefense.pdb
 C:\Users\212698858\Documents\GitHub\PixelTowerDefense\PixelTowerDefense\obj\Debug\net8.0\PixelTowerDefense.genruntimeconfig.cache
 C:\Users\212698858\Documents\GitHub\PixelTowerDefense\PixelTowerDefense\obj\Debug\net8.0\ref\PixelTowerDefense.dll
-C:\Users\212698858\Documents\GitHub\PixelTowerDefense\PixelTowerDefense\obj\Debug\net8.0\PixelTowerDefense.sourcelink.json
