@@ -1,0 +1,49 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\212698858\\Documents\\GitHub\\PixelTowerDefense\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{D8E49E44-FB8E-4F6D-B0AE-198E70FEB448}|PixelTowerDefense\\PixelTowerDefense.csproj|c:\\users\\212698858\\documents\\github\\pixeltowerdefense\\pixeltowerdefense\\game1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D8E49E44-FB8E-4F6D-B0AE-198E70FEB448}|PixelTowerDefense\\PixelTowerDefense.csproj|solutionrelative:pixeltowerdefense\\game1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Game1.cs",
+              "DocumentMoniker": "C:\\Users\\212698858\\Documents\\GitHub\\PixelTowerDefense\\PixelTowerDefense\\Game1.cs",
+              "RelativeDocumentMoniker": "PixelTowerDefense\\Game1.cs",
+              "ToolTip": "C:\\Users\\212698858\\Documents\\GitHub\\PixelTowerDefense\\PixelTowerDefense\\Game1.cs*",
+              "RelativeToolTip": "PixelTowerDefense\\Game1.cs*",
+              "ViewState": "AgIAAGsBAAAAAAAAAAA+wI0BAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-17T01:03:57.833Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{75188d03-9892-4ae2-abf1-207126247ce5}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{75188d03-9892-4ae2-abf1-207126247ce5}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
