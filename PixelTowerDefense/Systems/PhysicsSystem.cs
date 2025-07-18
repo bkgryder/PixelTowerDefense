@@ -20,6 +20,30 @@ namespace PixelTowerDefense.Systems
             {
                 var e = enemies[i];
 
+                if (e.IsBurning)
+                {
+                    e.BurnTimer -= dt;
+                    e.Health -= Constants.BURN_DPS * dt;
+                    if (_rng.NextDouble() < Constants.FIRE_PARTICLE_RATE * dt)
+                    {
+                        var head = e.GetPartPos(-2);
+                        head.Y -= e.z;
+                        var pv = new Vector2(
+                            _rng.NextFloat(-5f, 5f),
+                            _rng.NextFloat(-15f, -5f)
+                        );
+                        debris.Add(new Pixel(head, pv, Color.OrangeRed));
+                    }
+                    if (e.BurnTimer <= 0f)
+                        e.IsBurning = false;
+                    if (e.Health <= 0f)
+                    {
+                        ExplodeEnemy(e, debris);
+                        enemies.RemoveAt(i);
+                        continue;
+                    }
+                }
+
                 switch (e.State)
                 {
                     case EnemyState.Walking:
