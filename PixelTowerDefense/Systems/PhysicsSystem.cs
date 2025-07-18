@@ -80,9 +80,15 @@ namespace PixelTowerDefense.Systems
                             e.Pos += e.Vel * dt;
                             e.Vel *= MathF.Max(0f, 1f - Constants.FRICTION * dt);
                         }
+
+                        e.Angle += e.AngularVel * dt;
+                        e.AngularVel *= MathF.Exp(-Constants.ANGULAR_DAMPING * dt);
                         break;
 
                     case EnemyState.Stunned:
+                        e.Angle += e.AngularVel * dt;
+                        e.AngularVel *= MathF.Exp(-Constants.ANGULAR_DAMPING * dt);
+
                         e.StunTimer -= dt;
                         if (e.StunTimer <= 0f)
                         {
@@ -124,11 +130,16 @@ namespace PixelTowerDefense.Systems
                     2 => new Color(100, 0, 0),
                     _ => Color.Red
                 };
-                var v = new Vector2(
-                    _rng.NextFloat(-28, 28),
-                    _rng.NextFloat(-28, 28)
-                );
-                debris.Add(new Pixel(pos, v, c));
+
+                for (int i = 0; i < 2; i++)
+                {
+                    var v = new Vector2(
+                        _rng.NextFloat(-40, 40),
+                        _rng.NextFloat(-40, 40)
+                    );
+                    float angVel = _rng.NextFloat(-5f, 5f);
+                    debris.Add(new Pixel(pos, v, c, angVel));
+                }
             }
         }
     }

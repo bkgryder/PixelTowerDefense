@@ -20,6 +20,7 @@ namespace PixelTowerDefense.Systems
             ref Vector2 dragStartWorld,
             ref float dragStartTime,
             Vector2 mouseWorld,
+            Vector2 prevMouseWorld,
             List<Enemy> enemies,
             List<Pixel> debris
         )
@@ -70,18 +71,29 @@ namespace PixelTowerDefense.Systems
                     MathF.Sin(e.Angle) * l
                 );
 
-                // spring + damping
-                float spring = 16f, damping = 8f;
+                // spring + damping using configurable constants
+                float spring = Constants.DRAG_SPRING,
+                      damping = Constants.DRAG_DAMPING;
                 float targetAngle = MathF.Atan2(mouseWorld.Y - e.Pos.Y,
                                                 mouseWorld.X - e.Pos.X);
                 if (dragPart != 0)
                     targetAngle -= MathF.Asin(dragPart * Constants.PART_LEN / Constants.ENEMY_H);
 
+                float prevTargetAngle = MathF.Atan2(prevMouseWorld.Y - e.Pos.Y,
+                                                   prevMouseWorld.X - e.Pos.X);
+                if (dragPart != 0)
+                    prevTargetAngle -= MathF.Asin(dragPart * Constants.PART_LEN / Constants.ENEMY_H);
+
                 float diff = targetAngle - e.Angle;
                 diff = (diff + MathF.PI) % (2 * MathF.PI) - MathF.PI;
-                e.AngularVel += diff * spring * (float)gt.ElapsedGameTime.TotalSeconds;
-                e.AngularVel *= MathF.Exp(-damping * (float)gt.ElapsedGameTime.TotalSeconds);
-                e.Angle += e.AngularVel * (float)gt.ElapsedGameTime.TotalSeconds;
+
+                float mouseAngVel = targetAngle - prevTargetAngle;
+                mouseAngVel = (mouseAngVel + MathF.PI) % (2 * MathF.PI) - MathF.PI;
+
+                float dt = (float)gt.ElapsedGameTime.TotalSeconds;
+                e.AngularVel += (diff * spring + mouseAngVel / dt) * dt;
+                e.AngularVel *= MathF.Exp(-damping * dt);
+                e.Angle += e.AngularVel * dt;
 
                 // follow mouse
                 e.Pos = mouseWorld - grabVec;
