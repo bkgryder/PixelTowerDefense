@@ -175,7 +175,7 @@ namespace PixelTowerDefense
                         c = new Color(255, 219, 172);          // head
                     else if (seg <= Constants.ENEMY_H * 2 / 5)
                         c = e.ShirtColor;                      // upper body
-                    else if (seg <= Constants.ENEMY_H * 2 / 5)
+                    else if (seg <= Constants.ENEMY_H * 3 / 5)
                         c = e.ShirtColor;                      // waist
                     else if (seg <= Constants.ENEMY_H * 4 / 5)
                         c = new Color(32, 32, 128);            // legs
