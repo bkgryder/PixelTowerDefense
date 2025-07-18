@@ -14,3 +14,6 @@
 .vs/PixelTowerDefense/FileContentIndex/feba5832-1ada-435c-9ceb-37318b73c98c.vsidx
 .vs/PixelTowerDefense/FileContentIndex/97e46033-f93b-49c7-b61d-a50c0c40fa9b.vsidx
 .vs/PixelTowerDefense/FileContentIndex/c3f2dd6a-c048-4058-ae18-1f6eeece1503.vsidx
+
+bin/
+obj/
