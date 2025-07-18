@@ -8,7 +8,7 @@
 
         public const float WANDER_SPEED = 10f;
         public const float FRICTION = 3f;
-        public const float EXPLODE_VZ_THRESHOLD = 35f;
+        public const float EXPLODE_VZ_THRESHOLD = 45f;
         public const float STUN_VZ_THRESHOLD = 5f;
         public const float STUN_TIME = 1.2f;
         public const float Z_GRAVITY = 120f;
@@ -16,17 +16,17 @@
         public const float PART_LEN = 1.0f;
         public const float THROW_VZ_SCALE = 0.25f;
         public const float INITIAL_Z = 2f;
-        public const float THROW_SENSITIVITY = 1.5f;
+        public const float THROW_SENSITIVITY = .5f;
         public const float GRAB_Z = 4f;
-        public const float VOMIT_SPIN_THRESHOLD = 2f;
-        public const float ANGULAR_DAMPING = 4f;
+        public const float VOMIT_SPIN_THRESHOLD = 30f;
+        public const float ANGULAR_DAMPING = 1f;
         public const float DRAG_SPRING = 16f;
         public const float DRAG_DAMPING = 6f;
         /// <summary>Minimum debris launch speed</summary>
-        public const float EXPLOSION_FORCE_MIN = 80f;
+        public const float EXPLOSION_FORCE_MIN = 2f;
         /// <summary>Maximum debris launch speed</summary>
-        public const float EXPLOSION_FORCE_MAX = 160f;
+        public const float EXPLOSION_FORCE_MAX = 15f;
         /// <summary>Amount of friction to apply to debris</summary>
-        public const float DEBRIS_FRICTION = 1f;  // much lower than your 3f
+        public const float DEBRIS_FRICTION = 2.5f;  // much lower than your 3f
     }
 }

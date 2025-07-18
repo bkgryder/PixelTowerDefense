@@ -19,7 +19,7 @@ namespace PixelTowerDefense
         List<Pixel> _pixels = new();
         Random _rng = new();
 
-        float _camX, _camY, _zoom = 1f;
+        float _camX, _camY, _zoom = 3.5f;
         KeyboardState _prevKb;
         MouseState _prevMs;
 
