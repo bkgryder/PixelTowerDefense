@@ -25,8 +25,7 @@ namespace PixelTowerDefense
 
         // drag state
         bool _dragging;
-        int _dragIdx;
-        int _dragPart;
+        int _dragIdx, _dragPart;
         Vector2 _dragStartWorld;
         float _dragStartTime;
 
@@ -51,7 +50,8 @@ namespace PixelTowerDefense
             _px = new Texture2D(GraphicsDevice, 1, 1);
             _px.SetData(new[] { Color.White });
 
-            for (int i = 0; i < 10; i++) SpawnEnemy();
+            for (int i = 0; i < 10; i++)
+                SpawnEnemy();
 
             var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
             var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
@@ -82,14 +82,10 @@ namespace PixelTowerDefense
             if (Edge(kb, Keys.P)) SpawnEnemy();
 
             var mscr = new Point(ms.X, ms.Y);
-            var mworld = new Vector2(
-                _camX + mscr.X / _zoom,
-                _camY + mscr.Y / _zoom
-            );
-            var prevWorld = new Vector2(
-                _camX + _prevMs.X / _zoom,
-                _camY + _prevMs.Y / _zoom
-            );
+            var mworld = new Vector2(_camX + mscr.X / _zoom,
+                                     _camY + mscr.Y / _zoom);
+            var prevWorld = new Vector2(_camX + _prevMs.X / _zoom,
+                                        _camY + _prevMs.Y / _zoom);
 
             InputSystem.HandleDrag(
                 gt, ms, _prevMs,
@@ -116,37 +112,90 @@ namespace PixelTowerDefense
 
             // arena border
             int t = 2;
-            _sb.Draw(_px, new Rectangle(Constants.ARENA_LEFT, Constants.ARENA_TOP, Constants.ARENA_RIGHT - Constants.ARENA_LEFT, t), Color.Black);
-            _sb.Draw(_px, new Rectangle(Constants.ARENA_LEFT, Constants.ARENA_BOTTOM, Constants.ARENA_RIGHT - Constants.ARENA_LEFT, t), Color.Black);
-            _sb.Draw(_px, new Rectangle(Constants.ARENA_LEFT, Constants.ARENA_TOP, t, Constants.ARENA_BOTTOM - Constants.ARENA_TOP), Color.Black);
-            _sb.Draw(_px, new Rectangle(Constants.ARENA_RIGHT - t, Constants.ARENA_TOP, t, Constants.ARENA_BOTTOM - Constants.ARENA_TOP), Color.Black);
+            _sb.Draw(_px,
+                     new Rectangle(Constants.ARENA_LEFT,
+                                   Constants.ARENA_TOP,
+                                   Constants.ARENA_RIGHT - Constants.ARENA_LEFT,
+                                   t),
+                     Color.Black);
+            _sb.Draw(_px,
+                     new Rectangle(Constants.ARENA_LEFT,
+                                   Constants.ARENA_BOTTOM,
+                                   Constants.ARENA_RIGHT - Constants.ARENA_LEFT,
+                                   t),
+                     Color.Black);
+            _sb.Draw(_px,
+                     new Rectangle(Constants.ARENA_LEFT,
+                                   Constants.ARENA_TOP,
+                                   t,
+                                   Constants.ARENA_BOTTOM - Constants.ARENA_TOP),
+                     Color.Black);
+            _sb.Draw(_px,
+                     new Rectangle(Constants.ARENA_RIGHT - t,
+                                   Constants.ARENA_TOP,
+                                   t,
+                                   Constants.ARENA_BOTTOM - Constants.ARENA_TOP),
+                     Color.Black);
 
             // debris
             foreach (var p in _pixels)
                 _sb.Draw(_px, p.Bounds, p.Col);
 
-            // enemies
+            // enemies (with resized shadow)
             foreach (var e in _enemies)
             {
-                // shadow length grows with |sin(angle)| --
-                // a leaning enemy casts a wider shadow
-                int shLen = (int)MathF.Round(1 + 4 * MathF.Abs(MathF.Sin(e.Angle)));
-                var sh = new Rectangle((int)e.Pos.X + 1, (int)e.Pos.Y + 2, shLen, 1);
-                _sb.Draw(_px, sh, new Color(0, 0, 0, 100));
+                // --- dynamic shadow ---
+                // total stick length in pixels:
+                float stickLen = Constants.ENEMY_H * Constants.PART_LEN;
+                // project that onto X by sin(angle):
+                int shLen = (int)MathF.Round(
+                    MathF.Abs(MathF.Sin(e.Angle)) * stickLen
+                ) + Constants.ENEMY_W;
+                int shThick = 2;
+                var shRect = new Rectangle(
+                    (int)MathF.Round(e.Pos.X - shLen / 2f),
+                    (int)MathF.Round(e.Pos.Y + shThick),
+                    shLen, shThick
+                );
+                _sb.Draw(_px, shRect, new Color(0, 0, 0, 100));
 
-                for (int part = -2; part <= 2; part++)
+                // --- draw each 2×1 segment rotated around center ---
+                int half = Constants.ENEMY_H / 2;
+                for (int part = -half; part < half; part++)
                 {
                     var pt = e.GetPartPos(part);
                     pt.Y -= e.z;
-                    Color c = part switch
-                    {
-                        -2 => new Color(255, 219, 172),
-                        -1 or 0 => e.ShirtColor,
-                        1 => new Color(32, 32, 128),
-                        2 => new Color(16, 16, 64),
-                        _ => Color.White
-                    };
-                    _sb.Draw(_px, new Rectangle((int)pt.X, (int)pt.Y, 1, 1), c);
+
+                    // map part → [0..ENEMY_H-1]
+                    int seg = part + half;
+
+                    // bucket segments:
+                    Color c;
+                    if (seg <= 1)
+                        c = new Color(255, 219, 172);          // head
+                    else if (seg <= Constants.ENEMY_H * 2 / 5)
+                        c = e.ShirtColor;                      // upper body
+                    else if (seg <= Constants.ENEMY_H * 2 / 5)
+                        c = e.ShirtColor;                      // waist
+                    else if (seg <= Constants.ENEMY_H * 4 / 5)
+                        c = new Color(32, 32, 128);            // legs
+                    else
+                        c = new Color(16, 16, 64);             // feet
+
+                    int w = Constants.ENEMY_W;
+                    int h = (int)Constants.PART_LEN;
+                    var dest = new Rectangle(
+                        (int)(pt.X - w / 2f),
+                        (int)(pt.Y - h / 2f),
+                        w, h
+                    );
+
+                    _sb.Draw(
+                        _px, dest, null, c,
+                        e.Angle,
+                        new Vector2(w / 2f, h / 2f),
+                        SpriteEffects.None, 0f
+                    );
                 }
             }
 
@@ -156,14 +205,21 @@ namespace PixelTowerDefense
 
         private void SpawnEnemy()
         {
-            var x = _rng.NextFloat(Constants.ARENA_LEFT + 10, Constants.ARENA_RIGHT - 10);
-            var y = _rng.NextFloat(Constants.ARENA_TOP + 10, Constants.ARENA_BOTTOM - 10);
-            _enemies.Add(new Enemy(new Vector2(x, y), RandomShirtColor()));
+            var x = _rng.NextFloat(Constants.ARENA_LEFT + 10,
+                                   Constants.ARENA_RIGHT - 10);
+            var y = _rng.NextFloat(Constants.ARENA_TOP + 10,
+                                   Constants.ARENA_BOTTOM - 10);
+            _enemies.Add(new Enemy(new Vector2(x, y),
+                                   RandomShirtColor()));
         }
 
         private Color RandomShirtColor()
         {
-            var pal = new[] { Color.Blue, Color.Green, Color.Red, Color.Yellow, Color.Purple, Color.Orange, Color.Cyan };
+            var pal = new[]
+            {
+                Color.Blue, Color.Green, Color.Red,
+                Color.Yellow, Color.Purple, Color.Orange, Color.Cyan
+            };
             return pal[_rng.Next(pal.Length)];
         }
 
