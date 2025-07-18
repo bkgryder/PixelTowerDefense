@@ -6,10 +6,16 @@ namespace PixelTowerDefense.Entities
     {
         public Vector2 Pos, Vel;
         public Color Col;
-        public Pixel(Vector2 p, Vector2 v, Color c)
+        public float AngularVel;
+
+        public Pixel(Vector2 p, Vector2 v, Color c, float angVel = 0f)
         {
-            Pos = p; Vel = v; Col = c;
+            Pos = p;
+            Vel = v;
+            Col = c;
+            AngularVel = angVel;
         }
+
         public Rectangle Bounds => new((int)Pos.X, (int)Pos.Y, 1, 1);
     }
 }
