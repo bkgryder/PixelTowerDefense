@@ -36,6 +36,10 @@
         public const float EXPLOSION_FORCE_MIN = 2f;
         /// <summary>Maximum debris launch speed</summary>
         public const float EXPLOSION_FORCE_MAX = 55f;
+        /// <summary>Minimum ash drift speed</summary>
+        public const float ASH_FORCE_MIN = 0.5f;
+        /// <summary>Maximum ash drift speed</summary>
+        public const float ASH_FORCE_MAX = 10f;
         /// <summary>Amount of friction to apply to debris</summary>
         public const float DEBRIS_FRICTION = 2.5f;  // much lower than your 3f
     }
