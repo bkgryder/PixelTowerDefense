@@ -81,6 +81,29 @@ namespace PixelTowerDefense
             if (kb.IsKeyDown(Keys.A)) _camX -= camSp * dt;
             if (kb.IsKeyDown(Keys.D)) _camX += camSp * dt;
 
+            if (Edge(kb, Keys.F11))
+            {
+                if (_gfx.IsFullScreen)
+                {
+                    _gfx.IsFullScreen = false;
+                    _gfx.PreferredBackBufferWidth = 1280;
+                    _gfx.PreferredBackBufferHeight = 720;
+                }
+                else
+                {
+                    var dm = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+                    _gfx.PreferredBackBufferWidth = dm.Width;
+                    _gfx.PreferredBackBufferHeight = dm.Height;
+                    _gfx.IsFullScreen = true;
+                }
+                _gfx.ApplyChanges();
+
+                var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
+                var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
+                _camX = midX - (GraphicsDevice.Viewport.Width * 0.5f) / _zoom;
+                _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
+            }
+
             if (Edge(kb, Keys.P)) SpawnEnemy();
 
             // ability switching
@@ -150,7 +173,7 @@ namespace PixelTowerDefense
             GraphicsDevice.Clear(Color.DimGray);
             var cam = Matrix.CreateScale(_zoom, _zoom, 1f)
                       * Matrix.CreateTranslation(-_camX * _zoom, -_camY * _zoom, 0);
-            _sb.Begin(transformMatrix: cam);
+            _sb.Begin(transformMatrix: cam, samplerState: SamplerState.PointClamp);
 
             // arena border
             int t = 2;
