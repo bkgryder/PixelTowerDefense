@@ -23,6 +23,11 @@
         public const float ANGULAR_DAMPING = 1.5f;
         public const float DRAG_SPRING = 16f;
         public const float DRAG_DAMPING = 6f;
+        public const float ENEMY_MAX_HEALTH = 100f;
+        public const float BURN_DURATION = 5f;    // seconds of burning
+        public const float BURN_DPS = 10f;   // damage/sec
+        public const float FIRE_PARTICLE_RATE = 0.05f; // spawn rate
+
         /// <summary>Minimum debris launch speed</summary>
         public const float EXPLOSION_FORCE_MIN = 2f;
         /// <summary>Maximum debris launch speed</summary>

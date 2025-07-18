@@ -25,6 +25,10 @@ namespace PixelTowerDefense.Entities
         public Color ShirtColor;
         public EnemyState State;
 
+        public float Health;
+        public bool IsBurning;
+        public float BurnTimer;
+
         public Enemy(Vector2 spawn, Color shirt)
         {
             Pos = spawn;
@@ -37,6 +41,10 @@ namespace PixelTowerDefense.Entities
             StunTimer = 0f;
             ShirtColor = shirt;
             State = EnemyState.Walking;
+            Health = Constants.ENEMY_MAX_HEALTH;
+            IsBurning = false;
+            BurnTimer = 0f;
+
         }
 
         /// <summary>
