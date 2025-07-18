@@ -88,6 +88,8 @@ namespace PixelTowerDefense
                 _currentAbility = Ability.None;
             if (Edge(kb, Keys.D2) || Edge(kb, Keys.NumPad2))
                 _currentAbility = Ability.Fire;
+            if (Edge(kb, Keys.D3) || Edge(kb, Keys.NumPad3))
+                _currentAbility = Ability.Telekinesis;
 
             var mscr = new Point(ms.X, ms.Y);
             var mworld = new Vector2(_camX + mscr.X / _zoom,
@@ -120,7 +122,7 @@ namespace PixelTowerDefense
                     }
                 }
             }
-            else
+            else if (_currentAbility == Ability.Telekinesis)
             {
                 InputSystem.HandleDrag(
                     gt, ms, _prevMs,
@@ -129,6 +131,10 @@ namespace PixelTowerDefense
                     mworld, prevWorld,
                     _enemies, _pixels
                 );
+            }
+            else
+            {
+                _dragging = false;
             }
 
             PhysicsSystem.SimulateAll(_enemies, _pixels, dt);
