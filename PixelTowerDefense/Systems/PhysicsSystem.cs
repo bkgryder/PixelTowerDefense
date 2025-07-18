@@ -24,15 +24,19 @@ namespace PixelTowerDefense.Systems
                 {
                     e.BurnTimer -= dt;
                     e.Health -= Constants.BURN_DPS * dt;
-                    if (_rng.NextDouble() < Constants.FIRE_PARTICLE_RATE * dt)
+                    int half = Constants.ENEMY_H / 2;
+                    for (int part = -half; part < half; part++)
                     {
-                        var head = e.GetPartPos(-2);
-                        head.Y -= e.z;
-                        var pv = new Vector2(
-                            _rng.NextFloat(-5f, 5f),
-                            _rng.NextFloat(-15f, -5f)
-                        );
-                        debris.Add(new Pixel(head, pv, Color.OrangeRed));
+                        if (_rng.NextDouble() < Constants.FIRE_PARTICLE_RATE * dt)
+                        {
+                            var pos = e.GetPartPos(part);
+                            pos.Y -= e.z;
+                            var pv = new Vector2(
+                                _rng.NextFloat(-5f, 5f),
+                                _rng.NextFloat(-15f, -5f)
+                            );
+                            debris.Add(new Pixel(pos, pv, Color.OrangeRed));
+                        }
                     }
                     if (e.BurnTimer <= 0f)
                         e.IsBurning = false;
