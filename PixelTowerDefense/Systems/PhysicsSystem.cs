@@ -38,7 +38,7 @@ namespace PixelTowerDefense.Systems
                         e.IsBurning = false;
                     if (e.Health <= 0f)
                     {
-                        ExplodeEnemy(e, debris);
+                        AshEnemy(e, debris);
                         enemies.RemoveAt(i);
                         continue;
                     }
@@ -211,6 +211,37 @@ namespace PixelTowerDefense.Systems
                     // single‐pixel fallback
                     debris.Add(new Pixel(pos, vel, c));
                 }
+            }
+        }
+
+        private static void AshEnemy(Enemy e, List<Pixel> debris)
+        {
+            Vector2 center = e.Pos;
+            int half = Constants.ENEMY_H / 2;
+
+            for (int part = -half; part < half; part++)
+            {
+                Vector2 pos = e.GetPartPos(part);
+
+                Color c = new Color(80, 80, 80);
+
+                Vector2 dir = pos - center;
+                if (dir == Vector2.Zero)
+                {
+                    dir = new Vector2(
+                        _rng.NextFloat(-1f, 1f),
+                        _rng.NextFloat(-1f, 1f)
+                    );
+                }
+                dir.Normalize();
+
+                float mag = _rng.NextFloat(
+                    Constants.ASH_FORCE_MIN,
+                    Constants.ASH_FORCE_MAX
+                );
+                Vector2 vel = dir * mag;
+
+                debris.Add(new Pixel(pos, vel, c));
             }
         }
 
