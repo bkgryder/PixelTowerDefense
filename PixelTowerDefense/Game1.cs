@@ -100,6 +100,7 @@ namespace PixelTowerDefense
             );
 
             PhysicsSystem.SimulateAll(_enemies, _pixels, dt);
+            PhysicsSystem.UpdatePixels(_pixels, dt);
 
             _prevKb = kb;
             _prevMs = ms;
