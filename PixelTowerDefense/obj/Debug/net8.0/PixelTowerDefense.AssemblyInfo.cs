@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PixelTowerDefense")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+31b5ff8c3a9bb112c4b582a93403e94dd5ee9c17")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+18b6b7fa3fb6525e9765980df52106f0ea3cf85e")]
 [assembly: System.Reflection.AssemblyProductAttribute("PixelTowerDefense")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PixelTowerDefense")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

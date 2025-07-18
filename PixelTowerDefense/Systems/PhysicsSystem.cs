@@ -118,9 +118,14 @@ namespace PixelTowerDefense.Systems
 
         private static void ExplodeEnemy(Enemy e, List<Pixel> debris)
         {
+            // center of the ragdoll
+            Vector2 center = e.Pos;
+
             for (int part = -2; part <= 2; part++)
             {
-                var pos = e.GetPartPos(part);
+                Vector2 pos = e.GetPartPos(part);
+
+                // pick blood color per part
                 Color c = part switch
                 {
                     -2 => new Color(255, 80, 90),
@@ -131,16 +136,49 @@ namespace PixelTowerDefense.Systems
                     _ => Color.Red
                 };
 
-                for (int i = 0; i < 2; i++)
+                // compute a direction away from the ragdoll center
+                Vector2 dir = pos - center;
+                if (dir == Vector2.Zero)
                 {
-                    var v = new Vector2(
-                        _rng.NextFloat(-40, 40),
-                        _rng.NextFloat(-40, 40)
+                    // fallback to random
+                    dir = new Vector2(
+                        _rng.NextFloat(-1f, 1f),
+                        _rng.NextFloat(-1f, 1f)
                     );
-                    float angVel = _rng.NextFloat(-5f, 5f);
-                    debris.Add(new Pixel(pos, v, c, angVel));
                 }
+                dir.Normalize();
+
+                // pick a random magnitude in [min, max]
+                float mag = _rng.NextFloat(
+                    Constants.EXPLOSION_FORCE_MIN,
+                    Constants.EXPLOSION_FORCE_MAX
+                );
+
+                Vector2 vel = dir * mag;
+
+                debris.Add(new Pixel(pos, vel, c));
             }
         }
+        public static void UpdatePixels(List<Pixel> debris, float dt)
+        {
+            for (int i = debris.Count - 1; i >= 0; i--)
+            {
+                var p = debris[i];
+
+                // much gentler slow-down
+                p.Vel *= MathF.Max(0f, 1f - Constants.DEBRIS_FRICTION * dt);
+                p.Pos += p.Vel * dt;
+
+                // clamp to arena, bounce lightly
+                if (p.Pos.X < Constants.ARENA_LEFT) { p.Pos.X = Constants.ARENA_LEFT; p.Vel.X *= -0.5f; }
+                if (p.Pos.X > Constants.ARENA_RIGHT - 1) { p.Pos.X = Constants.ARENA_RIGHT - 1; p.Vel.X *= -0.5f; }
+                if (p.Pos.Y < Constants.ARENA_TOP) { p.Pos.Y = Constants.ARENA_TOP; p.Vel.Y *= -0.5f; }
+                if (p.Pos.Y > Constants.ARENA_BOTTOM - 1) { p.Pos.Y = Constants.ARENA_BOTTOM - 1; p.Vel.Y *= -0.5f; }
+
+                debris[i] = p;
+            }
+        }
+
+
     }
 }

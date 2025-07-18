@@ -22,5 +22,11 @@
         public const float ANGULAR_DAMPING = 4f;
         public const float DRAG_SPRING = 16f;
         public const float DRAG_DAMPING = 6f;
+        /// <summary>Minimum debris launch speed</summary>
+        public const float EXPLOSION_FORCE_MIN = 80f;
+        /// <summary>Maximum debris launch speed</summary>
+        public const float EXPLOSION_FORCE_MAX = 160f;
+        /// <summary>Amount of friction to apply to debris</summary>
+        public const float DEBRIS_FRICTION = 1f;  // much lower than your 3f
     }
 }
