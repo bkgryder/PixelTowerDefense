@@ -80,9 +80,15 @@ namespace PixelTowerDefense.Systems
                             e.Pos += e.Vel * dt;
                             e.Vel *= MathF.Max(0f, 1f - Constants.FRICTION * dt);
                         }
+
+                        e.Angle += e.AngularVel * dt;
+                        e.AngularVel *= MathF.Exp(-Constants.ANGULAR_DAMPING * dt);
                         break;
 
                     case EnemyState.Stunned:
+                        e.Angle += e.AngularVel * dt;
+                        e.AngularVel *= MathF.Exp(-Constants.ANGULAR_DAMPING * dt);
+
                         e.StunTimer -= dt;
                         if (e.StunTimer <= 0f)
                         {
