@@ -86,12 +86,17 @@ namespace PixelTowerDefense
                 _camX + mscr.X / _zoom,
                 _camY + mscr.Y / _zoom
             );
+            var prevWorld = new Vector2(
+                _camX + _prevMs.X / _zoom,
+                _camY + _prevMs.Y / _zoom
+            );
 
             InputSystem.HandleDrag(
                 gt, ms, _prevMs,
                 ref _dragging, ref _dragIdx, ref _dragPart,
                 ref _dragStartWorld, ref _dragStartTime,
-                mworld, _enemies, _pixels
+                mworld, prevWorld,
+                _enemies, _pixels
             );
 
             PhysicsSystem.SimulateAll(_enemies, _pixels, dt);

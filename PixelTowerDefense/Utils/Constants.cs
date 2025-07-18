@@ -20,5 +20,7 @@
         public const float GRAB_Z = 4f;
         public const float VOMIT_SPIN_THRESHOLD = 2f;
         public const float ANGULAR_DAMPING = 4f;
+        public const float DRAG_SPRING = 16f;
+        public const float DRAG_DAMPING = 6f;
     }
 }
