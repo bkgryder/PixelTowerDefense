@@ -292,27 +292,24 @@ namespace PixelTowerDefense
                         c = new Color(16, 16, 64);             // feet
 
                     int w = Constants.ENEMY_W;
-                    int h = (int)Constants.PART_LEN;
-                    var dest = new Rectangle(
-                        (int)(pt.X - w / 2f),
-                        (int)(pt.Y - h / 2f),
-                        w, h
-                    );
+                    float h = Constants.PART_LEN;
+                    var pos = pt;
+                    var scale = new Vector2(w, h);
+                    var origin = new Vector2(0.5f, 0.5f);
 
                     if (e.IsBurning)
                     {
-                        var glow = new Rectangle(dest.X - 1, dest.Y - 1,
-                            dest.Width + 2, dest.Height + 2);
+                        var glowScale = new Vector2(w + 2, h + 2);
                         var glowCol = new Color(255, 160 + _rng.Next(95), 0,
                             80 + _rng.Next(60));
-                        _sb.Draw(_px, glow, null, glowCol, e.Angle,
-                            new Vector2(w / 2f, h / 2f), SpriteEffects.None, 0f);
+                        _sb.Draw(_px, pos, null, glowCol, e.Angle,
+                            origin, glowScale, SpriteEffects.None, 0f);
                     }
 
                     _sb.Draw(
-                        _px, dest, null, c,
+                        _px, pos, null, c,
                         e.Angle,
-                        new Vector2(w / 2f, h / 2f),
+                        origin, scale,
                         SpriteEffects.None, 0f
                     );
                 }
