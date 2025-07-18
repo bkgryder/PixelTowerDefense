@@ -40,6 +40,10 @@
         public const float ASH_FORCE_MIN = 0.5f;
         /// <summary>Maximum ash drift speed</summary>
         public const float ASH_FORCE_MAX = 10f;
+        /// <summary>Minimum ash pixels per body part</summary>
+        public const int ASH_PARTICLES_MIN = 3;
+        /// <summary>Maximum ash pixels per body part</summary>
+        public const int ASH_PARTICLES_MAX = 6;
         /// <summary>Amount of friction to apply to debris</summary>
         public const float DEBRIS_FRICTION = 2.5f;  // much lower than your 3f
     }
