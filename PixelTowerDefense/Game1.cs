@@ -127,8 +127,10 @@ namespace PixelTowerDefense
             // enemies
             foreach (var e in _enemies)
             {
-                // shadow
-                var sh = new Rectangle((int)e.Pos.X + 1, (int)e.Pos.Y + 2, 1, 1);
+                // shadow length grows with |sin(angle)| --
+                // a leaning enemy casts a wider shadow
+                int shLen = (int)MathF.Round(1 + 4 * MathF.Abs(MathF.Sin(e.Angle)));
+                var sh = new Rectangle((int)e.Pos.X + 1, (int)e.Pos.Y + 2, shLen, 1);
                 _sb.Draw(_px, sh, new Color(0, 0, 0, 100));
 
                 for (int part = -2; part <= 2; part++)
