@@ -216,32 +216,33 @@ namespace PixelTowerDefense.Systems
 
         private static void AshEnemy(Enemy e, List<Pixel> debris)
         {
-            Vector2 center = e.Pos;
+            Vector2 ground = e.Pos;
             int half = Constants.ENEMY_H / 2;
 
             for (int part = -half; part < half; part++)
             {
-                Vector2 pos = e.GetPartPos(part);
-
-                Color c = new Color(80, 80, 80);
-
-                Vector2 dir = pos - center;
-                if (dir == Vector2.Zero)
+                int count = _rng.Next(Constants.ASH_PARTICLES_MIN,
+                                     Constants.ASH_PARTICLES_MAX + 1);
+                for (int j = 0; j < count; j++)
                 {
-                    dir = new Vector2(
+                    Color c = new Color(80, 80, 80);
+                    Vector2 pos = ground + new Vector2(
                         _rng.NextFloat(-1f, 1f),
-                        _rng.NextFloat(-1f, 1f)
+                        _rng.NextFloat(-0.5f, 0.5f)
                     );
+                    Vector2 dir = new Vector2(
+                        _rng.NextFloat(-0.3f, 0.3f),
+                        _rng.NextFloat(0.6f, 1f)
+                    );
+                    dir.Normalize();
+                    float mag = _rng.NextFloat(
+                        Constants.ASH_FORCE_MIN,
+                        Constants.ASH_FORCE_MAX
+                    );
+                    Vector2 vel = dir * mag;
+
+                    debris.Add(new Pixel(pos, vel, c));
                 }
-                dir.Normalize();
-
-                float mag = _rng.NextFloat(
-                    Constants.ASH_FORCE_MIN,
-                    Constants.ASH_FORCE_MAX
-                );
-                Vector2 vel = dir * mag;
-
-                debris.Add(new Pixel(pos, vel, c));
             }
         }
 
