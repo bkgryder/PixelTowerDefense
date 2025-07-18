@@ -255,9 +255,15 @@ namespace PixelTowerDefense
                     MathF.Abs(MathF.Sin(e.Angle)) * stickLen
                 ) + Constants.ENEMY_W;
                 int shThick = 2;
+                float shY = e.Pos.Y + shThick;
+                if (e.State == EnemyState.Stunned && e.z <= 0f)
+                {
+                    // place shadow directly under a knocked-out enemy
+                    shY = e.Pos.Y - shThick;
+                }
                 var shRect = new Rectangle(
                     (int)MathF.Round(e.Pos.X - shLen / 2f),
-                    (int)MathF.Round(e.Pos.Y + shThick),
+                    (int)MathF.Round(shY),
                     shLen, shThick
                 );
                 _sb.Draw(_px, shRect, new Color(0, 0, 0, 100));
