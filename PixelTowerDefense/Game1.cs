@@ -25,6 +25,13 @@ namespace PixelTowerDefense
 
         Ability _currentAbility = Ability.None;
 
+        // ability toolbar
+        Rectangle _abilityButtonRect;
+        Rectangle[] _abilityOptionRects;
+        readonly Ability[] _abilityOptions =
+            { Ability.None, Ability.Fire, Ability.Telekinesis };
+        bool _abilityMenuOpen;
+
         // drag state
         bool _dragging;
         int _dragIdx, _dragPart;
@@ -43,6 +50,11 @@ namespace PixelTowerDefense
             _gfx.PreferredBackBufferWidth = 1280;
             _gfx.PreferredBackBufferHeight = 720;
             _gfx.ApplyChanges();
+            _abilityButtonRect = new Rectangle(5, 5, 24, 24);
+            _abilityOptionRects = new Rectangle[_abilityOptions.Length];
+            for (int i = 0; i < _abilityOptionRects.Length; i++)
+                _abilityOptionRects[i] =
+                    new Rectangle(5, 31 + i * 26, 24, 24);
             base.Initialize();
         }
 
@@ -83,13 +95,39 @@ namespace PixelTowerDefense
 
             if (Edge(kb, Keys.P)) SpawnEnemy();
 
-            // ability switching
+            // ability switching (keyboard)
             if (Edge(kb, Keys.D1) || Edge(kb, Keys.NumPad1))
                 _currentAbility = Ability.None;
             if (Edge(kb, Keys.D2) || Edge(kb, Keys.NumPad2))
                 _currentAbility = Ability.Fire;
             if (Edge(kb, Keys.D3) || Edge(kb, Keys.NumPad3))
                 _currentAbility = Ability.Telekinesis;
+
+            // toolbar interaction
+            var mousePoint = new Point(ms.X, ms.Y);
+            bool mClick = ms.LeftButton == ButtonState.Pressed &&
+                          _prevMs.LeftButton == ButtonState.Released;
+            if (mClick && _abilityButtonRect.Contains(mousePoint))
+            {
+                _abilityMenuOpen = !_abilityMenuOpen;
+            }
+            else if (_abilityMenuOpen && mClick)
+            {
+                bool inside = false;
+                for (int i = 0; i < _abilityOptionRects.Length; i++)
+                {
+                    if (_abilityOptionRects[i].Contains(mousePoint))
+                    {
+                        _currentAbility = _abilityOptions[i];
+                        inside = true;
+                        break;
+                    }
+                }
+                if (!inside && !_abilityButtonRect.Contains(mousePoint))
+                    _abilityMenuOpen = false;
+                else
+                    _abilityMenuOpen = inside ? false : _abilityMenuOpen;
+            }
 
             var mscr = new Point(ms.X, ms.Y);
             var mworld = new Vector2(_camX + mscr.X / _zoom,
@@ -250,6 +288,11 @@ namespace PixelTowerDefense
             }
 
             _sb.End();
+
+            // --- UI ---
+            _sb.Begin();
+            DrawAbilityToolbar();
+            _sb.End();
             base.Draw(gt);
         }
 
@@ -275,5 +318,28 @@ namespace PixelTowerDefense
 
         private bool Edge(KeyboardState kb, Keys k)
             => kb.IsKeyDown(k) && _prevKb.IsKeyUp(k);
+
+        private Color AbilityColor(Ability a)
+            => a switch
+            {
+                Ability.None => Color.LightGray,
+                Ability.Fire => Color.OrangeRed,
+                Ability.Telekinesis => Color.MediumPurple,
+                _ => Color.White
+            };
+
+        private void DrawAbilityToolbar()
+        {
+            _sb.Draw(_px, _abilityButtonRect, AbilityColor(_currentAbility));
+
+            if (_abilityMenuOpen)
+            {
+                for (int i = 0; i < _abilityOptionRects.Length; i++)
+                {
+                    var rect = _abilityOptionRects[i];
+                    _sb.Draw(_px, rect, AbilityColor(_abilityOptions[i]));
+                }
+            }
+        }
     }
 }
