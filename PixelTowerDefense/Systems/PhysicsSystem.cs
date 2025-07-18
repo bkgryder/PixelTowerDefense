@@ -51,11 +51,25 @@ namespace PixelTowerDefense.Systems
                         e.WanderTimer -= dt;
                         if (e.WanderTimer <= 0f)
                         {
-                            e.WanderTimer = _rng.NextFloat(1f, 3f);
-                            float ang = MathHelper.ToRadians(_rng.Next(360));
-                            e.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang))
-                                         * Constants.WANDER_SPEED;
+                            if (e.IsBurning)
+                            {
+                                e.WanderTimer = _rng.NextFloat(Constants.BURN_WANDER_TIME_MIN,
+                                                               Constants.BURN_WANDER_TIME_MAX);
+                                float ang = MathHelper.ToRadians(_rng.Next(360));
+                                e.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang))
+                                             * Constants.WANDER_SPEED * Constants.BURNING_SPEED_MULT;
+                            }
+                            else
+                            {
+                                e.WanderTimer = _rng.NextFloat(1f, 3f);
+                                float ang = MathHelper.ToRadians(_rng.Next(360));
+                                e.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang))
+                                             * Constants.WANDER_SPEED;
+                            }
                         }
+                        // ensure burning enemies keep running fast
+                        if (e.IsBurning)
+                            e.Vel = Vector2.Normalize(e.Vel) * Constants.WANDER_SPEED * Constants.BURNING_SPEED_MULT;
                         e.Pos += e.Vel * dt;
                         e.Angle = 0f;
                         break;

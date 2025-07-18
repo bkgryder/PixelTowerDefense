@@ -28,6 +28,10 @@
         public const float BURN_DPS = 10f;   // damage/sec
         public const float FIRE_PARTICLE_RATE = 0.05f; // spawn rate
 
+        public const float BURNING_SPEED_MULT = 3f;
+        public const float BURN_WANDER_TIME_MIN = 0.1f;
+        public const float BURN_WANDER_TIME_MAX = 0.3f;
+
         /// <summary>Minimum debris launch speed</summary>
         public const float EXPLOSION_FORCE_MIN = 2f;
         /// <summary>Maximum debris launch speed</summary>
