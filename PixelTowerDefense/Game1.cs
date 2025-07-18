@@ -23,6 +23,8 @@ namespace PixelTowerDefense
         KeyboardState _prevKb;
         MouseState _prevMs;
 
+        Ability _currentAbility = Ability.None;
+
         // drag state
         bool _dragging;
         int _dragIdx, _dragPart;
@@ -81,19 +83,53 @@ namespace PixelTowerDefense
 
             if (Edge(kb, Keys.P)) SpawnEnemy();
 
+            // ability switching
+            if (Edge(kb, Keys.D1) || Edge(kb, Keys.NumPad1))
+                _currentAbility = Ability.None;
+            if (Edge(kb, Keys.D2) || Edge(kb, Keys.NumPad2))
+                _currentAbility = Ability.Fire;
+
             var mscr = new Point(ms.X, ms.Y);
             var mworld = new Vector2(_camX + mscr.X / _zoom,
                                      _camY + mscr.Y / _zoom);
             var prevWorld = new Vector2(_camX + _prevMs.X / _zoom,
                                         _camY + _prevMs.Y / _zoom);
 
-            InputSystem.HandleDrag(
-                gt, ms, _prevMs,
-                ref _dragging, ref _dragIdx, ref _dragPart,
-                ref _dragStartWorld, ref _dragStartTime,
-                mworld, prevWorld,
-                _enemies, _pixels
-            );
+            if (_currentAbility == Ability.Fire)
+            {
+                bool mPress = ms.LeftButton == ButtonState.Pressed &&
+                              _prevMs.LeftButton == ButtonState.Released;
+                if (mPress)
+                {
+                    float minD = Constants.PICKUP_RADIUS;
+                    for (int i = _enemies.Count - 1; i >= 0; i--)
+                    {
+                        var e = _enemies[i];
+                        for (int p = -2; p <= 2; p++)
+                        {
+                            float d = Vector2.Distance(e.GetPartPos(p), mworld);
+                            if (d < minD)
+                            {
+                                e.IsBurning = true;
+                                e.BurnTimer = Constants.BURN_DURATION;
+                                _enemies[i] = e;
+                                i = -1; // break outer
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                InputSystem.HandleDrag(
+                    gt, ms, _prevMs,
+                    ref _dragging, ref _dragIdx, ref _dragPart,
+                    ref _dragStartWorld, ref _dragStartTime,
+                    mworld, prevWorld,
+                    _enemies, _pixels
+                );
+            }
 
             PhysicsSystem.SimulateAll(_enemies, _pixels, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
@@ -196,6 +232,14 @@ namespace PixelTowerDefense
                         new Vector2(w / 2f, h / 2f),
                         SpriteEffects.None, 0f
                     );
+                }
+
+                if (e.IsBurning)
+                {
+                    var head = e.GetPartPos(-2);
+                    head.Y -= e.z + 1;
+                    var flame = new Rectangle((int)head.X - 1, (int)head.Y - 2, 2, 2);
+                    _sb.Draw(_px, flame, Color.OrangeRed);
                 }
             }
 
