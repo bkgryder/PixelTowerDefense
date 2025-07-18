@@ -299,20 +299,22 @@ namespace PixelTowerDefense
                         w, h
                     );
 
+                    if (e.IsBurning)
+                    {
+                        var glow = new Rectangle(dest.X - 1, dest.Y - 1,
+                            dest.Width + 2, dest.Height + 2);
+                        var glowCol = new Color(255, 160 + _rng.Next(95), 0,
+                            80 + _rng.Next(60));
+                        _sb.Draw(_px, glow, null, glowCol, e.Angle,
+                            new Vector2(w / 2f, h / 2f), SpriteEffects.None, 0f);
+                    }
+
                     _sb.Draw(
                         _px, dest, null, c,
                         e.Angle,
                         new Vector2(w / 2f, h / 2f),
                         SpriteEffects.None, 0f
                     );
-                }
-
-                if (e.IsBurning)
-                {
-                    var head = e.GetPartPos(-2);
-                    head.Y -= e.z + 1;
-                    var flame = new Rectangle((int)head.X - 1, (int)head.Y - 2, 2, 2);
-                    _sb.Draw(_px, flame, Color.OrangeRed);
                 }
             }
 
