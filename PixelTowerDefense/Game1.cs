@@ -292,7 +292,9 @@ namespace PixelTowerDefense
                         }
                 }
 
-                // ---- HANDS: 1px at sides of upper body, rotated ----
+                    DrawFatSegment(pos, e.Angle, w, h, c);
+                }
+                // draw 1px hands at the sides of the body
                 {
                     var bodyPos = e.GetPartPos(-1);
                     bodyPos.Y -= e.z;
@@ -391,6 +393,38 @@ namespace PixelTowerDefense
             };
             var col = firePal[_rng.Next(firePal.Length)];
             _sb.Draw(_px, rect, col);
+        }
+
+        private void DrawFatSegment(Vector2 center, float angle, float width, float length, Color color)
+        {
+            var dir = new Vector2(MathF.Sin(angle), MathF.Cos(angle));
+            var start = center - dir * (length * 0.5f);
+            var end = center + dir * (length * 0.5f);
+
+            float halfW = width * 0.5f;
+
+            int minX = (int)MathF.Floor(MathF.Min(start.X, end.X) - halfW);
+            int maxX = (int)MathF.Ceiling(MathF.Max(start.X, end.X) + halfW);
+            int minY = (int)MathF.Floor(MathF.Min(start.Y, end.Y) - halfW);
+            int maxY = (int)MathF.Ceiling(MathF.Max(start.Y, end.Y) + halfW);
+
+            Vector2 ab = end - start;
+            float abLenSq = ab.LengthSquared();
+
+            for (int y = minY; y <= maxY; y++)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    Vector2 p = new Vector2(x + 0.5f, y + 0.5f);
+                    float t = 0f;
+                    if (abLenSq > 0f)
+                        t = Math.Clamp(Vector2.Dot(p - start, ab) / abLenSq, 0f, 1f);
+                    Vector2 proj = start + ab * t;
+                    float dist = Vector2.Distance(p, proj);
+                    if (dist <= halfW)
+                        _sb.Draw(_px, new Rectangle(x, y, 1, 1), color);
+                }
+            }
         }
     }
 }
