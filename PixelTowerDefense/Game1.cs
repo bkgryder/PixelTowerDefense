@@ -292,8 +292,6 @@ namespace PixelTowerDefense
                         }
                 }
 
-                    DrawFatSegment(pos, e.Angle, w, h, c);
-                }
                 // draw 1px hands at the sides of the body
                 {
                     var bodyPos = e.GetPartPos(-1);
