@@ -244,9 +244,15 @@ namespace PixelTowerDefense
                 float stickLen = Constants.ENEMY_H * Constants.PART_LEN;
                 int shLen = (int)MathF.Round(MathF.Abs(MathF.Sin(e.Angle)) * stickLen) + Constants.ENEMY_W;
                 int shThick = 2;
-                float shY = e.Pos.Y + shThick;
-                if (e.State == SoldierState.Stunned && e.z <= 0f)
-                    shY = e.Pos.Y - shThick;
+
+                // find the lowest point of the ragdoll in world space
+                int halfSeg = Constants.ENEMY_H / 2;
+                float bottomY = float.MinValue;
+                for (int part = -halfSeg; part < halfSeg; part++)
+                    bottomY = MathF.Max(bottomY, e.GetPartPos(part).Y);
+
+                float shY = bottomY + 1f; // slightly below the lowest segment
+
                 var shRect = new Rectangle(
                     (int)MathF.Round(e.Pos.X - shLen / 2f),
                     (int)MathF.Round(shY),
