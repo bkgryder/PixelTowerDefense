@@ -72,6 +72,9 @@ using Microsoft.Xna.Framework;
         public const float MELEE_KNOCKBACK = 12f;
         public const float MELEE_KNOCKBACK_UPWARD = 5f;
 
+        // How long corpses take to fully decompose
+        public const float DECOMP_DURATION = 12f;
+
         public static readonly Color HAND_COLOR = new Color(255, 219, 172);
 
     }

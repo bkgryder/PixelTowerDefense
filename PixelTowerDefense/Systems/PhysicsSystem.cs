@@ -99,6 +99,7 @@ namespace PixelTowerDefense.Systems
                         e.Vel = Vector2.Zero;
                         e.Angle = 0f;
                         e.AngularVel = 0f;
+                        e.DecompTimer += dt;
                         break;
 
                     case SoldierState.Launched:
@@ -160,6 +161,7 @@ namespace PixelTowerDefense.Systems
                             e.z = 0f;
                             e.vz = 0f;
                             e.State = SoldierState.Dead;
+                            e.DecompTimer = 0f;
                             e.Angle = MathHelper.PiOver2;
                             e.Vel = Vector2.Zero;
                             e.AngularVel = 0f;
