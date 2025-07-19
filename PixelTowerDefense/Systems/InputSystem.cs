@@ -60,8 +60,15 @@ namespace PixelTowerDefense.Systems
             }
 
             // follow drag
-            if (dragging && dragIdx >= 0 && dragIdx < soldiers.Count)
+            if (dragging && dragIdx >= 0)
             {
+                if (dragIdx >= soldiers.Count)
+                {
+                    dragging = false;
+                    dragIdx = -1;
+                    return;
+                }
+
                 var e = soldiers[dragIdx];
 
                 // simple spring‐torque on that segment
@@ -104,8 +111,15 @@ namespace PixelTowerDefense.Systems
             }
 
             // release / throw
-            if (dragging && mRel && dragIdx >= 0 && dragIdx < soldiers.Count)
+            if (dragging && mRel && dragIdx >= 0)
             {
+                if (dragIdx >= soldiers.Count)
+                {
+                    dragging = false;
+                    dragIdx = -1;
+                    return;
+                }
+
                 var e = soldiers[dragIdx];
                 float t2 = (float)gt.TotalGameTime.TotalSeconds;
                 float dt = MathF.Max(0.01f, t2 - dragStartTime);
