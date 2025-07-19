@@ -4,6 +4,7 @@ namespace PixelTowerDefense
     {
         None,
         Fire,
-        Telekinesis
+        Telekinesis,
+        Explosion
     }
 }

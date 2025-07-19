@@ -30,7 +30,7 @@ namespace PixelTowerDefense
         Rectangle _abilityButtonRect;
         Rectangle[] _abilityOptionRects;
         readonly Ability[] _abilityOptions =
-            { Ability.None, Ability.Fire, Ability.Telekinesis };
+            { Ability.None, Ability.Fire, Ability.Telekinesis, Ability.Explosion };
         bool _abilityMenuOpen;
 
         // drag state
@@ -126,6 +126,8 @@ namespace PixelTowerDefense
                 _currentAbility = Ability.Fire;
             if (Edge(kb, Keys.D3) || Edge(kb, Keys.NumPad3))
                 _currentAbility = Ability.Telekinesis;
+            if (Edge(kb, Keys.D4) || Edge(kb, Keys.NumPad4))
+                _currentAbility = Ability.Explosion;
 
             // toolbar interaction
             var mousePoint = new Point(ms.X, ms.Y);
@@ -193,6 +195,15 @@ namespace PixelTowerDefense
                     mworld, prevWorld,
                     _soldiers, _pixels
                 );
+            }
+            else if (_currentAbility == Ability.Explosion)
+            {
+                bool mPress = ms.LeftButton == ButtonState.Pressed &&
+                              _prevMs.LeftButton == ButtonState.Released;
+                if (mPress)
+                {
+                    TriggerExplosion(mworld);
+                }
             }
             else
             {
@@ -364,6 +375,7 @@ namespace PixelTowerDefense
                 Ability.None => Color.LightGray,
                 Ability.Fire => Color.OrangeRed,
                 Ability.Telekinesis => Color.MediumPurple,
+                Ability.Explosion => Color.Gold,
                 _ => Color.White
             };
 
@@ -403,6 +415,36 @@ namespace PixelTowerDefense
             };
             var col = firePal[_rng.Next(firePal.Length)];
             _sb.Draw(_px, rect, col);
+        }
+
+        private void TriggerExplosion(Vector2 pos)
+        {
+            // push soldiers away
+            for (int i = 0; i < _soldiers.Count; i++)
+            {
+                var s = _soldiers[i];
+                Vector2 dir = s.Pos - pos;
+                float dist = dir.Length();
+                if (dist > Constants.EXPLOSION_RADIUS)
+                    continue;
+                if (dist > 0f) dir /= dist; else dir = new Vector2(0f, -1f);
+                float strength = (1f - dist / Constants.EXPLOSION_RADIUS) * Constants.EXPLOSION_PUSH;
+                s.Vel += dir * strength;
+                s.vz += Constants.EXPLOSION_UPWARD;
+                s.State = SoldierState.Launched;
+                _soldiers[i] = s;
+            }
+
+            // visual particles
+            Color[] smokePal = { Color.OrangeRed, Color.Orange, Color.Yellow, Color.Gray };
+            for (int i = 0; i < Constants.EXPLOSION_PARTICLES; i++)
+            {
+                float ang = MathHelper.ToRadians(_rng.Next(360));
+                float spd = _rng.NextFloat(10f, Constants.EXPLOSION_PUSH);
+                var vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * spd;
+                var col = smokePal[_rng.Next(smokePal.Length)];
+                _pixels.Add(new Pixel(pos, vel, col));
+            }
         }
 
         private void DrawFatSegment(Vector2 center, float angle, float width, float length, Color color)

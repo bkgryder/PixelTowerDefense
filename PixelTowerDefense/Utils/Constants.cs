@@ -53,6 +53,12 @@ using Microsoft.Xna.Framework;
         public const int   DEATH_SMOKE_COUNT = 20;
         public const float DEBRIS_FRICTION = 2.5f;  // much lower than your 3f
 
+        // Explosion ability
+        public const float EXPLOSION_RADIUS = 25f;
+        public const float EXPLOSION_PUSH = 70f;
+        public const float EXPLOSION_UPWARD = 60f;
+        public const int   EXPLOSION_PARTICLES = 30;
+
         public const float SEEK_RADIUS = 28f;
         public const float TOUCH_RANGE = 1.8f;
         public const float MELEE_DMG = 8f;
