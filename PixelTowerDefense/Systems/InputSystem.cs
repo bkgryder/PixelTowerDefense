@@ -139,7 +139,13 @@ namespace PixelTowerDefense.Systems
                             _rng.NextFloat(-30, 30),
                             -_rng.NextFloat(20, 50)
                         );
-                        debris.Add(new Pixel(head, v, Color.LimeGreen));
+                        debris.Add(new Pixel(
+                            head,
+                            v,
+                            Color.LimeGreen,
+                            0f,
+                            _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
+                                          Constants.DEBRIS_LIFETIME_MAX)));
                     }
                 }
 

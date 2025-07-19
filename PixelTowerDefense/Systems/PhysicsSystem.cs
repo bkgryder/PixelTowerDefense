@@ -43,7 +43,13 @@ namespace PixelTowerDefense.Systems
                                 new Color(255, 100, 0)
                             };
                             var c = firePal[_rng.Next(firePal.Length)];
-                            debris.Add(new Pixel(pos, pv, c));
+                            debris.Add(new Pixel(
+                                pos,
+                                pv,
+                                c,
+                                0f,
+                                _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f,
+                                               Constants.EMBER_LIFETIME)));
                         }
                     }
                     if (_rng.NextDouble() < Constants.SMOKE_PARTICLE_RATE * dt)
@@ -239,13 +245,25 @@ namespace PixelTowerDefense.Systems
                             _rng.NextFloat(-0.5f, 0.5f),
                             _rng.NextFloat(-0.5f, 0.5f)
                         );
-                        debris.Add(new Pixel(pos + offset, vel, c));
+                        debris.Add(new Pixel(
+                            pos + offset,
+                            vel,
+                            c,
+                            0f,
+                            _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
+                                           Constants.DEBRIS_LIFETIME_MAX)));
                     }
                 }
                 else
                 {
                     // single‐pixel fallback
-                    debris.Add(new Pixel(pos, vel, c));
+                    debris.Add(new Pixel(
+                        pos,
+                        vel,
+                        c,
+                        0f,
+                        _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
+                                       Constants.DEBRIS_LIFETIME_MAX)));
                 }
             }
         }
@@ -278,7 +296,13 @@ namespace PixelTowerDefense.Systems
                     );
                     Vector2 vel = dir * mag;
 
-                    debris.Add(new Pixel(pos, vel, c));
+                    debris.Add(new Pixel(
+                        pos,
+                        vel,
+                        c,
+                        0f,
+                        _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
+                                       Constants.DEBRIS_LIFETIME_MAX)));
                 }
             }
 

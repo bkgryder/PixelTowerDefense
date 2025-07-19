@@ -443,7 +443,13 @@ namespace PixelTowerDefense
                 float spd = _rng.NextFloat(10f, Constants.EXPLOSION_PUSH);
                 var vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * spd;
                 var col = smokePal[_rng.Next(smokePal.Length)];
-                _pixels.Add(new Pixel(pos, vel, col));
+                _pixels.Add(new Pixel(
+                    pos,
+                    vel,
+                    col,
+                    0f,
+                    _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
+                                   Constants.DEBRIS_LIFETIME_MAX)));
             }
         }
 

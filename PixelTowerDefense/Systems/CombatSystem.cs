@@ -117,7 +117,13 @@ namespace PixelTowerDefense.Systems
             {
                 Vector2 off = new Vector2(_rng.NextFloat(-1f, 1f), _rng.NextFloat(-1f, 1f));
                 Vector2 vel = new Vector2(_rng.NextFloat(-15f, 15f), _rng.NextFloat(-15f, 0f));
-                debris.Add(new Pixel(pos + off, vel, blood));
+                debris.Add(new Pixel(
+                    pos + off,
+                    vel,
+                    blood,
+                    0f,
+                    _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
+                                   Constants.DEBRIS_LIFETIME_MAX)));
             }
         }
     }

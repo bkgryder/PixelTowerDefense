@@ -53,6 +53,11 @@ using Microsoft.Xna.Framework;
         public const int   DEATH_SMOKE_COUNT = 20;
         public const float DEBRIS_FRICTION = 2.5f;  // much lower than your 3f
 
+        // Debris fade-out
+        public const float DEBRIS_LIFETIME_MIN = 6f;
+        public const float DEBRIS_LIFETIME_MAX = 10f;
+        public const float EMBER_LIFETIME = 1.5f;
+
         // Explosion ability
         public const float EXPLOSION_RADIUS = 25f;
         public const float EXPLOSION_PUSH = 70f;
