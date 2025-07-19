@@ -18,6 +18,7 @@ namespace PixelTowerDefense
 
         List<Meeple> _meeples = new();
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
+        List<BerryBush> _bushes = new();
         Random _rng = new();
 
         float _camX, _camY, _zoom = 3.5f;
@@ -66,6 +67,7 @@ namespace PixelTowerDefense
             _px.SetData(new[] { Color.White });
 
             SpawnMeeple(10);
+            SpawnBerryBushes(5);
 
             var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
             var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
@@ -209,7 +211,7 @@ namespace PixelTowerDefense
                 _dragging = false;
             }
 
-            PhysicsSystem.SimulateAll(_meeples, _pixels, dt);
+            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             CombatSystem.ResolveCombat(_meeples, _pixels, dt);
 
@@ -250,6 +252,10 @@ namespace PixelTowerDefense
             // --- debris ---
             foreach (var p in _pixels)
                 _sb.Draw(_px, p.Bounds, p.Col);
+
+            // --- berry bushes ---
+            foreach (var b in _bushes)
+                DrawBush(b);
 
             // --- shadows ---
             foreach (var e in _meeples.OrderBy(s => s.ShadowY))
@@ -387,6 +393,7 @@ namespace PixelTowerDefense
             // --- UI ---
             _sb.Begin();
             DrawAbilityToolbar();
+            DrawHint();
             _sb.End();
             base.Draw(gt);
         }
@@ -415,7 +422,21 @@ namespace PixelTowerDefense
                 float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
                                        Constants.ARENA_BOTTOM - 5);
                 var shirt = Meeple.FRIENDLY_SHIRTS[_rng.Next(Meeple.FRIENDLY_SHIRTS.Length)];
-                _meeples.Add(new Meeple(new Vector2(x, y), Faction.Friendly, shirt));
+                var m = new Meeple(new Vector2(x, y), Faction.Friendly, shirt);
+                m.Worker = new Worker();
+                _meeples.Add(m);
+            }
+        }
+
+        private void SpawnBerryBushes(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
+                                       Constants.ARENA_RIGHT - 5);
+                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
+                                       Constants.ARENA_BOTTOM - 5);
+                _bushes.Add(new BerryBush(new Vector2(x, y), _rng));
             }
         }
 
@@ -446,6 +467,13 @@ namespace PixelTowerDefense
             }
         }
 
+        private void DrawHint()
+        {
+            int total = 0;
+            foreach (var b in _bushes) total += b.Berries;
+            DrawTinyString($"B{total}", new Vector2(35, 8), Color.White);
+        }
+
         private void DrawFlame(Meeple e)
         {
             var pos = e.GetPartPos(0);
@@ -468,6 +496,19 @@ namespace PixelTowerDefense
             };
             var col = firePal[_rng.Next(firePal.Length)];
             _sb.Draw(_px, rect, col);
+        }
+
+        private void DrawBush(BerryBush b)
+        {
+            int baseX = (int)MathF.Round(b.Pos.X);
+            int baseY = (int)MathF.Round(b.Pos.Y);
+            foreach (var p in b.Shape)
+                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), new Color(0, 120, 0));
+            for (int i = 0; i < b.Berries && i < b.BerryPixels.Length; i++)
+            {
+                var off = b.BerryPixels[i];
+                _sb.Draw(_px, new Rectangle(baseX + off.X, baseY + off.Y, 1, 1), Color.Red);
+            }
         }
 
         private void DrawShadow(Meeple e)
@@ -534,6 +575,42 @@ namespace PixelTowerDefense
             return t < 0.5f
                 ? Color.Lerp(pale, Constants.DECOMP_PURPLE, t * 2f)
                 : Color.Lerp(Constants.DECOMP_PURPLE, Constants.BONE_COLOR, (t - 0.5f) * 2f);
+        }
+
+        private static readonly Dictionary<char, string[]> TinyFont = new()
+        {
+            ['0'] = new[]{"###","# #","# #","# #","###"},
+            ['1'] = new[]{" ##","# #","  #","  #","###"},
+            ['2'] = new[]{"###","  #","###","#  ","###"},
+            ['3'] = new[]{"###","  #","###","  #","###"},
+            ['4'] = new[]{"# #","# #","###","  #","  #"},
+            ['5'] = new[]{"###","#  ","###","  #","###"},
+            ['6'] = new[]{"###","#  ","###","# #","###"},
+            ['7'] = new[]{"###","  #","  #","  #","  #"},
+            ['8'] = new[]{"###","# #","###","# #","###"},
+            ['9'] = new[]{"###","# #","###","  #","###"},
+            ['B'] = new[]{"## ","# #","## ","# #","## "}
+        };
+
+        private void DrawTinyString(string text, Vector2 pos, Color col)
+        {
+            float x = pos.X;
+            foreach (char ch in text)
+            {
+                if (!TinyFont.TryGetValue(ch, out var glyph))
+                {
+                    x += 4;
+                    continue;
+                }
+                for (int y = 0; y < glyph.Length; y++)
+                {
+                    for (int gx = 0; gx < glyph[y].Length; gx++)
+                    {
+                        if (glyph[y][gx] != ' ') _sb.Draw(_px, new Rectangle((int)x + gx, (int)pos.Y + y, 1, 1), col);
+                    }
+                }
+                x += glyph[0].Length + 1;
+            }
         }
 
         private void DrawFatSegment(Vector2 center, float angle, float width, float length, Color color)
