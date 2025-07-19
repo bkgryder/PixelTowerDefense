@@ -67,20 +67,20 @@ namespace PixelTowerDefense.Systems
                 // simple spring‐torque on that segment
                 float l = dragPart * Constants.PART_LEN;
                 var grabVec = new Vector2(
-                    MathF.Cos(e.Angle) * l,
-                    MathF.Sin(e.Angle) * l
+                    MathF.Sin(e.Angle) * l,
+                    MathF.Cos(e.Angle) * l
                 );
 
                 // spring + damping using configurable constants
                 float spring = Constants.DRAG_SPRING,
                       damping = Constants.DRAG_DAMPING;
-                float targetAngle = MathF.Atan2(mouseWorld.Y - e.Pos.Y,
-                                                mouseWorld.X - e.Pos.X);
+                float targetAngle = MathF.Atan2(mouseWorld.X - e.Pos.X,
+                                                mouseWorld.Y - e.Pos.Y);
                 if (dragPart != 0)
                     targetAngle -= MathF.Asin(dragPart * Constants.PART_LEN / Constants.ENEMY_H);
 
-                float prevTargetAngle = MathF.Atan2(prevMouseWorld.Y - e.Pos.Y,
-                                                   prevMouseWorld.X - e.Pos.X);
+                float prevTargetAngle = MathF.Atan2(prevMouseWorld.X - e.Pos.X,
+                                                   prevMouseWorld.Y - e.Pos.Y);
                 if (dragPart != 0)
                     prevTargetAngle -= MathF.Asin(dragPart * Constants.PART_LEN / Constants.ENEMY_H);
 
