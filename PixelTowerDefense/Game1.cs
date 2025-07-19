@@ -214,6 +214,20 @@ namespace PixelTowerDefense
             PhysicsSystem.UpdatePixels(_pixels, dt);
             CombatSystem.ResolveCombat(_soldiers, _pixels, dt);
 
+            // smooth shadow placement
+            for (int i = 0; i < _soldiers.Count; i++)
+            {
+                var s = _soldiers[i];
+                int halfSeg = Constants.ENEMY_H / 2;
+                float bottom = float.MinValue;
+                for (int p = -halfSeg; p < halfSeg; p++)
+                    bottom = MathF.Max(bottom, s.GetPartPos(p).Y - s.z);
+                float target = bottom + 1f;
+                float lerp = MathHelper.Clamp(8f * dt, 0f, 1f);
+                s.ShadowY = MathHelper.Lerp(s.ShadowY, target, lerp);
+                _soldiers[i] = s;
+            }
+
             _prevKb = kb;
             _prevMs = ms;
             base.Update(gt);
@@ -245,13 +259,7 @@ namespace PixelTowerDefense
                 int shLen = (int)MathF.Round(MathF.Abs(MathF.Sin(e.Angle)) * stickLen) + Constants.ENEMY_W;
                 int shThick = 2;
 
-                // find the lowest point of the ragdoll in world space
-                int halfSeg = Constants.ENEMY_H / 2;
-                float bottomY = float.MinValue;
-                for (int part = -halfSeg; part < halfSeg; part++)
-                    bottomY = MathF.Max(bottomY, e.GetPartPos(part).Y);
-
-                float shY = bottomY + 1f; // slightly below the lowest segment
+                float shY = e.ShadowY; // precalculated & smoothed
 
                 var shRect = new Rectangle(
                     (int)MathF.Round(e.Pos.X - shLen / 2f),

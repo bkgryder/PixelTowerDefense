@@ -97,7 +97,6 @@ namespace PixelTowerDefense.Systems
 
                     case SoldierState.Dead:
                         e.Vel = Vector2.Zero;
-                        e.Angle = 0f;
                         e.AngularVel = 0f;
                         e.DecompTimer += dt;
                         break;
