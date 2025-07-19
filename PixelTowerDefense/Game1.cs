@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -245,7 +246,7 @@ namespace PixelTowerDefense
                 _sb.Draw(_px, p.Bounds, p.Col);
 
             // enemies (with resized shadow)
-            foreach (var e in _enemies)
+            foreach (var e in _enemies.OrderBy(e => e.z))
             {
                 // --- dynamic shadow ---
                 // total stick length in pixels:
@@ -301,6 +302,12 @@ namespace PixelTowerDefense
                     var pos = pt;
                     var scale = new Vector2(w, h);
                     var origin = new Vector2(0.5f, 0.5f);
+                    var dest = new Rectangle(
+                        (int)MathF.Round(pos.X - w * 0.5f),
+                        (int)MathF.Round(pos.Y - h * 0.5f),
+                        w,
+                        (int)MathF.Round(h)
+                    );
 
                     if (e.IsBurning)
                     {
