@@ -160,8 +160,8 @@ namespace PixelTowerDefense.Systems
                             e.z = 0f;
                             e.vz = 0f;
                             e.State = SoldierState.Dead;
-                            // keep current Angle when transitioning to Dead
                             e.DecompTimer = 0f;
+                            e.Angle = MathHelper.PiOver2;
                             e.Vel = Vector2.Zero;
                             e.AngularVel = 0f;
                         }

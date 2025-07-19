@@ -269,6 +269,11 @@ namespace PixelTowerDefense
                 _sb.Draw(_px, shRect, new Color(0, 0, 0, 100));
 
                 // ---- BODY: Each segment as pixels ----
+                bool isDead = e.State == SoldierState.Dead;
+                float decomp = isDead
+                    ? MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION)
+                    : 0f;
+
                 int half = Constants.ENEMY_H / 2;
                 for (int part = -half; part < half; part++)
                 {
@@ -289,15 +294,9 @@ namespace PixelTowerDefense
                     else
                         c = e.Side == Faction.Friendly ? new Color(20, 40, 20) : new Color(80, 60, 40);
 
-                    if (e.State == SoldierState.Dead)
+                    if (isDead)
                     {
-                        float decomp = MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION);
-                        var pale = Color.Lerp(c, Color.LightGray, 0.5f);
-                        var purple = new Color(60, 0, 80);
-                        var bone = new Color(245, 245, 235);
-                        c = decomp < 0.5f
-                            ? Color.Lerp(pale, purple, decomp * 2f)
-                            : Color.Lerp(purple, bone, (decomp - 0.5f) * 2f);
+                        c = ApplyDecomposition(c, decomp);
                     }
                     else if (e.State == SoldierState.Ragdoll)
                     {
@@ -327,9 +326,8 @@ namespace PixelTowerDefense
                             float y = segPos.Y + localX * sin + localY * cos;
 
                             // skip pixels as corpse decomposes
-                            if (e.State == SoldierState.Dead)
+                            if (isDead)
                             {
-                                float decomp = MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION);
                                 if (decomp > 0.5f)
                                 {
                                     float skipChance = MathF.Min((decomp - 0.5f) * 2f, 0.9f);
@@ -367,15 +365,9 @@ namespace PixelTowerDefense
                     float lx = bodyPos.X - sideX * handOffset;
                     float ly = bodyPos.Y - sideY * handOffset;
                     Color handCol = Constants.HAND_COLOR;
-                    if (e.State == SoldierState.Dead)
+                    if (isDead)
                     {
-                        float decomp = MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION);
-                        var pale = Color.Lerp(handCol, Color.LightGray, 0.5f);
-                        var purple = new Color(60, 0, 80);
-                        var bone = new Color(245, 245, 235);
-                        handCol = decomp < 0.5f
-                            ? Color.Lerp(pale, purple, decomp * 2f)
-                            : Color.Lerp(purple, bone, (decomp - 0.5f) * 2f);
+                        handCol = ApplyDecomposition(handCol, decomp);
                     }
                     else if (e.State == SoldierState.Ragdoll)
                     {
@@ -505,6 +497,14 @@ namespace PixelTowerDefense
                     _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
                                    Constants.DEBRIS_LIFETIME_MAX)));
             }
+        }
+
+        private static Color ApplyDecomposition(Color baseColor, float t)
+        {
+            var pale = Color.Lerp(baseColor, Color.LightGray, 0.5f);
+            return t < 0.5f
+                ? Color.Lerp(pale, Constants.DECOMP_PURPLE, t * 2f)
+                : Color.Lerp(Constants.DECOMP_PURPLE, Constants.BONE_COLOR, (t - 0.5f) * 2f);
         }
 
         private void DrawFatSegment(Vector2 center, float angle, float width, float length, Color color)
