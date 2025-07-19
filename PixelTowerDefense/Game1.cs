@@ -223,7 +223,8 @@ namespace PixelTowerDefense
                 for (int p = -halfSeg; p < halfSeg; p++)
                     bottom = MathF.Max(bottom, s.GetPartPos(p).Y - s.z);
                 float target = bottom + 1f;
-                float lerp = MathHelper.Clamp(8f * dt, 0f, 1f);
+                // slower interpolation so shadows follow movement smoothly
+                float lerp = MathHelper.Clamp(4f * dt, 0f, 1f);
                 s.ShadowY = MathHelper.Lerp(s.ShadowY, target, lerp);
                 _soldiers[i] = s;
             }
@@ -255,6 +256,11 @@ namespace PixelTowerDefense
             foreach (var e in _soldiers.OrderBy(e => e.z))
             {
                 // ---- SHADOW ----
+                bool isDead = e.State == SoldierState.Dead;
+                float decomp = isDead
+                    ? MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION)
+                    : 0f;
+
                 float stickLen = Constants.ENEMY_H * Constants.PART_LEN;
                 int shLen = (int)MathF.Round(MathF.Abs(MathF.Sin(e.Angle)) * stickLen) + Constants.ENEMY_W;
                 int shThick = 2;
@@ -266,13 +272,10 @@ namespace PixelTowerDefense
                     (int)MathF.Round(shY),
                     shLen, shThick
                 );
-                _sb.Draw(_px, shRect, new Color(0, 0, 0, 100));
+                byte shAlpha = (byte)(100 * (1f - decomp));
+                _sb.Draw(_px, shRect, new Color((byte)0, (byte)0, (byte)0, shAlpha));
 
                 // ---- BODY: Each segment as pixels ----
-                bool isDead = e.State == SoldierState.Dead;
-                float decomp = isDead
-                    ? MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION)
-                    : 0f;
 
                 int half = Constants.ENEMY_H / 2;
                 for (int part = -half; part < half; part++)
@@ -330,7 +333,8 @@ namespace PixelTowerDefense
                             {
                                 if (decomp > 0.5f)
                                 {
-                                    float skipChance = MathF.Min((decomp - 0.5f) * 2f, 0.9f);
+                                    // fewer pixels vanish as the corpse decays
+                                    float skipChance = MathF.Min((decomp - 0.5f) * 2f * 0.5f, 0.9f * 0.5f);
                                     int hx = (int)MathF.Round(x), hy = (int)MathF.Round(y);
                                     int hash = (hx * 73856093) ^ (hy * 19349663) ^ part;
                                     double r = ((hash & 0x7fffffff) / (double)int.MaxValue);
