@@ -65,8 +65,7 @@ namespace PixelTowerDefense
             _px = new Texture2D(GraphicsDevice, 1, 1);
             _px.SetData(new[] { Color.White });
 
-            SpawnWave(Faction.Friendly, 12, true);
-            SpawnWave(Faction.Enemy, 12, true);
+            SpawnMeeple(10);
 
             var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
             var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
@@ -117,7 +116,7 @@ namespace PixelTowerDefense
                 _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
             }
 
-            if (Edge(kb, Keys.P)) SpawnWave(Faction.Enemy, 1, true);
+
 
             // ability switching (keyboard)
             if (Edge(kb, Keys.D1) || Edge(kb, Keys.NumPad1))
@@ -404,6 +403,19 @@ namespace PixelTowerDefense
                 var pal = side == Faction.Friendly ? Meeple.FRIENDLY_SHIRTS : Meeple.ENEMY_SHIRTS;
                 var shirt = pal[_rng.Next(pal.Length)];
                 _meeples.Add(new Meeple(new Vector2(x, y), side, shirt){Combatant = withCombat ? new Combatant() : (Combatant?)null});
+            }
+        }
+
+        private void SpawnMeeple(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
+                                       Constants.ARENA_RIGHT - 5);
+                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
+                                       Constants.ARENA_BOTTOM - 5);
+                var shirt = Meeple.FRIENDLY_SHIRTS[_rng.Next(Meeple.FRIENDLY_SHIRTS.Length)];
+                _meeples.Add(new Meeple(new Vector2(x, y), Faction.Friendly, shirt));
             }
         }
 
