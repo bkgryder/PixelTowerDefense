@@ -293,6 +293,11 @@ namespace PixelTowerDefense
 
                     int w = Constants.ENEMY_W;
                     float h = Constants.PART_LEN;
+                    var dest = new Rectangle(
+                        (int)(pt.X - w / 2f),
+                        (int)(pt.Y - h / 2f),
+                        w, (int)h
+                    );
                     var pos = pt;
                     var scale = new Vector2(w, h);
                     var origin = new Vector2(0.5f, 0.5f);
