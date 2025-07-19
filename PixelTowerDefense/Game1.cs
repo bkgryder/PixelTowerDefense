@@ -332,6 +332,27 @@ namespace PixelTowerDefense
                         SpriteEffects.None, 0f
                     );
                 }
+                // draw 1px hands at the sides of the body
+                {
+                    var basePos = e.GetPartPos(-1);
+                    basePos.Y -= e.z;
+                    var side = new Vector2(MathF.Cos(e.Angle), -MathF.Sin(e.Angle));
+                    float off = Constants.ENEMY_W * 0.5f + 0.5f;
+                    var left = basePos - side * off;
+                    var right = basePos + side * off;
+                    var skin = new Color(255, 219, 172);
+
+                    _sb.Draw(
+                        _px,
+                        new Rectangle((int)MathF.Round(left.X), (int)MathF.Round(left.Y), 1, 1),
+                        skin
+                    );
+                    _sb.Draw(
+                        _px,
+                        new Rectangle((int)MathF.Round(right.X), (int)MathF.Round(right.Y), 1, 1),
+                        skin
+                    );
+                }
                 if (e.IsBurning)
                 {
                     DrawFlame(e);
