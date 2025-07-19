@@ -46,5 +46,12 @@
         public const int ASH_PARTICLES_MAX = 6;
         /// <summary>Amount of friction to apply to debris</summary>
         public const float DEBRIS_FRICTION = 2.5f;  // much lower than your 3f
+
+        // smoke particle settings
+        public const float SMOKE_FORCE_MIN = 1f;
+        public const float SMOKE_FORCE_MAX = 4f;
+        public const float SMOKE_LIFETIME = 1.5f;
+        public const float SMOKE_PARTICLE_RATE = 0.2f;
+        public const int DEATH_SMOKE_COUNT = 5;
     }
 }
