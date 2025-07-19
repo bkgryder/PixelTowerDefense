@@ -1,20 +1,21 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Utils;
 
 namespace PixelTowerDefense.Entities
 {
-    public enum SoldierState { Idle, Charging, Melee, Launched, Stunned, Ragdoll, Dead }
+    public enum MeepleState { Idle, Charging, Melee, Launched, Stunned, Ragdoll, Dead }
 
     public enum Faction { Friendly, Enemy }
 
-    public struct CombatStats
+    public struct Combatant
     {
-        public float Health;
         public float AttackCooldown;
     }
 
-    public struct Soldier
+    public struct Worker { }
+
+    public struct Meeple
     {
         public static readonly Color[] FRIENDLY_SHIRTS =
         {
@@ -43,19 +44,23 @@ namespace PixelTowerDefense.Entities
 
         // appearance / state
         public Color ShirtColor;
-        public SoldierState State;
+        public MeepleState State;
 
         public Faction Side;
-        public CombatStats Combat;
         public bool IsBurning;
         public float BurnTimer;
 
         // time spent decomposing once dead
         public float DecompTimer;
 
-        public bool Alive => Combat.Health > 0f && State != SoldierState.Dead && State != SoldierState.Ragdoll;
+        public float Health;
 
-        public Soldier(Vector2 spawn, Faction side, Color shirt)
+        public Combatant? Combatant;
+        public Worker? Worker;
+
+        public bool Alive => Health > 0f && State != MeepleState.Dead && State != MeepleState.Ragdoll;
+
+        public Meeple(Vector2 spawn, Faction side, Color shirt, float health = Constants.ENEMY_MAX_HEALTH)
         {
             Pos = spawn;
             Vel = Vector2.Zero;
@@ -64,23 +69,24 @@ namespace PixelTowerDefense.Entities
             AngularVel = 0f;
             z = 0f;
             vz = 0f;
+            ShadowY = 0f;
             StunTimer = 0f;
             ShirtColor = shirt;
-            State = SoldierState.Idle;
+            State = MeepleState.Idle;
             Side = side;
-            Combat = new CombatStats { Health = Constants.ENEMY_MAX_HEALTH, AttackCooldown = 0f };
             IsBurning = false;
             BurnTimer = 0f;
             DecompTimer = 0f;
-
+            Health = health;
+            Combatant = null;
+            Worker = null;
         }
 
         /// <summary>
-        /// Get world‐pos of segment −2..+2 (head..foot)
+        /// Get world-pos of segment -2..+2 (head..foot)
         /// </summary>
         public Vector2 GetPartPos(int part)
         {
-            // sin/cos so that when Angle=0 the chain is vertical
             float l = part * Constants.PART_LEN;
             return new Vector2(
                 Pos.X + MathF.Sin(Angle) * l,

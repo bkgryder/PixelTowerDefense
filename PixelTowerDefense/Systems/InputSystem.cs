@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -21,7 +21,7 @@ namespace PixelTowerDefense.Systems
             ref float dragStartTime,
             Vector2 mouseWorld,
             Vector2 prevMouseWorld,
-            List<Soldier> soldiers,
+            List<Meeple> meeples,
             List<Pixel> debris
         )
         {
@@ -34,10 +34,10 @@ namespace PixelTowerDefense.Systems
             if (!dragging && mPress)
             {
                 float minD = Constants.PICKUP_RADIUS;
-                for (int i = soldiers.Count - 1; i >= 0; i--)
+                for (int i = meeples.Count - 1; i >= 0; i--)
                 {
-                    var e = soldiers[i];
-                    if (e.State != SoldierState.Idle) continue;
+                    var e = meeples[i];
+                    if (e.State != MeepleState.Idle) continue;
                     for (int p = -2; p <= 2; p++)
                     {
                         float d = Vector2.Distance(e.GetPartPos(p), mouseWorld);
@@ -52,7 +52,7 @@ namespace PixelTowerDefense.Systems
                             // lift
                             e.z = Constants.GRAB_Z;
                             e.vz = 0f;
-                            soldiers[i] = e;
+                            meeples[i] = e;
                         }
                     }
                     if (dragging) break;
@@ -62,23 +62,21 @@ namespace PixelTowerDefense.Systems
             // follow drag
             if (dragging && dragIdx >= 0)
             {
-                if (dragIdx >= soldiers.Count)
+                if (dragIdx >= meeples.Count)
                 {
                     dragging = false;
                     dragIdx = -1;
                     return;
                 }
 
-                var e = soldiers[dragIdx];
+                var e = meeples[dragIdx];
 
-                // simple spring‐torque on that segment
                 float l = dragPart * Constants.PART_LEN;
                 var grabVec = new Vector2(
                     MathF.Sin(e.Angle) * l,
                     MathF.Cos(e.Angle) * l
                 );
 
-                // spring + damping using configurable constants
                 float spring = Constants.DRAG_SPRING,
                       damping = Constants.DRAG_DAMPING;
                 float targetAngle = MathF.Atan2(mouseWorld.X - e.Pos.X,
@@ -102,25 +100,24 @@ namespace PixelTowerDefense.Systems
                 e.AngularVel *= MathF.Exp(-damping * dt);
                 e.Angle += e.AngularVel * dt;
 
-                // follow mouse
                 e.Pos = mouseWorld - grabVec;
                 e.z = Constants.GRAB_Z;
                 e.vz = 0f;
 
-                soldiers[dragIdx] = e;
+                meeples[dragIdx] = e;
             }
 
             // release / throw
             if (dragging && mRel && dragIdx >= 0)
             {
-                if (dragIdx >= soldiers.Count)
+                if (dragIdx >= meeples.Count)
                 {
                     dragging = false;
                     dragIdx = -1;
                     return;
                 }
 
-                var e = soldiers[dragIdx];
+                var e = meeples[dragIdx];
                 float t2 = (float)gt.TotalGameTime.TotalSeconds;
                 float dt = MathF.Max(0.01f, t2 - dragStartTime);
                 var delta = mouseWorld - dragStartWorld;
@@ -129,7 +126,6 @@ namespace PixelTowerDefense.Systems
                 e.Vel = avgV * Constants.THROW_SENSITIVITY;
                 e.vz = avgV.Length() * Constants.THROW_VZ_SCALE + Constants.INITIAL_Z * 2f;
 
-                // puke if spinning
                 if (Math.Abs(e.AngularVel) > Constants.VOMIT_SPIN_THRESHOLD)
                 {
                     for (int i = 0; i < 3; i++)
@@ -149,9 +145,9 @@ namespace PixelTowerDefense.Systems
                     }
                 }
 
-                e.State = SoldierState.Launched;
+                e.State = MeepleState.Launched;
                 e.AngularVel = e.Vel.X * 0.05f;
-                soldiers[dragIdx] = e;
+                meeples[dragIdx] = e;
 
                 dragging = false;
                 dragIdx = -1;
