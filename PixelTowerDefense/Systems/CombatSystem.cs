@@ -98,7 +98,8 @@ namespace PixelTowerDefense.Systems
                                 target.Vel = knock * Constants.MELEE_KNOCKBACK;
                                 target.z = 0f;
                                 target.vz = Constants.MELEE_KNOCKBACK_UPWARD;
-                                target.Angle = 0f;
+                                // preserve target.Angle so the body keeps its
+                                // current orientation when entering ragdoll
                                 target.AngularVel = _rng.NextFloat(-4f, 4f);
                                 EmitBlood(target.Pos, debris);
                             }
