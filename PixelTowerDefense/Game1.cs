@@ -269,6 +269,12 @@ namespace PixelTowerDefense
                     float cos = MathF.Cos(angle);
                     float sin = MathF.Sin(angle);
 
+                    if (MathF.Abs(e.AngularVel) > 0.01f)
+                        DrawFatSegment(segPos, angle,
+                            Constants.ENEMY_W,
+                            Constants.PART_LEN,
+                            c);
+
                     for (int dx = 0; dx < Constants.ENEMY_W; dx++)
                         for (int dy = 0; dy < (int)Constants.PART_LEN; dy++)
                         {
