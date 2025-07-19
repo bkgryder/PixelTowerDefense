@@ -274,6 +274,14 @@ namespace PixelTowerDefense.Systems
             {
                 var p = debris[i];
 
+                // decrease lifetime and remove expired pixels
+                p.Lifetime -= dt;
+                if (p.Lifetime <= 0f)
+                {
+                    debris.RemoveAt(i);
+                    continue;
+                }
+
                 // gentle drag
                 p.Vel *= MathF.Max(0f, 1f - Constants.DEBRIS_FRICTION * dt);
                 p.Pos += p.Vel * dt;
