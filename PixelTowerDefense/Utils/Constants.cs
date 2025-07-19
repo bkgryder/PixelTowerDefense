@@ -58,6 +58,9 @@ using Microsoft.Xna.Framework;
         public const float DEBRIS_LIFETIME_MAX = 10f;
         public const float EMBER_LIFETIME = 1.5f;
 
+        // Maximum number of active debris pixels
+        public const int MAX_DEBRIS = 1000;
+
         // Explosion ability
         public const float EXPLOSION_RADIUS = 25f;
         public const float EXPLOSION_PUSH = 70f;
