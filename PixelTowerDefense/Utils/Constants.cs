@@ -51,5 +51,12 @@
         public const float SMOKE_FORCE_MAX = 15f;
         public const int   DEATH_SMOKE_COUNT = 30;
         public const float DEBRIS_FRICTION = 2.5f;  // much lower than your 3f
+
+        // smoke particle settings
+        public const float SMOKE_FORCE_MIN = 1f;
+        public const float SMOKE_FORCE_MAX = 4f;
+        public const float SMOKE_LIFETIME = 1.5f;
+        public const float SMOKE_PARTICLE_RATE = 0.2f;
+        public const int DEATH_SMOKE_COUNT = 5;
     }
 }

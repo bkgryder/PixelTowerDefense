@@ -46,10 +46,13 @@ namespace PixelTowerDefense.Systems
                             debris.Add(new Pixel(pos, pv, c));
                         }
                     }
+                    if (_rng.NextDouble() < Constants.SMOKE_PARTICLE_RATE * dt)
+                        EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), 1, debris);
                     if (e.BurnTimer <= 0f)
                         e.IsBurning = false;
                     if (e.Health <= 0f)
                     {
+                        EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), Constants.DEATH_SMOKE_COUNT, debris);
                         AshEnemy(e, debris);
                         enemies.RemoveAt(i);
                         continue;
@@ -265,6 +268,29 @@ namespace PixelTowerDefense.Systems
                     debris.Add(new Pixel(pos, vel, c));
                 }
             }
+
+            // lingering smoke from ash pile
+            EmitSmoke(ground, 3, debris);
+        }
+
+        private static void EmitSmoke(Vector2 pos, int count, List<Pixel> debris)
+        {
+            Color[] smokePal =
+            {
+                new Color(80, 80, 80),
+                new Color(100, 100, 100),
+                new Color(120, 120, 120),
+                new Color(150, 150, 150)
+            };
+            for (int i = 0; i < count; i++)
+            {
+                var c = smokePal[_rng.Next(smokePal.Length)];
+                var v = new Vector2(
+                    _rng.NextFloat(-0.5f, 0.5f),
+                    -_rng.NextFloat(Constants.SMOKE_FORCE_MIN, Constants.SMOKE_FORCE_MAX)
+                );
+                debris.Add(new Pixel(pos, v, c, 0f, Constants.SMOKE_LIFETIME));
+            }
         }
 
 
@@ -274,12 +300,14 @@ namespace PixelTowerDefense.Systems
             {
                 var p = debris[i];
 
-                // decrease lifetime and remove expired pixels
-                p.Lifetime -= dt;
-                if (p.Lifetime <= 0f)
+                if (p.Lifetime > 0f)
                 {
-                    debris.RemoveAt(i);
-                    continue;
+                    p.Lifetime -= dt;
+                    if (p.Lifetime <= 0f)
+                    {
+                        debris.RemoveAt(i);
+                        continue;
+                    }
                 }
 
                 // gentle drag

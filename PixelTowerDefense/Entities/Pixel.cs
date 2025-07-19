@@ -9,7 +9,7 @@ namespace PixelTowerDefense.Entities
         public float AngularVel;
         public float Lifetime;
 
-        public Pixel(Vector2 p, Vector2 v, Color c, float angVel = 0f, float lifetime = float.PositiveInfinity)
+        public Pixel(Vector2 p, Vector2 v, Color c, float angVel = 0f, float lifetime = 0f)
         {
             Pos = p;
             Vel = v;
