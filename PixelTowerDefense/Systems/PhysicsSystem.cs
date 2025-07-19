@@ -29,13 +29,21 @@ namespace PixelTowerDefense.Systems
                     {
                         if (_rng.NextDouble() < Constants.FIRE_PARTICLE_RATE * dt)
                         {
-                            var pos = e.GetPartPos(part);
+                            var pos = e.GetPartPos(0);
                             pos.Y -= e.z;
                             var pv = new Vector2(
-                                _rng.NextFloat(-5f, 5f),
-                                _rng.NextFloat(-15f, -5f)
+                                _rng.NextFloat(-4f, 4f),
+                                _rng.NextFloat(-20f, -10f)
                             );
-                            debris.Add(new Pixel(pos, pv, Color.OrangeRed));
+                            Color[] firePal =
+                            {
+                                Color.OrangeRed,
+                                Color.Orange,
+                                Color.Yellow,
+                                new Color(255, 100, 0)
+                            };
+                            var c = firePal[_rng.Next(firePal.Length)];
+                            debris.Add(new Pixel(pos, pv, c));
                         }
                     }
                     if (e.BurnTimer <= 0f)
@@ -177,6 +185,14 @@ namespace PixelTowerDefense.Systems
                     2 => new Color(100, 0, 0),
                     _ => Color.Red
                 };
+                Color[] bonePal =
+                {
+                    new Color(255, 245, 235),
+                    new Color(255, 220, 230),
+                    new Color(245, 200, 210)
+                };
+                if (_rng.NextDouble() < 0.15)
+                    c = bonePal[_rng.Next(bonePal.Length)];
 
                 // compute a direction away from the ragdoll center
                 Vector2 dir = pos - center;
@@ -229,7 +245,8 @@ namespace PixelTowerDefense.Systems
                                      Constants.ASH_PARTICLES_MAX + 1);
                 for (int j = 0; j < count; j++)
                 {
-                    Color c = new Color(80, 80, 80);
+                    int shade = _rng.Next(60, 111);
+                    Color c = new Color(shade, shade, shade);
                     Vector2 pos = ground + new Vector2(
                         _rng.NextFloat(-1f, 1f),
                         _rng.NextFloat(-0.5f, 0.5f)
