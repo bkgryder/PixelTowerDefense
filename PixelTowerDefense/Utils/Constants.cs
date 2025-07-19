@@ -84,5 +84,12 @@ using Microsoft.Xna.Framework;
 
         public static readonly Color HAND_COLOR = new Color(255, 219, 172);
 
+        // Hunger & resources
+        public const float HUNGER_MAX = 10f;
+        public const float HUNGER_RATE = 1f;
+        public const float HUNGER_THRESHOLD = 5f;
+        public const float HARVEST_RANGE = 2f;
+        public const int BUSH_BERRIES = 5;
+
     }
 }

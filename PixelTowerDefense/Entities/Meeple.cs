@@ -53,6 +53,9 @@ namespace PixelTowerDefense.Entities
         // time spent decomposing once dead
         public float DecompTimer;
 
+        // survival
+        public float Hunger;
+
         public float Health;
 
         public Combatant? Combatant;
@@ -77,6 +80,7 @@ namespace PixelTowerDefense.Entities
             IsBurning = false;
             BurnTimer = 0f;
             DecompTimer = 0f;
+            Hunger = 0f;
             Health = health;
             Combatant = null;
             Worker = null;

@@ -13,6 +13,7 @@ namespace PixelTowerDefense.Systems
         public static void SimulateAll(
             List<Meeple> meeples,
             List<Pixel> debris,
+            List<BerryBush> bushes,
             float dt
         )
         {
@@ -68,6 +69,34 @@ namespace PixelTowerDefense.Systems
                 switch (e.State)
                 {
                     case MeepleState.Idle:
+                        e.Hunger = MathF.Min(Constants.HUNGER_MAX, e.Hunger + Constants.HUNGER_RATE * dt);
+                        if (e.Hunger >= Constants.HUNGER_THRESHOLD && e.Worker != null)
+                        {
+                            int bidx = FindNearestBush(e.Pos, bushes);
+                            if (bidx >= 0)
+                            {
+                                var bush = bushes[bidx];
+                                Vector2 dir = bush.Pos - e.Pos;
+                                float dist = dir.Length();
+                                if (dist < Constants.HARVEST_RANGE)
+                                {
+                                    if (bush.Berries > 0)
+                                    {
+                                        bush.Berries--;
+                                        e.Hunger = 0f;
+                                        bushes[bidx] = bush;
+                                    }
+                                }
+                                else
+                                {
+                                    if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                    e.Vel = dir * Constants.WANDER_SPEED;
+                                    e.Pos += e.Vel * dt;
+                                }
+                                e.Angle = 0f;
+                                break;
+                            }
+                        }
                         e.WanderTimer -= dt;
                         if (e.WanderTimer <= 0f)
                         {
@@ -365,6 +394,23 @@ namespace PixelTowerDefense.Systems
 
                 debris[i] = p;
             }
+        }
+
+        private static int FindNearestBush(Vector2 pos, List<BerryBush> bushes)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < bushes.Count; i++)
+            {
+                if (bushes[i].Berries <= 0) continue;
+                float d = Vector2.Distance(pos, bushes[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
         }
     }
 }
