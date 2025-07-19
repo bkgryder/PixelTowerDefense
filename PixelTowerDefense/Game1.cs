@@ -252,28 +252,19 @@ namespace PixelTowerDefense
             foreach (var p in _pixels)
                 _sb.Draw(_px, p.Bounds, p.Col);
 
+            // --- shadows ---
+            foreach (var e in _soldiers.OrderBy(s => s.ShadowY))
+            {
+                DrawShadow(e);
+            }
+
             // --- soldiers/entities ---
             foreach (var e in _soldiers.OrderBy(e => e.z))
             {
-                // ---- SHADOW ----
                 bool isDead = e.State == SoldierState.Dead;
                 float decomp = isDead
                     ? MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION)
                     : 0f;
-
-                float stickLen = Constants.ENEMY_H * Constants.PART_LEN;
-                int shLen = (int)MathF.Round(MathF.Abs(MathF.Sin(e.Angle)) * stickLen) + Constants.ENEMY_W;
-                int shThick = 2;
-
-                float shY = e.ShadowY; // precalculated & smoothed
-
-                var shRect = new Rectangle(
-                    (int)MathF.Round(e.Pos.X - shLen / 2f),
-                    (int)MathF.Round(shY),
-                    shLen, shThick
-                );
-                byte shAlpha = (byte)(100 * (1f - decomp));
-                _sb.Draw(_px, shRect, new Color((byte)0, (byte)0, (byte)0, shAlpha));
 
                 // ---- BODY: Each segment as pixels ----
 
@@ -465,6 +456,28 @@ namespace PixelTowerDefense
             };
             var col = firePal[_rng.Next(firePal.Length)];
             _sb.Draw(_px, rect, col);
+        }
+
+        private void DrawShadow(Soldier e)
+        {
+            bool isDead = e.State == SoldierState.Dead;
+            float decomp = isDead
+                ? MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION)
+                : 0f;
+
+            float stickLen = Constants.ENEMY_H * Constants.PART_LEN;
+            int shLen = (int)MathF.Round(MathF.Abs(MathF.Sin(e.Angle)) * stickLen) + Constants.ENEMY_W;
+            int shThick = 2;
+
+            float shY = e.ShadowY;
+
+            var shRect = new Rectangle(
+                (int)MathF.Round(e.Pos.X - shLen / 2f),
+                (int)MathF.Round(shY),
+                shLen, shThick
+            );
+            byte shAlpha = (byte)(100 * (1f - decomp));
+            _sb.Draw(_px, shRect, new Color((byte)0, (byte)0, (byte)0, shAlpha));
         }
 
         private void TriggerExplosion(Vector2 pos)
