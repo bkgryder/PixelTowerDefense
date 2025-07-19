@@ -98,6 +98,7 @@ namespace PixelTowerDefense.Systems
                     case SoldierState.Dead:
                         e.Vel = Vector2.Zero;
                         e.AngularVel = 0f;
+                        e.DecompTimer += dt;
                         break;
 
                     case SoldierState.Launched:
@@ -160,6 +161,7 @@ namespace PixelTowerDefense.Systems
                             e.vz = 0f;
                             e.State = SoldierState.Dead;
                             // keep current Angle when transitioning to Dead
+                            e.DecompTimer = 0f;
                             e.Vel = Vector2.Zero;
                             e.AngularVel = 0f;
                         }
