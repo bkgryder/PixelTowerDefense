@@ -69,6 +69,9 @@ using Microsoft.Xna.Framework;
         public const float MELEE_DMG = 8f;
         public const float ATTACK_WINDUP = 0.35f;
 
+        public const float MELEE_KNOCKBACK = 12f;
+        public const float MELEE_KNOCKBACK_UPWARD = 5f;
+
         public static readonly Color HAND_COLOR = new Color(255, 219, 172);
 
     }

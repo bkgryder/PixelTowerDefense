@@ -275,7 +275,7 @@ namespace PixelTowerDefense
                     else
                         c = e.Side == Faction.Friendly ? new Color(20, 40, 20) : new Color(80, 60, 40);
 
-                    if (e.State == SoldierState.Dead)
+                    if (e.State == SoldierState.Dead || e.State == SoldierState.Ragdoll)
                         c = Color.Lerp(c, Color.LightGray, 0.5f);
 
                     // Pixel-by-pixel for a 2x1 "block", rotated in world space
@@ -324,7 +324,7 @@ namespace PixelTowerDefense
                     // Left hand
                     float lx = bodyPos.X - sideX * handOffset;
                     float ly = bodyPos.Y - sideY * handOffset;
-                    var handCol = e.State == SoldierState.Dead
+                    var handCol = (e.State == SoldierState.Dead || e.State == SoldierState.Ragdoll)
                         ? Color.Lerp(Constants.HAND_COLOR, Color.LightGray, 0.5f)
                         : Constants.HAND_COLOR;
                     _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly), 1, 1), handCol);

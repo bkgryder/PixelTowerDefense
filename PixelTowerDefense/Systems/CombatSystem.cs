@@ -90,13 +90,16 @@ namespace PixelTowerDefense.Systems
                             if (target.Combat.Health <= 0f)
                             {
                                 target.Combat.Health = 0f;
-                                target.State = SoldierState.Dead;
+                                target.State = SoldierState.Ragdoll;
                                 target.IsBurning = false;
-                                target.Vel = Vector2.Zero;
-                                target.Angle = 0f;
-                                target.AngularVel = 0f;
+                                Vector2 knock = target.Pos - s.Pos;
+                                if (knock.LengthSquared() > 0f)
+                                    knock.Normalize();
+                                target.Vel = knock * Constants.MELEE_KNOCKBACK;
                                 target.z = 0f;
-                                target.vz = 0f;
+                                target.vz = Constants.MELEE_KNOCKBACK_UPWARD;
+                                target.Angle = 0f;
+                                target.AngularVel = _rng.NextFloat(-4f, 4f);
                                 EmitBlood(target.Pos, debris);
                             }
                         }
