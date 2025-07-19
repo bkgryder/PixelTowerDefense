@@ -261,6 +261,11 @@ namespace PixelTowerDefense
                 _sb.Draw(_px, shRect, new Color(0, 0, 0, 100));
 
                 // ---- BODY: Each segment as pixels ----
+                bool isDead = e.State == SoldierState.Dead;
+                float decomp = isDead
+                    ? MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION)
+                    : 0f;
+
                 int half = Constants.ENEMY_H / 2;
                 for (int part = -half; part < half; part++)
                 {
@@ -281,8 +286,14 @@ namespace PixelTowerDefense
                     else
                         c = e.Side == Faction.Friendly ? new Color(20, 40, 20) : new Color(80, 60, 40);
 
-                    if (e.State == SoldierState.Dead || e.State == SoldierState.Ragdoll)
+                    if (isDead)
+                    {
+                        c = ApplyDecomposition(c, decomp);
+                    }
+                    else if (e.State == SoldierState.Ragdoll)
+                    {
                         c = Color.Lerp(c, Color.LightGray, 0.5f);
+                    }
 
                     // Pixel-by-pixel for a 2x1 "block", rotated in world space
                     float angle = e.Angle;
@@ -305,6 +316,21 @@ namespace PixelTowerDefense
                             // Apply rotation
                             float x = segPos.X + localX * cos - localY * sin;
                             float y = segPos.Y + localX * sin + localY * cos;
+
+                            // skip pixels as corpse decomposes
+                            if (isDead)
+                            {
+                                if (decomp > 0.5f)
+                                {
+                                    float skipChance = MathF.Min((decomp - 0.5f) * 2f, 0.9f);
+                                    int hx = (int)MathF.Round(x), hy = (int)MathF.Round(y);
+                                    int hash = (hx * 73856093) ^ (hy * 19349663) ^ part;
+                                    double r = ((hash & 0x7fffffff) / (double)int.MaxValue);
+                                    if (r < skipChance)
+                                        continue;
+                                }
+                            }
+
                             _sb.Draw(_px, new Rectangle((int)MathF.Round(x), (int)MathF.Round(y), 1, 1), c);
 
                             // Optionally: Burning glow behind pixels
@@ -330,9 +356,15 @@ namespace PixelTowerDefense
                     // Left hand
                     float lx = bodyPos.X - sideX * handOffset;
                     float ly = bodyPos.Y - sideY * handOffset;
-                    var handCol = (e.State == SoldierState.Dead || e.State == SoldierState.Ragdoll)
-                        ? Color.Lerp(Constants.HAND_COLOR, Color.LightGray, 0.5f)
-                        : Constants.HAND_COLOR;
+                    Color handCol = Constants.HAND_COLOR;
+                    if (isDead)
+                    {
+                        handCol = ApplyDecomposition(handCol, decomp);
+                    }
+                    else if (e.State == SoldierState.Ragdoll)
+                    {
+                        handCol = Color.Lerp(handCol, Color.LightGray, 0.5f);
+                    }
                     _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly), 1, 1), handCol);
 
                     // Right hand
@@ -457,6 +489,14 @@ namespace PixelTowerDefense
                     _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
                                    Constants.DEBRIS_LIFETIME_MAX)));
             }
+        }
+
+        private static Color ApplyDecomposition(Color baseColor, float t)
+        {
+            var pale = Color.Lerp(baseColor, Color.LightGray, 0.5f);
+            return t < 0.5f
+                ? Color.Lerp(pale, Constants.DECOMP_PURPLE, t * 2f)
+                : Color.Lerp(Constants.DECOMP_PURPLE, Constants.BONE_COLOR, (t - 0.5f) * 2f);
         }
 
         private void DrawFatSegment(Vector2 center, float angle, float width, float length, Color color)
