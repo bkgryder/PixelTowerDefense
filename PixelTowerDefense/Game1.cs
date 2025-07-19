@@ -215,54 +215,27 @@ namespace PixelTowerDefense
                       * Matrix.CreateTranslation(-_camX * _zoom, -_camY * _zoom, 0);
             _sb.Begin(transformMatrix: cam, samplerState: SamplerState.PointClamp);
 
-            // arena border
+            // --- arena border ---
             int t = 2;
-            _sb.Draw(_px,
-                     new Rectangle(Constants.ARENA_LEFT,
-                                   Constants.ARENA_TOP,
-                                   Constants.ARENA_RIGHT - Constants.ARENA_LEFT,
-                                   t),
-                     Color.Black);
-            _sb.Draw(_px,
-                     new Rectangle(Constants.ARENA_LEFT,
-                                   Constants.ARENA_BOTTOM,
-                                   Constants.ARENA_RIGHT - Constants.ARENA_LEFT,
-                                   t),
-                     Color.Black);
-            _sb.Draw(_px,
-                     new Rectangle(Constants.ARENA_LEFT,
-                                   Constants.ARENA_TOP,
-                                   t,
-                                   Constants.ARENA_BOTTOM - Constants.ARENA_TOP),
-                     Color.Black);
-            _sb.Draw(_px,
-                     new Rectangle(Constants.ARENA_RIGHT - t,
-                                   Constants.ARENA_TOP,
-                                   t,
-                                   Constants.ARENA_BOTTOM - Constants.ARENA_TOP),
-                     Color.Black);
+            _sb.Draw(_px, new Rectangle(Constants.ARENA_LEFT, Constants.ARENA_TOP, Constants.ARENA_RIGHT - Constants.ARENA_LEFT, t), Color.Black);
+            _sb.Draw(_px, new Rectangle(Constants.ARENA_LEFT, Constants.ARENA_BOTTOM, Constants.ARENA_RIGHT - Constants.ARENA_LEFT, t), Color.Black);
+            _sb.Draw(_px, new Rectangle(Constants.ARENA_LEFT, Constants.ARENA_TOP, t, Constants.ARENA_BOTTOM - Constants.ARENA_TOP), Color.Black);
+            _sb.Draw(_px, new Rectangle(Constants.ARENA_RIGHT - t, Constants.ARENA_TOP, t, Constants.ARENA_BOTTOM - Constants.ARENA_TOP), Color.Black);
 
-            // debris
+            // --- debris ---
             foreach (var p in _pixels)
                 _sb.Draw(_px, p.Bounds, p.Col);
 
-            // enemies (with resized shadow)
+            // --- soldiers/entities ---
             foreach (var e in _soldiers.OrderBy(e => e.z))
             {
-                // --- dynamic shadow ---
-                // total stick length in pixels:
+                // ---- SHADOW ----
                 float stickLen = Constants.ENEMY_H * Constants.PART_LEN;
-                // project that onto X by sin(angle):
-                int shLen = (int)MathF.Round(
-                    MathF.Abs(MathF.Sin(e.Angle)) * stickLen
-                ) + Constants.ENEMY_W;
+                int shLen = (int)MathF.Round(MathF.Abs(MathF.Sin(e.Angle)) * stickLen) + Constants.ENEMY_W;
                 int shThick = 2;
                 float shY = e.Pos.Y + shThick;
                 if (e.State == SoldierState.Stunned && e.z <= 0f)
-                {
-                    // place shadow directly under a knocked-out enemy
                     shY = e.Pos.Y - shThick;
-                }
                 var shRect = new Rectangle(
                     (int)MathF.Round(e.Pos.X - shLen / 2f),
                     (int)MathF.Round(shY),
@@ -270,90 +243,76 @@ namespace PixelTowerDefense
                 );
                 _sb.Draw(_px, shRect, new Color(0, 0, 0, 100));
 
-                // --- draw each 2×1 segment rotated around center ---
+                // ---- BODY: Each segment as pixels ----
                 int half = Constants.ENEMY_H / 2;
                 for (int part = -half; part < half; part++)
                 {
-                    var pt = e.GetPartPos(part);
-                    pt.Y -= e.z;
+                    var segPos = e.GetPartPos(part);
+                    segPos.Y -= e.z;
 
-                    // map part → [0..ENEMY_H-1]
+                    // Determine color for this part
                     int seg = part + half;
-
-                    // bucket segments:
                     Color c;
                     if (seg <= 1)
-                        c = Constants.HAND_COLOR;          // head
+                        c = Constants.HAND_COLOR;
                     else if (seg <= Constants.ENEMY_H * 2 / 5)
-                        c = e.ShirtColor;                      // upper body
+                        c = e.ShirtColor;
                     else if (seg <= Constants.ENEMY_H * 3 / 5)
-                        c = e.ShirtColor;                      // waist
+                        c = e.ShirtColor;
                     else if (seg <= Constants.ENEMY_H * 4 / 5)
-                        c = e.Side == Faction.Friendly ? new Color(40, 70, 40) : new Color(128, 110, 90); // legs
+                        c = e.Side == Faction.Friendly ? new Color(40, 70, 40) : new Color(128, 110, 90);
                     else
-                        c = e.Side == Faction.Friendly ? new Color(20, 40, 20) : new Color(80, 60, 40);   // feet
+                        c = e.Side == Faction.Friendly ? new Color(20, 40, 20) : new Color(80, 60, 40);
 
-                    int w = Constants.ENEMY_W;
-                    float h = Constants.PART_LEN;
-                    var pos = pt;
-                    var scale = new Vector2(w, h);
-                    var origin = new Vector2(0.5f, 0.5f);
-                    var dest = new Rectangle(
-                        (int)MathF.Round(pos.X - w * 0.5f),
-                        (int)MathF.Round(pos.Y - h * 0.5f),
-                        w,
-                        (int)MathF.Round(h)
-                    );
+                    // Pixel-by-pixel for a 2x1 "block", rotated in world space
+                    float angle = e.Angle;
+                    float cos = MathF.Cos(angle);
+                    float sin = MathF.Sin(angle);
 
-                    if (e.IsBurning)
-                    {
-                        int offX = _rng.Next(-1, 2);
-                        int offY = _rng.Next(-1, 2);
-                        var glow = new Rectangle(dest.X - 1 + offX,
-                            dest.Y - 1 + offY,
-                            dest.Width + 2 + _rng.Next(2),
-                            dest.Height + 2 + _rng.Next(2));
-                        Color[] firePal =
+                    for (int dx = 0; dx < Constants.ENEMY_W; dx++)
+                        for (int dy = 0; dy < (int)Constants.PART_LEN; dy++)
                         {
-                            Color.OrangeRed,
-                            Color.Orange,
-                            Color.Yellow,
-                            new Color(255, 100, 0)
-                        };
-                        var col = firePal[_rng.Next(firePal.Length)];
-                        var glowCol = new Color(col.R, col.G, col.B,
-                            (byte)(80 + _rng.Next(60)));
-                        _sb.Draw(_px, glow, glowCol);
-                    }
+                            // Local offset, so body is centered on segPos
+                            float localX = dx - (Constants.ENEMY_W * 0.5f - 0.5f);
+                            float localY = dy - (Constants.PART_LEN * 0.5f - 0.5f);
 
-                    _sb.Draw(
-                        _px, pos, null, c,
-                        e.Angle,
-                        origin, scale,
-                        SpriteEffects.None, 0f
-                    );
+                            // Apply rotation
+                            float x = segPos.X + localX * cos - localY * sin;
+                            float y = segPos.Y + localX * sin + localY * cos;
+                            _sb.Draw(_px, new Rectangle((int)MathF.Round(x), (int)MathF.Round(y), 1, 1), c);
+
+                            // Optionally: Burning glow behind pixels
+                            if (e.IsBurning && _rng.NextDouble() < 0.03)
+                            {
+                                Color[] firePal = { Color.OrangeRed, Color.Orange, Color.Yellow, new Color(255, 100, 0) };
+                                Color glowCol = firePal[_rng.Next(firePal.Length)];
+                                var glow = new Rectangle((int)MathF.Round(x) + _rng.Next(-1, 2), (int)MathF.Round(y) + _rng.Next(-1, 2), 1, 1);
+                                _sb.Draw(_px, glow, new Color(glowCol, 90));
+                            }
+                        }
                 }
-                // draw 1px hands at the sides of the body
+
+                // ---- HANDS: 1px at sides of upper body, rotated ----
                 {
-                    var basePos = e.GetPartPos(-1);
-                    basePos.Y -= e.z;
-                    var side = new Vector2(MathF.Cos(e.Angle), -MathF.Sin(e.Angle));
-                    float off = Constants.ENEMY_W * 0.5f + 0.5f;
-                    var left = basePos - side * off;
-                    var right = basePos + side * off;
-                    var skin = Constants.HAND_COLOR;
+                    var bodyPos = e.GetPartPos(-1);
+                    bodyPos.Y -= e.z;
+                    float angle = e.Angle;
+                    float sideX = MathF.Cos(angle);
+                    float sideY = MathF.Sin(angle);
+                    float handOffset = Constants.ENEMY_W * 0.5f + 0.5f;
 
-                    _sb.Draw(
-                        _px,
-                        new Rectangle((int)MathF.Round(left.X), (int)MathF.Round(left.Y), 1, 1),
-                        skin
-                    );
-                    _sb.Draw(
-                        _px,
-                        new Rectangle((int)MathF.Round(right.X), (int)MathF.Round(right.Y), 1, 1),
-                        skin
-                    );
+                    // Left hand
+                    float lx = bodyPos.X - sideX * handOffset;
+                    float ly = bodyPos.Y - sideY * handOffset;
+                    _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly), 1, 1), Constants.HAND_COLOR);
+
+                    // Right hand
+                    float rx = bodyPos.X + sideX * handOffset;
+                    float ry = bodyPos.Y + sideY * handOffset;
+                    _sb.Draw(_px, new Rectangle((int)MathF.Round(rx), (int)MathF.Round(ry), 1, 1), Constants.HAND_COLOR);
                 }
+
+                // ---- FLAME EFFECT on burning ----
                 if (e.IsBurning)
                 {
                     DrawFlame(e);
@@ -368,6 +327,7 @@ namespace PixelTowerDefense
             _sb.End();
             base.Draw(gt);
         }
+
 
         private void SpawnWave(Faction side, int count)
         {
