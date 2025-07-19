@@ -97,7 +97,6 @@ namespace PixelTowerDefense.Systems
 
                     case SoldierState.Dead:
                         e.Vel = Vector2.Zero;
-                        e.Angle = 0f;
                         e.AngularVel = 0f;
                         break;
 
@@ -160,7 +159,7 @@ namespace PixelTowerDefense.Systems
                             e.z = 0f;
                             e.vz = 0f;
                             e.State = SoldierState.Dead;
-                            e.Angle = MathHelper.PiOver2;
+                            // keep current Angle when transitioning to Dead
                             e.Vel = Vector2.Zero;
                             e.AngularVel = 0f;
                         }
