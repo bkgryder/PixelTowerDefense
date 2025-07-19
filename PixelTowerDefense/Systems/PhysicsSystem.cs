@@ -50,7 +50,7 @@ namespace PixelTowerDefense.Systems
                         EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), 1, debris);
                     if (e.BurnTimer <= 0f)
                         e.IsBurning = false;
-                    if (e.Combat.Health <= 0f && e.State != SoldierState.Dead)
+                    if (e.Combat.Health <= 0f && e.State != SoldierState.Dead && e.State != SoldierState.Ragdoll)
                     {
                         EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), Constants.DEATH_SMOKE_COUNT, debris);
                         AshEnemy(e, debris);
@@ -145,6 +145,28 @@ namespace PixelTowerDefense.Systems
                         e.AngularVel *= MathF.Exp(-Constants.ANGULAR_DAMPING * dt);
                         break;
 
+                    case SoldierState.Ragdoll:
+                        e.vz -= Constants.Z_GRAVITY * dt;
+                        e.z += e.vz * dt;
+
+                        if (e.z <= 0f)
+                        {
+                            e.z = 0f;
+                            e.vz = 0f;
+                            e.State = SoldierState.Dead;
+                            e.Angle = MathHelper.PiOver2;
+                            e.Vel = Vector2.Zero;
+                            e.AngularVel = 0f;
+                        }
+                        else
+                        {
+                            e.Pos += e.Vel * dt;
+                            e.Vel *= MathF.Max(0f, 1f - Constants.FRICTION * dt);
+                            e.Angle += e.AngularVel * dt;
+                            e.AngularVel *= MathF.Exp(-Constants.ANGULAR_DAMPING * dt);
+                        }
+                        break;
+
                     case SoldierState.Stunned:
                         // **no rotation while stunned**
                         e.AngularVel = 0f;
@@ -171,7 +193,7 @@ namespace PixelTowerDefense.Systems
                            Constants.ARENA_TOP + 2,
                            Constants.ARENA_BOTTOM - 2);
 
-                if (e.Combat.Health <= 0f && e.State != SoldierState.Dead)
+                if (e.Combat.Health <= 0f && e.State != SoldierState.Dead && e.State != SoldierState.Ragdoll)
                 {
                     AshEnemy(e, debris);
                     soldiers.RemoveAt(i);
