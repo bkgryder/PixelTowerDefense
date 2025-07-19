@@ -201,7 +201,7 @@ namespace PixelTowerDefense
 
             PhysicsSystem.SimulateAll(_soldiers, _pixels, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
-            CombatSystem.ResolveCombat(_soldiers, dt);
+            CombatSystem.ResolveCombat(_soldiers, _pixels, dt);
 
             _prevKb = kb;
             _prevMs = ms;
@@ -264,6 +264,9 @@ namespace PixelTowerDefense
                     else
                         c = e.Side == Faction.Friendly ? new Color(20, 40, 20) : new Color(80, 60, 40);
 
+                    if (e.State == SoldierState.Dead)
+                        c = Color.Lerp(c, Color.LightGray, 0.5f);
+
                     // Pixel-by-pixel for a 2x1 "block", rotated in world space
                     float angle = e.Angle;
                     float cos = MathF.Cos(angle);
@@ -310,12 +313,15 @@ namespace PixelTowerDefense
                     // Left hand
                     float lx = bodyPos.X - sideX * handOffset;
                     float ly = bodyPos.Y - sideY * handOffset;
-                    _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly), 1, 1), Constants.HAND_COLOR);
+                    var handCol = e.State == SoldierState.Dead
+                        ? Color.Lerp(Constants.HAND_COLOR, Color.LightGray, 0.5f)
+                        : Constants.HAND_COLOR;
+                    _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly), 1, 1), handCol);
 
                     // Right hand
                     float rx = bodyPos.X + sideX * handOffset;
                     float ry = bodyPos.Y + sideY * handOffset;
-                    _sb.Draw(_px, new Rectangle((int)MathF.Round(rx), (int)MathF.Round(ry), 1, 1), Constants.HAND_COLOR);
+                    _sb.Draw(_px, new Rectangle((int)MathF.Round(rx), (int)MathF.Round(ry), 1, 1), handCol);
                 }
 
                 // ---- FLAME EFFECT on burning ----

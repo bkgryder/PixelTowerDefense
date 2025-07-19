@@ -8,6 +8,8 @@ namespace PixelTowerDefense.Systems
 {
     public static class CombatSystem
     {
+        private static Random _rng = new Random();
+
         private static int FindNearestEnemyIndex(Soldier me, List<Soldier> soldiers, float radius)
         {
             int idx = -1;
@@ -25,7 +27,7 @@ namespace PixelTowerDefense.Systems
             return idx;
         }
 
-        public static void ResolveCombat(List<Soldier> soldiers, float dt)
+        public static void ResolveCombat(List<Soldier> soldiers, List<Pixel> debris, float dt)
         {
             for (int i = 0; i < soldiers.Count; i++)
             {
@@ -38,6 +40,8 @@ namespace PixelTowerDefense.Systems
                     case SoldierState.Idle:
                         if (enemyIdx >= 0)
                             s.State = SoldierState.Charging;
+                        s.Angle = 0f;
+                        s.AngularVel = 0f;
                         break;
 
                     case SoldierState.Charging:
@@ -55,6 +59,8 @@ namespace PixelTowerDefense.Systems
                         s.Pos += s.Vel * dt;
                         if (dist < Constants.TOUCH_RANGE)
                             s.State = SoldierState.Melee;
+                        s.Angle = 0f;
+                        s.AngularVel = 0f;
                         break;
 
                     case SoldierState.Melee:
@@ -68,7 +74,8 @@ namespace PixelTowerDefense.Systems
                         dir = target.Pos - s.Pos;
                         dist = dir.Length();
                         s.Vel = Vector2.Zero;
-                        s.Angle = (float)Math.Atan2(dir.X, dir.Y);
+                        s.Angle = 0f;
+                        s.AngularVel = 0f;
                         if (dist > Constants.TOUCH_RANGE)
                         {
                             s.State = SoldierState.Charging;
@@ -80,6 +87,18 @@ namespace PixelTowerDefense.Systems
                         {
                             target.Combat.Health -= Constants.MELEE_DMG;
                             s.Combat.AttackCooldown = Constants.ATTACK_WINDUP;
+                            if (target.Combat.Health <= 0f)
+                            {
+                                target.Combat.Health = 0f;
+                                target.State = SoldierState.Dead;
+                                target.IsBurning = false;
+                                target.Vel = Vector2.Zero;
+                                target.Angle = 0f;
+                                target.AngularVel = 0f;
+                                target.z = 0f;
+                                target.vz = 0f;
+                                EmitBlood(target.Pos, debris);
+                            }
                         }
                         if (!target.Alive)
                             s.State = SoldierState.Idle;
@@ -87,6 +106,18 @@ namespace PixelTowerDefense.Systems
                         break;
                 }
                 soldiers[i] = s;
+            }
+        }
+
+        private static void EmitBlood(Vector2 pos, List<Pixel> debris)
+        {
+            Color blood = new Color(160, 0, 0);
+            int count = _rng.Next(6, 10);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 off = new Vector2(_rng.NextFloat(-1f, 1f), _rng.NextFloat(-1f, 1f));
+                Vector2 vel = new Vector2(_rng.NextFloat(-15f, 15f), _rng.NextFloat(-15f, 0f));
+                debris.Add(new Pixel(pos + off, vel, blood));
             }
         }
     }

@@ -4,7 +4,7 @@ using PixelTowerDefense.Utils;
 
 namespace PixelTowerDefense.Entities
 {
-    public enum SoldierState { Idle, Charging, Melee, Launched, Stunned }
+    public enum SoldierState { Idle, Charging, Melee, Launched, Stunned, Dead }
 
     public enum Faction { Friendly, Enemy }
 
@@ -47,7 +47,7 @@ namespace PixelTowerDefense.Entities
         public bool IsBurning;
         public float BurnTimer;
 
-        public bool Alive => Combat.Health > 0f;
+        public bool Alive => Combat.Health > 0f && State != SoldierState.Dead;
 
         public Soldier(Vector2 spawn, Faction side, Color shirt)
         {

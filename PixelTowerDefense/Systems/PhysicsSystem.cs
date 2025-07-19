@@ -50,7 +50,7 @@ namespace PixelTowerDefense.Systems
                         EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), 1, debris);
                     if (e.BurnTimer <= 0f)
                         e.IsBurning = false;
-                    if (e.Combat.Health <= 0f)
+                    if (e.Combat.Health <= 0f && e.State != SoldierState.Dead)
                     {
                         EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), Constants.DEATH_SMOKE_COUNT, debris);
                         AshEnemy(e, debris);
@@ -87,6 +87,12 @@ namespace PixelTowerDefense.Systems
                             e.Vel = Vector2.Normalize(e.Vel) * Constants.WANDER_SPEED * Constants.BURNING_SPEED_MULT;
                         e.Pos += e.Vel * dt;
                         e.Angle = 0f;
+                        break;
+
+                    case SoldierState.Dead:
+                        e.Vel = Vector2.Zero;
+                        e.Angle = 0f;
+                        e.AngularVel = 0f;
                         break;
 
                     case SoldierState.Launched:
@@ -165,7 +171,7 @@ namespace PixelTowerDefense.Systems
                            Constants.ARENA_TOP + 2,
                            Constants.ARENA_BOTTOM - 2);
 
-                if (e.Combat.Health <= 0f)
+                if (e.Combat.Health <= 0f && e.State != SoldierState.Dead)
                 {
                     AshEnemy(e, debris);
                     soldiers.RemoveAt(i);
