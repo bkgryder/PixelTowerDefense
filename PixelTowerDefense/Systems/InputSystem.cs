@@ -21,7 +21,7 @@ namespace PixelTowerDefense.Systems
             ref float dragStartTime,
             Vector2 mouseWorld,
             Vector2 prevMouseWorld,
-            List<Enemy> enemies,
+            List<Soldier> soldiers,
             List<Pixel> debris
         )
         {
@@ -34,10 +34,10 @@ namespace PixelTowerDefense.Systems
             if (!dragging && mPress)
             {
                 float minD = Constants.PICKUP_RADIUS;
-                for (int i = enemies.Count - 1; i >= 0; i--)
+                for (int i = soldiers.Count - 1; i >= 0; i--)
                 {
-                    var e = enemies[i];
-                    if (e.State != EnemyState.Walking) continue;
+                    var e = soldiers[i];
+                    if (e.State != SoldierState.Idle) continue;
                     for (int p = -2; p <= 2; p++)
                     {
                         float d = Vector2.Distance(e.GetPartPos(p), mouseWorld);
@@ -52,7 +52,7 @@ namespace PixelTowerDefense.Systems
                             // lift
                             e.z = Constants.GRAB_Z;
                             e.vz = 0f;
-                            enemies[i] = e;
+                            soldiers[i] = e;
                         }
                     }
                     if (dragging) break;
@@ -60,9 +60,9 @@ namespace PixelTowerDefense.Systems
             }
 
             // follow drag
-            if (dragging && dragIdx >= 0 && dragIdx < enemies.Count)
+            if (dragging && dragIdx >= 0 && dragIdx < soldiers.Count)
             {
-                var e = enemies[dragIdx];
+                var e = soldiers[dragIdx];
 
                 // simple spring‐torque on that segment
                 float l = dragPart * Constants.PART_LEN;
@@ -100,13 +100,13 @@ namespace PixelTowerDefense.Systems
                 e.z = Constants.GRAB_Z;
                 e.vz = 0f;
 
-                enemies[dragIdx] = e;
+                soldiers[dragIdx] = e;
             }
 
             // release / throw
-            if (dragging && mRel && dragIdx >= 0 && dragIdx < enemies.Count)
+            if (dragging && mRel && dragIdx >= 0 && dragIdx < soldiers.Count)
             {
-                var e = enemies[dragIdx];
+                var e = soldiers[dragIdx];
                 float t2 = (float)gt.TotalGameTime.TotalSeconds;
                 float dt = MathF.Max(0.01f, t2 - dragStartTime);
                 var delta = mouseWorld - dragStartWorld;
@@ -129,9 +129,9 @@ namespace PixelTowerDefense.Systems
                     }
                 }
 
-                e.State = EnemyState.Launched;
+                e.State = SoldierState.Launched;
                 e.AngularVel = e.Vel.X * 0.05f;
-                enemies[dragIdx] = e;
+                soldiers[dragIdx] = e;
 
                 dragging = false;
                 dragIdx = -1;

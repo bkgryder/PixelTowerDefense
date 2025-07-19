@@ -11,19 +11,19 @@ namespace PixelTowerDefense.Systems
         private static Random _rng = new Random();
 
         public static void SimulateAll(
-            List<Enemy> enemies,
+            List<Soldier> soldiers,
             List<Pixel> debris,
             float dt
         )
         {
-            for (int i = enemies.Count - 1; i >= 0; i--)
+            for (int i = soldiers.Count - 1; i >= 0; i--)
             {
-                var e = enemies[i];
+                var e = soldiers[i];
 
                 if (e.IsBurning)
                 {
                     e.BurnTimer -= dt;
-                    e.Health -= Constants.BURN_DPS * dt;
+                    e.Combat.Health -= Constants.BURN_DPS * dt;
                     int half = Constants.ENEMY_H / 2;
                     for (int part = -half; part < half; part++)
                     {
@@ -50,18 +50,18 @@ namespace PixelTowerDefense.Systems
                         EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), 1, debris);
                     if (e.BurnTimer <= 0f)
                         e.IsBurning = false;
-                    if (e.Health <= 0f)
+                    if (e.Combat.Health <= 0f)
                     {
                         EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), Constants.DEATH_SMOKE_COUNT, debris);
                         AshEnemy(e, debris);
-                        enemies.RemoveAt(i);
+                        soldiers.RemoveAt(i);
                         continue;
                     }
                 }
 
                 switch (e.State)
                 {
-                    case EnemyState.Walking:
+                    case SoldierState.Idle:
                         // wander
                         e.WanderTimer -= dt;
                         if (e.WanderTimer <= 0f)
@@ -89,7 +89,7 @@ namespace PixelTowerDefense.Systems
                         e.Angle = 0f;
                         break;
 
-                    case EnemyState.Launched:
+                    case SoldierState.Launched:
                         // vertical flight
                         e.vz -= Constants.Z_GRAVITY * dt;
                         e.z += e.vz * dt;
@@ -103,13 +103,13 @@ namespace PixelTowerDefense.Systems
                             if (impact > Constants.EXPLODE_VZ_THRESHOLD)
                             {
                                 ExplodeEnemy(e, debris);
-                                enemies.RemoveAt(i);
+                                soldiers.RemoveAt(i);
                                 continue;
                             }
                             else if (impact > Constants.STUN_VZ_THRESHOLD)
                             {
                                 // go stunned (flat on ground)
-                                e.State = EnemyState.Stunned;
+                                e.State = SoldierState.Stunned;
                                 e.StunTimer = Constants.STUN_TIME;
                                 e.Angle = MathHelper.PiOver2; // lay flat
                                 e.Vel = Vector2.Zero;
@@ -117,8 +117,8 @@ namespace PixelTowerDefense.Systems
                             }
                             else
                             {
-                                // gentle landing → resume Walking
-                                e.State = EnemyState.Walking;
+                                // gentle landing → resume Idle
+                                e.State = SoldierState.Idle;
                                 e.WanderTimer = _rng.NextFloat(0.5f, 2.5f);
                                 float landAng = MathHelper.ToRadians(_rng.Next(360));
                                 e.Vel = new Vector2(MathF.Cos(landAng), MathF.Sin(landAng))
@@ -139,7 +139,7 @@ namespace PixelTowerDefense.Systems
                         e.AngularVel *= MathF.Exp(-Constants.ANGULAR_DAMPING * dt);
                         break;
 
-                    case EnemyState.Stunned:
+                    case SoldierState.Stunned:
                         // **no rotation while stunned**
                         e.AngularVel = 0f;
                         // count down
@@ -147,7 +147,7 @@ namespace PixelTowerDefense.Systems
                         if (e.StunTimer <= 0f)
                         {
                             // stand up and resume walking
-                            e.State = EnemyState.Walking;
+                            e.State = SoldierState.Idle;
                             e.WanderTimer = _rng.NextFloat(0.5f, 2.5f);
                             float upAng = MathHelper.ToRadians(_rng.Next(360));
                             e.Vel = new Vector2(MathF.Cos(upAng), MathF.Sin(upAng))
@@ -165,11 +165,18 @@ namespace PixelTowerDefense.Systems
                            Constants.ARENA_TOP + 2,
                            Constants.ARENA_BOTTOM - 2);
 
-                enemies[i] = e;
+                if (e.Combat.Health <= 0f)
+                {
+                    AshEnemy(e, debris);
+                    soldiers.RemoveAt(i);
+                    continue;
+                }
+
+                soldiers[i] = e;
             }
         }
 
-        private static void ExplodeEnemy(Enemy e, List<Pixel> debris)
+        private static void ExplodeEnemy(Soldier e, List<Pixel> debris)
         {
             Vector2 center = e.Pos;
             int half = Constants.ENEMY_H / 2;
@@ -237,7 +244,7 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        private static void AshEnemy(Enemy e, List<Pixel> debris)
+        private static void AshEnemy(Soldier e, List<Pixel> debris)
         {
             Vector2 ground = e.Pos;
             int half = Constants.ENEMY_H / 2;
