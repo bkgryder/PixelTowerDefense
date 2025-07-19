@@ -47,6 +47,9 @@ namespace PixelTowerDefense.Entities
         public bool IsBurning;
         public float BurnTimer;
 
+        // time spent decomposing once dead
+        public float DecompTimer;
+
         public bool Alive => Combat.Health > 0f && State != SoldierState.Dead && State != SoldierState.Ragdoll;
 
         public Soldier(Vector2 spawn, Faction side, Color shirt)
@@ -65,6 +68,7 @@ namespace PixelTowerDefense.Entities
             Combat = new CombatStats { Health = Constants.ENEMY_MAX_HEALTH, AttackCooldown = 0f };
             IsBurning = false;
             BurnTimer = 0f;
+            DecompTimer = 0f;
 
         }
 
