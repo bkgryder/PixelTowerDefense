@@ -290,7 +290,19 @@ namespace PixelTowerDefense
                         c = e.Side == Faction.Friendly ? new Color(20, 40, 20) : new Color(80, 60, 40);
 
                     if (e.State == SoldierState.Dead)
+                    {
+                        float decomp = MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION);
+                        var pale = Color.Lerp(c, Color.LightGray, 0.5f);
+                        var purple = new Color(60, 0, 80);
+                        var bone = new Color(245, 245, 235);
+                        c = decomp < 0.5f
+                            ? Color.Lerp(pale, purple, decomp * 2f)
+                            : Color.Lerp(purple, bone, (decomp - 0.5f) * 2f);
+                    }
+                    else if (e.State == SoldierState.Ragdoll)
+                    {
                         c = Color.Lerp(c, Color.LightGray, 0.5f);
+                    }
 
                     // Pixel-by-pixel for a 2x1 "block", rotated in world space
                     float angle = e.Angle;
@@ -313,6 +325,22 @@ namespace PixelTowerDefense
                             // Apply rotation
                             float x = segPos.X + localX * cos - localY * sin;
                             float y = segPos.Y + localX * sin + localY * cos;
+
+                            // skip pixels as corpse decomposes
+                            if (e.State == SoldierState.Dead)
+                            {
+                                float decomp = MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION);
+                                if (decomp > 0.5f)
+                                {
+                                    float skipChance = MathF.Min((decomp - 0.5f) * 2f, 0.9f);
+                                    int hx = (int)MathF.Round(x), hy = (int)MathF.Round(y);
+                                    int hash = (hx * 73856093) ^ (hy * 19349663) ^ part;
+                                    double r = ((hash & 0x7fffffff) / (double)int.MaxValue);
+                                    if (r < skipChance)
+                                        continue;
+                                }
+                            }
+
                             _sb.Draw(_px, new Rectangle((int)MathF.Round(x), (int)MathF.Round(y), 1, 1), c);
 
                             // Optionally: Burning glow behind pixels
@@ -338,9 +366,21 @@ namespace PixelTowerDefense
                     // Left hand
                     float lx = bodyPos.X - sideX * handOffset;
                     float ly = bodyPos.Y - sideY * handOffset;
-                    var handCol = e.State == SoldierState.Dead
-                        ? Color.Lerp(Constants.HAND_COLOR, Color.LightGray, 0.5f)
-                        : Constants.HAND_COLOR;
+                    Color handCol = Constants.HAND_COLOR;
+                    if (e.State == SoldierState.Dead)
+                    {
+                        float decomp = MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION);
+                        var pale = Color.Lerp(handCol, Color.LightGray, 0.5f);
+                        var purple = new Color(60, 0, 80);
+                        var bone = new Color(245, 245, 235);
+                        handCol = decomp < 0.5f
+                            ? Color.Lerp(pale, purple, decomp * 2f)
+                            : Color.Lerp(purple, bone, (decomp - 0.5f) * 2f);
+                    }
+                    else if (e.State == SoldierState.Ragdoll)
+                    {
+                        handCol = Color.Lerp(handCol, Color.LightGray, 0.5f);
+                    }
                     _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly), 1, 1), handCol);
 
                     // Right hand
@@ -457,7 +497,13 @@ namespace PixelTowerDefense
                 float spd = _rng.NextFloat(10f, Constants.EXPLOSION_PUSH);
                 var vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * spd;
                 var col = smokePal[_rng.Next(smokePal.Length)];
-                _pixels.Add(new Pixel(pos, vel, col));
+                _pixels.Add(new Pixel(
+                    pos,
+                    vel,
+                    col,
+                    0f,
+                    _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
+                                   Constants.DEBRIS_LIFETIME_MAX)));
             }
         }
 

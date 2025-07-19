@@ -53,6 +53,11 @@ using Microsoft.Xna.Framework;
         public const int   DEATH_SMOKE_COUNT = 20;
         public const float DEBRIS_FRICTION = 2.5f;  // much lower than your 3f
 
+        // Debris fade-out
+        public const float DEBRIS_LIFETIME_MIN = 6f;
+        public const float DEBRIS_LIFETIME_MAX = 10f;
+        public const float EMBER_LIFETIME = 1.5f;
+
         // Explosion ability
         public const float EXPLOSION_RADIUS = 25f;
         public const float EXPLOSION_PUSH = 70f;
@@ -63,6 +68,12 @@ using Microsoft.Xna.Framework;
         public const float TOUCH_RANGE = 1.8f;
         public const float MELEE_DMG = 8f;
         public const float ATTACK_WINDUP = 0.35f;
+
+        public const float MELEE_KNOCKBACK = 12f;
+        public const float MELEE_KNOCKBACK_UPWARD = 50f;
+
+        // How long corpses take to fully decompose
+        public const float DECOMP_DURATION = 12f;
 
         public static readonly Color HAND_COLOR = new Color(255, 219, 172);
 

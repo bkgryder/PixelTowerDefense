@@ -90,13 +90,17 @@ namespace PixelTowerDefense.Systems
                             if (target.Combat.Health <= 0f)
                             {
                                 target.Combat.Health = 0f;
-                                target.State = SoldierState.Dead;
+                                target.State = SoldierState.Ragdoll;
                                 target.IsBurning = false;
-                                target.Vel = Vector2.Zero;
-                                target.Angle = 0f;
-                                target.AngularVel = 0f;
+                                Vector2 knock = target.Pos - s.Pos;
+                                if (knock.LengthSquared() > 0f)
+                                    knock.Normalize();
+                                target.Vel = knock * Constants.MELEE_KNOCKBACK;
                                 target.z = 0f;
-                                target.vz = 0f;
+                                target.vz = Constants.MELEE_KNOCKBACK_UPWARD;
+                                // preserve target.Angle so the body keeps its
+                                // current orientation when entering ragdoll
+                                target.AngularVel = _rng.NextFloat(-4f, 4f);
                                 EmitBlood(target.Pos, debris);
                             }
                         }
@@ -117,7 +121,13 @@ namespace PixelTowerDefense.Systems
             {
                 Vector2 off = new Vector2(_rng.NextFloat(-1f, 1f), _rng.NextFloat(-1f, 1f));
                 Vector2 vel = new Vector2(_rng.NextFloat(-15f, 15f), _rng.NextFloat(-15f, 0f));
-                debris.Add(new Pixel(pos + off, vel, blood));
+                debris.Add(new Pixel(
+                    pos + off,
+                    vel,
+                    blood,
+                    0f,
+                    _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
+                                   Constants.DEBRIS_LIFETIME_MAX)));
             }
         }
     }
