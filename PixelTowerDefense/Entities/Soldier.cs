@@ -4,10 +4,27 @@ using PixelTowerDefense.Utils;
 
 namespace PixelTowerDefense.Entities
 {
-    public enum EnemyState { Walking, Launched, Stunned }
+    public enum SoldierState { Idle, Charging, Melee, Launched, Stunned }
 
-    public struct Enemy
+    public enum Faction { Friendly, Enemy }
+
+    public struct CombatStats
     {
+        public float Health;
+        public float AttackCooldown;
+    }
+
+    public struct Soldier
+    {
+        public static readonly Color[] FRIENDLY_SHIRTS =
+        {
+            new Color(60,130,60), new Color(90,150,90)
+        };
+        public static readonly Color[] ENEMY_SHIRTS =
+        {
+            new Color(215,175,130), new Color(190,155,110)
+        };
+
         // planar
         public Vector2 Pos, Vel;
         public float WanderTimer;
@@ -23,13 +40,16 @@ namespace PixelTowerDefense.Entities
 
         // appearance / state
         public Color ShirtColor;
-        public EnemyState State;
+        public SoldierState State;
 
-        public float Health;
+        public Faction Side;
+        public CombatStats Combat;
         public bool IsBurning;
         public float BurnTimer;
 
-        public Enemy(Vector2 spawn, Color shirt)
+        public bool Alive => Combat.Health > 0f;
+
+        public Soldier(Vector2 spawn, Faction side, Color shirt)
         {
             Pos = spawn;
             Vel = Vector2.Zero;
@@ -40,8 +60,9 @@ namespace PixelTowerDefense.Entities
             vz = 0f;
             StunTimer = 0f;
             ShirtColor = shirt;
-            State = EnemyState.Walking;
-            Health = Constants.ENEMY_MAX_HEALTH;
+            State = SoldierState.Idle;
+            Side = side;
+            Combat = new CombatStats { Health = Constants.ENEMY_MAX_HEALTH, AttackCooldown = 0f };
             IsBurning = false;
             BurnTimer = 0f;
 

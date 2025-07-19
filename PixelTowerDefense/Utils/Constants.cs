@@ -1,3 +1,4 @@
+using Microsoft.Xna.Framework;
 ﻿namespace PixelTowerDefense.Utils
 {
     public static class Constants
@@ -51,6 +52,13 @@
         public const float SMOKE_FORCE_MAX = 75f;
         public const int   DEATH_SMOKE_COUNT = 20;
         public const float DEBRIS_FRICTION = 2.5f;  // much lower than your 3f
+
+        public const float SEEK_RADIUS = 28f;
+        public const float TOUCH_RANGE = 1.8f;
+        public const float MELEE_DMG = 8f;
+        public const float ATTACK_WINDUP = 0.35f;
+
+        public static readonly Color HAND_COLOR = new Color(255, 219, 172);
 
     }
 }

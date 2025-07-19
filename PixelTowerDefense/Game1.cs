@@ -16,7 +16,7 @@ namespace PixelTowerDefense
         SpriteBatch _sb;
         Texture2D _px;
 
-        List<Enemy> _enemies = new();
+        List<Soldier> _soldiers = new();
         List<Pixel> _pixels = new();
         Random _rng = new();
 
@@ -65,8 +65,8 @@ namespace PixelTowerDefense
             _px = new Texture2D(GraphicsDevice, 1, 1);
             _px.SetData(new[] { Color.White });
 
-            for (int i = 0; i < 10; i++)
-                SpawnEnemy();
+            SpawnWave(Faction.Friendly, 12);
+            SpawnWave(Faction.Enemy, 12);
 
             var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
             var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
@@ -117,7 +117,7 @@ namespace PixelTowerDefense
                 _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
             }
 
-            if (Edge(kb, Keys.P)) SpawnEnemy();
+            if (Edge(kb, Keys.P)) SpawnWave(Faction.Enemy, 1);
 
             // ability switching (keyboard)
             if (Edge(kb, Keys.D1) || Edge(kb, Keys.NumPad1))
@@ -166,9 +166,9 @@ namespace PixelTowerDefense
                 if (mPress)
                 {
                     float minD = Constants.PICKUP_RADIUS;
-                    for (int i = _enemies.Count - 1; i >= 0; i--)
+                    for (int i = _soldiers.Count - 1; i >= 0; i--)
                     {
-                        var e = _enemies[i];
+                        var e = _soldiers[i];
                         for (int p = -2; p <= 2; p++)
                         {
                             float d = Vector2.Distance(e.GetPartPos(p), mworld);
@@ -176,7 +176,7 @@ namespace PixelTowerDefense
                             {
                                 e.IsBurning = true;
                                 e.BurnTimer = Constants.BURN_DURATION;
-                                _enemies[i] = e;
+                                _soldiers[i] = e;
                                 i = -1; // break outer
                                 break;
                             }
@@ -191,7 +191,7 @@ namespace PixelTowerDefense
                     ref _dragging, ref _dragIdx, ref _dragPart,
                     ref _dragStartWorld, ref _dragStartTime,
                     mworld, prevWorld,
-                    _enemies, _pixels
+                    _soldiers, _pixels
                 );
             }
             else
@@ -199,8 +199,9 @@ namespace PixelTowerDefense
                 _dragging = false;
             }
 
-            PhysicsSystem.SimulateAll(_enemies, _pixels, dt);
+            PhysicsSystem.SimulateAll(_soldiers, _pixels, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
+            CombatSystem.ResolveCombat(_soldiers, dt);
 
             _prevKb = kb;
             _prevMs = ms;
@@ -246,7 +247,7 @@ namespace PixelTowerDefense
                 _sb.Draw(_px, p.Bounds, p.Col);
 
             // enemies (with resized shadow)
-            foreach (var e in _enemies.OrderBy(e => e.z))
+            foreach (var e in _soldiers.OrderBy(e => e.z))
             {
                 // --- dynamic shadow ---
                 // total stick length in pixels:
@@ -257,7 +258,7 @@ namespace PixelTowerDefense
                 ) + Constants.ENEMY_W;
                 int shThick = 2;
                 float shY = e.Pos.Y + shThick;
-                if (e.State == EnemyState.Stunned && e.z <= 0f)
+                if (e.State == SoldierState.Stunned && e.z <= 0f)
                 {
                     // place shadow directly under a knocked-out enemy
                     shY = e.Pos.Y - shThick;
@@ -282,15 +283,15 @@ namespace PixelTowerDefense
                     // bucket segments:
                     Color c;
                     if (seg <= 1)
-                        c = new Color(255, 219, 172);          // head
+                        c = Constants.HAND_COLOR;          // head
                     else if (seg <= Constants.ENEMY_H * 2 / 5)
                         c = e.ShirtColor;                      // upper body
                     else if (seg <= Constants.ENEMY_H * 3 / 5)
                         c = e.ShirtColor;                      // waist
                     else if (seg <= Constants.ENEMY_H * 4 / 5)
-                        c = new Color(32, 32, 128);            // legs
+                        c = e.Side == Faction.Friendly ? new Color(40, 70, 40) : new Color(128, 110, 90); // legs
                     else
-                        c = new Color(16, 16, 64);             // feet
+                        c = e.Side == Faction.Friendly ? new Color(20, 40, 20) : new Color(80, 60, 40);   // feet
 
                     int w = Constants.ENEMY_W;
                     float h = Constants.PART_LEN;
@@ -340,7 +341,7 @@ namespace PixelTowerDefense
                     float off = Constants.ENEMY_W * 0.5f + 0.5f;
                     var left = basePos - side * off;
                     var right = basePos + side * off;
-                    var skin = new Color(255, 219, 172);
+                    var skin = Constants.HAND_COLOR;
 
                     _sb.Draw(
                         _px,
@@ -368,24 +369,18 @@ namespace PixelTowerDefense
             base.Draw(gt);
         }
 
-        private void SpawnEnemy()
+        private void SpawnWave(Faction side, int count)
         {
-            var x = _rng.NextFloat(Constants.ARENA_LEFT + 10,
-                                   Constants.ARENA_RIGHT - 10);
-            var y = _rng.NextFloat(Constants.ARENA_TOP + 10,
-                                   Constants.ARENA_BOTTOM - 10);
-            _enemies.Add(new Enemy(new Vector2(x, y),
-                                   RandomShirtColor()));
-        }
-
-        private Color RandomShirtColor()
-        {
-            var pal = new[]
+            float x0 = side == Faction.Friendly ? Constants.ARENA_LEFT + 2 : Constants.ARENA_RIGHT - 30;
+            float x1 = side == Faction.Friendly ? Constants.ARENA_LEFT + 30 : Constants.ARENA_RIGHT - 2;
+            for (int i = 0; i < count; i++)
             {
-                Color.Blue, Color.Green, Color.Red,
-                Color.Yellow, Color.Purple, Color.Orange, Color.Cyan
-            };
-            return pal[_rng.Next(pal.Length)];
+                var x = _rng.NextFloat(x0, x1);
+                var y = _rng.NextFloat(Constants.ARENA_TOP + 2, Constants.ARENA_BOTTOM - 2);
+                var pal = side == Faction.Friendly ? Soldier.FRIENDLY_SHIRTS : Soldier.ENEMY_SHIRTS;
+                var shirt = pal[_rng.Next(pal.Length)];
+                _soldiers.Add(new Soldier(new Vector2(x, y), side, shirt));
+            }
         }
 
         private bool Edge(KeyboardState kb, Keys k)
@@ -414,7 +409,7 @@ namespace PixelTowerDefense
             }
         }
 
-        private void DrawFlame(Enemy e)
+        private void DrawFlame(Soldier e)
         {
             var pos = e.GetPartPos(0);
             pos.Y -= e.z + 1f;
