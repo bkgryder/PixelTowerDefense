@@ -10,14 +10,17 @@ namespace PixelTowerDefense.Systems
     {
         private static Random _rng = new Random();
 
-        private static int FindNearestEnemyIndex(Soldier me, List<Soldier> soldiers, float radius)
+        private static int FindNearestEnemyIndex(int meIdx, List<Meeple> meeples, float radius)
         {
+            var me = meeples[meIdx];
             int idx = -1;
             float best = radius;
-            for (int i = 0; i < soldiers.Count; i++)
+            for (int i = 0; i < meeples.Count; i++)
             {
-                if (soldiers[i].Side == me.Side || !soldiers[i].Alive) continue;
-                float d = Vector2.Distance(me.Pos, soldiers[i].Pos);
+                if (i == meIdx) continue;
+                var other = meeples[i];
+                if (other.Side == me.Side || other.Combatant == null || !other.Alive) continue;
+                float d = Vector2.Distance(me.Pos, other.Pos);
                 if (d < best)
                 {
                     best = d;
@@ -27,89 +30,89 @@ namespace PixelTowerDefense.Systems
             return idx;
         }
 
-        public static void ResolveCombat(List<Soldier> soldiers, List<Pixel> debris, float dt)
+        public static void ResolveCombat(List<Meeple> meeples, List<Pixel> debris, float dt)
         {
-            for (int i = 0; i < soldiers.Count; i++)
+            for (int i = 0; i < meeples.Count; i++)
             {
-                var s = soldiers[i];
-                if (!s.Alive) continue;
+                var m = meeples[i];
+                if (m.Combatant == null || !m.Alive) continue;
 
-                int enemyIdx = FindNearestEnemyIndex(s, soldiers, Constants.SEEK_RADIUS);
-                switch (s.State)
+                int enemyIdx = FindNearestEnemyIndex(i, meeples, Constants.SEEK_RADIUS);
+                switch (m.State)
                 {
-                    case SoldierState.Idle:
+                    case MeepleState.Idle:
                         if (enemyIdx >= 0)
-                            s.State = SoldierState.Charging;
-                        s.Angle = 0f;
-                        s.AngularVel = 0f;
+                            m.State = MeepleState.Charging;
+                        m.Angle = 0f;
+                        m.AngularVel = 0f;
                         break;
 
-                    case SoldierState.Charging:
+                    case MeepleState.Charging:
                         if (enemyIdx < 0)
                         {
-                            s.State = SoldierState.Idle;
-                            s.Vel = Vector2.Zero;
+                            m.State = MeepleState.Idle;
+                            m.Vel = Vector2.Zero;
                             break;
                         }
-                        var target = soldiers[enemyIdx];
-                        Vector2 dir = target.Pos - s.Pos;
+                        var target = meeples[enemyIdx];
+                        Vector2 dir = target.Pos - m.Pos;
                         float dist = dir.Length();
                         if (dist > 0f) dir /= dist;
-                        s.Vel = dir * Constants.WANDER_SPEED * 1.8f;
-                        s.Pos += s.Vel * dt;
+                        m.Vel = dir * Constants.WANDER_SPEED * 1.8f;
+                        m.Pos += m.Vel * dt;
                         if (dist < Constants.TOUCH_RANGE)
-                            s.State = SoldierState.Melee;
-                        s.Angle = 0f;
-                        s.AngularVel = 0f;
+                            m.State = MeepleState.Melee;
+                        m.Angle = 0f;
+                        m.AngularVel = 0f;
                         break;
 
-                    case SoldierState.Melee:
+                    case MeepleState.Melee:
                         if (enemyIdx < 0)
                         {
-                            s.State = SoldierState.Idle;
-                            s.Vel = Vector2.Zero;
+                            m.State = MeepleState.Idle;
+                            m.Vel = Vector2.Zero;
                             break;
                         }
-                        target = soldiers[enemyIdx];
-                        dir = target.Pos - s.Pos;
+                        target = meeples[enemyIdx];
+                        dir = target.Pos - m.Pos;
                         dist = dir.Length();
-                        s.Vel = Vector2.Zero;
-                        s.Angle = 0f;
-                        s.AngularVel = 0f;
+                        m.Vel = Vector2.Zero;
+                        m.Angle = 0f;
+                        m.AngularVel = 0f;
                         if (dist > Constants.TOUCH_RANGE)
                         {
-                            s.State = SoldierState.Charging;
+                            m.State = MeepleState.Charging;
                             break;
                         }
-                        if (s.Combat.AttackCooldown > 0f)
-                            s.Combat.AttackCooldown -= dt;
-                        if (s.Combat.AttackCooldown <= 0f)
+                        var combat = m.Combatant.Value;
+                        if (combat.AttackCooldown > 0f)
+                            combat.AttackCooldown -= dt;
+                        if (combat.AttackCooldown <= 0f)
                         {
-                            target.Combat.Health -= Constants.MELEE_DMG;
-                            s.Combat.AttackCooldown = Constants.ATTACK_WINDUP;
-                            if (target.Combat.Health <= 0f)
+                            target.Health -= Constants.MELEE_DMG;
+                            combat.AttackCooldown = Constants.ATTACK_WINDUP;
+                            if (target.Health <= 0f)
                             {
-                                target.Combat.Health = 0f;
-                                target.State = SoldierState.Ragdoll;
+                                target.Health = 0f;
+                                target.State = MeepleState.Ragdoll;
                                 target.IsBurning = false;
-                                Vector2 knock = target.Pos - s.Pos;
+                                Vector2 knock = target.Pos - m.Pos;
                                 if (knock.LengthSquared() > 0f)
                                     knock.Normalize();
                                 target.Vel = knock * Constants.MELEE_KNOCKBACK;
                                 target.z = 0f;
                                 target.vz = Constants.MELEE_KNOCKBACK_UPWARD;
-                                // preserve target.Angle so the body keeps its
-                                // current orientation when entering ragdoll
                                 target.AngularVel = _rng.NextFloat(-4f, 4f);
                                 EmitBlood(target.Pos, debris);
                             }
                         }
                         if (!target.Alive)
-                            s.State = SoldierState.Idle;
-                        soldiers[enemyIdx] = target;
+                            m.State = MeepleState.Idle;
+                        meeples[enemyIdx] = target;
+                        m.Combatant = combat;
                         break;
                 }
-                soldiers[i] = s;
+                meeples[i] = m;
             }
         }
 

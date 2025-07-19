@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Entities;
@@ -11,19 +11,19 @@ namespace PixelTowerDefense.Systems
         private static Random _rng = new Random();
 
         public static void SimulateAll(
-            List<Soldier> soldiers,
+            List<Meeple> meeples,
             List<Pixel> debris,
             float dt
         )
         {
-            for (int i = soldiers.Count - 1; i >= 0; i--)
+            for (int i = meeples.Count - 1; i >= 0; i--)
             {
-                var e = soldiers[i];
+                var e = meeples[i];
 
                 if (e.IsBurning)
                 {
                     e.BurnTimer -= dt;
-                    e.Combat.Health -= Constants.BURN_DPS * dt;
+                    e.Health -= Constants.BURN_DPS * dt;
                     int half = Constants.ENEMY_H / 2;
                     for (int part = -half; part < half; part++)
                     {
@@ -56,19 +56,18 @@ namespace PixelTowerDefense.Systems
                         EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), 1, debris);
                     if (e.BurnTimer <= 0f)
                         e.IsBurning = false;
-                    if (e.Combat.Health <= 0f && e.State != SoldierState.Dead && e.State != SoldierState.Ragdoll)
+                    if (e.Health <= 0f && e.State != MeepleState.Dead && e.State != MeepleState.Ragdoll)
                     {
                         EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), Constants.DEATH_SMOKE_COUNT, debris);
                         AshEnemy(e, debris);
-                        soldiers.RemoveAt(i);
+                        meeples.RemoveAt(i);
                         continue;
                     }
                 }
 
                 switch (e.State)
                 {
-                    case SoldierState.Idle:
-                        // wander
+                    case MeepleState.Idle:
                         e.WanderTimer -= dt;
                         if (e.WanderTimer <= 0f)
                         {
@@ -88,21 +87,19 @@ namespace PixelTowerDefense.Systems
                                              * Constants.WANDER_SPEED;
                             }
                         }
-                        // ensure burning enemies keep running fast
                         if (e.IsBurning)
                             e.Vel = Vector2.Normalize(e.Vel) * Constants.WANDER_SPEED * Constants.BURNING_SPEED_MULT;
                         e.Pos += e.Vel * dt;
                         e.Angle = 0f;
                         break;
 
-                    case SoldierState.Dead:
+                    case MeepleState.Dead:
                         e.Vel = Vector2.Zero;
                         e.AngularVel = 0f;
                         e.DecompTimer += dt;
                         break;
 
-                    case SoldierState.Launched:
-                        // vertical flight
+                    case MeepleState.Launched:
                         e.vz -= Constants.Z_GRAVITY * dt;
                         e.z += e.vz * dt;
 
@@ -115,22 +112,20 @@ namespace PixelTowerDefense.Systems
                             if (impact > Constants.EXPLODE_VZ_THRESHOLD)
                             {
                                 ExplodeEnemy(e, debris);
-                                soldiers.RemoveAt(i);
+                                meeples.RemoveAt(i);
                                 continue;
                             }
                             else if (impact > Constants.STUN_VZ_THRESHOLD)
                             {
-                                // go stunned (flat on ground)
-                                e.State = SoldierState.Stunned;
+                                e.State = MeepleState.Stunned;
                                 e.StunTimer = Constants.STUN_TIME;
-                                e.Angle = MathHelper.PiOver2; // lay flat
+                                e.Angle = MathHelper.PiOver2;
                                 e.Vel = Vector2.Zero;
                                 e.AngularVel = 0f;
                             }
                             else
                             {
-                                // gentle landing → resume Idle
-                                e.State = SoldierState.Idle;
+                                e.State = MeepleState.Idle;
                                 e.WanderTimer = _rng.NextFloat(0.5f, 2.5f);
                                 float landAng = MathHelper.ToRadians(_rng.Next(360));
                                 e.Vel = new Vector2(MathF.Cos(landAng), MathF.Sin(landAng))
@@ -141,17 +136,15 @@ namespace PixelTowerDefense.Systems
                         }
                         else
                         {
-                            // still airborne: planar + friction
                             e.Pos += e.Vel * dt;
                             e.Vel *= MathF.Max(0f, 1f - Constants.FRICTION * dt);
                         }
 
-                        // apply spin while flying
                         e.Angle += e.AngularVel * dt;
                         e.AngularVel *= MathF.Exp(-Constants.ANGULAR_DAMPING * dt);
                         break;
 
-                    case SoldierState.Ragdoll:
+                    case MeepleState.Ragdoll:
                         e.vz -= Constants.Z_GRAVITY * dt;
                         e.z += e.vz * dt;
 
@@ -159,7 +152,7 @@ namespace PixelTowerDefense.Systems
                         {
                             e.z = 0f;
                             e.vz = 0f;
-                            e.State = SoldierState.Dead;
+                            e.State = MeepleState.Dead;
                             e.DecompTimer = 0f;
                             e.Angle = MathHelper.PiOver2;
                             e.Vel = Vector2.Zero;
@@ -174,15 +167,12 @@ namespace PixelTowerDefense.Systems
                         }
                         break;
 
-                    case SoldierState.Stunned:
-                        // **no rotation while stunned**
+                    case MeepleState.Stunned:
                         e.AngularVel = 0f;
-                        // count down
                         e.StunTimer -= dt;
                         if (e.StunTimer <= 0f)
                         {
-                            // stand up and resume walking
-                            e.State = SoldierState.Idle;
+                            e.State = MeepleState.Idle;
                             e.WanderTimer = _rng.NextFloat(0.5f, 2.5f);
                             float upAng = MathHelper.ToRadians(_rng.Next(360));
                             e.Vel = new Vector2(MathF.Cos(upAng), MathF.Sin(upAng))
@@ -192,7 +182,6 @@ namespace PixelTowerDefense.Systems
                         break;
                 }
 
-                // clamp inside arena
                 e.Pos.X = MathHelper.Clamp(e.Pos.X,
                            Constants.ARENA_LEFT + 2,
                            Constants.ARENA_RIGHT - 2);
@@ -200,18 +189,18 @@ namespace PixelTowerDefense.Systems
                            Constants.ARENA_TOP + 2,
                            Constants.ARENA_BOTTOM - 2);
 
-                if (e.Combat.Health <= 0f && e.State != SoldierState.Dead && e.State != SoldierState.Ragdoll)
+                if (e.Health <= 0f && e.State != MeepleState.Dead && e.State != MeepleState.Ragdoll)
                 {
                     AshEnemy(e, debris);
-                    soldiers.RemoveAt(i);
+                    meeples.RemoveAt(i);
                     continue;
                 }
 
-                soldiers[i] = e;
+                meeples[i] = e;
             }
         }
 
-        private static void ExplodeEnemy(Soldier e, List<Pixel> debris)
+        private static void ExplodeEnemy(Meeple e, List<Pixel> debris)
         {
             Vector2 center = e.Pos;
             int half = Constants.ENEMY_H / 2;
@@ -220,7 +209,6 @@ namespace PixelTowerDefense.Systems
             {
                 Vector2 pos = e.GetPartPos(part);
 
-                // pick blood color per part (as before)…
                 Color c = part switch
                 {
                     -2 => new Color(255, 80, 90),
@@ -239,7 +227,6 @@ namespace PixelTowerDefense.Systems
                 if (_rng.NextDouble() < 0.15)
                     c = bonePal[_rng.Next(bonePal.Length)];
 
-                // compute a direction away from the ragdoll center
                 Vector2 dir = pos - center;
                 if (dir == Vector2.Zero)
                 {
@@ -250,20 +237,17 @@ namespace PixelTowerDefense.Systems
                 }
                 dir.Normalize();
 
-                // pick a random magnitude
                 float mag = _rng.NextFloat(
                     Constants.EXPLOSION_FORCE_MIN,
                     Constants.EXPLOSION_FORCE_MAX
                 );
                 Vector2 vel = dir * mag;
 
-                // decide: emit a single pixel or a little cluster?
-                if (_rng.NextDouble() < 0.4)  // 40% chance to cluster
+                if (_rng.NextDouble() < 0.4)
                 {
-                    int clusterSize = _rng.Next(3, 6);  // between 3 and 5 pixels
+                    int clusterSize = _rng.Next(3, 6);
                     for (int j = 0; j < clusterSize; j++)
                     {
-                        // tiny random offset so they form a “chunk”
                         Vector2 offset = new Vector2(
                             _rng.NextFloat(-0.5f, 0.5f),
                             _rng.NextFloat(-0.5f, 0.5f)
@@ -279,7 +263,6 @@ namespace PixelTowerDefense.Systems
                 }
                 else
                 {
-                    // single‐pixel fallback
                     debris.Spawn(new Pixel(
                         pos,
                         vel,
@@ -291,7 +274,7 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        private static void AshEnemy(Soldier e, List<Pixel> debris)
+        private static void AshEnemy(Meeple e, List<Pixel> debris)
         {
             Vector2 ground = e.Pos;
             int half = Constants.ENEMY_H / 2;
@@ -329,7 +312,6 @@ namespace PixelTowerDefense.Systems
                 }
             }
 
-            // lingering smoke from ash pile
             EmitSmoke(ground, 3, debris);
         }
 
@@ -353,7 +335,6 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-
         public static void UpdatePixels(List<Pixel> debris, float dt)
         {
             for (int i = debris.Count - 1; i >= 0; i--)
@@ -370,11 +351,9 @@ namespace PixelTowerDefense.Systems
                     }
                 }
 
-                // gentle drag
                 p.Vel *= MathF.Max(0f, 1f - Constants.DEBRIS_FRICTION * dt);
                 p.Pos += p.Vel * dt;
 
-                // bounce & clamp to arena
                 if (p.Pos.X < Constants.ARENA_LEFT)
                 { p.Pos.X = Constants.ARENA_LEFT; p.Vel.X *= -0.5f; }
                 if (p.Pos.X > Constants.ARENA_RIGHT - 1)

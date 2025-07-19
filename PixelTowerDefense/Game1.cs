@@ -16,7 +16,7 @@ namespace PixelTowerDefense
         SpriteBatch _sb;
         Texture2D _px;
 
-        List<Soldier> _soldiers = new();
+        List<Meeple> _meeples = new();
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
         Random _rng = new();
 
@@ -65,8 +65,8 @@ namespace PixelTowerDefense
             _px = new Texture2D(GraphicsDevice, 1, 1);
             _px.SetData(new[] { Color.White });
 
-            SpawnWave(Faction.Friendly, 12);
-            SpawnWave(Faction.Enemy, 12);
+            SpawnWave(Faction.Friendly, 12, true);
+            SpawnWave(Faction.Enemy, 12, true);
 
             var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
             var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
@@ -117,7 +117,7 @@ namespace PixelTowerDefense
                 _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
             }
 
-            if (Edge(kb, Keys.P)) SpawnWave(Faction.Enemy, 1);
+            if (Edge(kb, Keys.P)) SpawnWave(Faction.Enemy, 1, true);
 
             // ability switching (keyboard)
             if (Edge(kb, Keys.D1) || Edge(kb, Keys.NumPad1))
@@ -168,9 +168,9 @@ namespace PixelTowerDefense
                 if (mPress)
                 {
                     float minD = Constants.PICKUP_RADIUS;
-                    for (int i = _soldiers.Count - 1; i >= 0; i--)
+                    for (int i = _meeples.Count - 1; i >= 0; i--)
                     {
-                        var e = _soldiers[i];
+                        var e = _meeples[i];
                         for (int p = -2; p <= 2; p++)
                         {
                             float d = Vector2.Distance(e.GetPartPos(p), mworld);
@@ -178,7 +178,7 @@ namespace PixelTowerDefense
                             {
                                 e.IsBurning = true;
                                 e.BurnTimer = Constants.BURN_DURATION;
-                                _soldiers[i] = e;
+                                _meeples[i] = e;
                                 i = -1; // break outer
                                 break;
                             }
@@ -193,7 +193,7 @@ namespace PixelTowerDefense
                     ref _dragging, ref _dragIdx, ref _dragPart,
                     ref _dragStartWorld, ref _dragStartTime,
                     mworld, prevWorld,
-                    _soldiers, _pixels
+                    _meeples, _pixels
                 );
             }
             else if (_currentAbility == Ability.Explosion)
@@ -210,14 +210,14 @@ namespace PixelTowerDefense
                 _dragging = false;
             }
 
-            PhysicsSystem.SimulateAll(_soldiers, _pixels, dt);
+            PhysicsSystem.SimulateAll(_meeples, _pixels, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
-            CombatSystem.ResolveCombat(_soldiers, _pixels, dt);
+            CombatSystem.ResolveCombat(_meeples, _pixels, dt);
 
             // smooth shadow placement
-            for (int i = 0; i < _soldiers.Count; i++)
+            for (int i = 0; i < _meeples.Count; i++)
             {
-                var s = _soldiers[i];
+                var s = _meeples[i];
                 int halfSeg = Constants.ENEMY_H / 2;
                 float bottom = float.MinValue;
                 for (int p = -halfSeg; p < halfSeg; p++)
@@ -226,7 +226,7 @@ namespace PixelTowerDefense
                 // slower interpolation so shadows follow movement smoothly
                 float lerp = MathHelper.Clamp(4f * dt, 0f, 1f);
                 s.ShadowY = MathHelper.Lerp(s.ShadowY, target, lerp);
-                _soldiers[i] = s;
+                _meeples[i] = s;
             }
 
             _prevKb = kb;
@@ -253,15 +253,15 @@ namespace PixelTowerDefense
                 _sb.Draw(_px, p.Bounds, p.Col);
 
             // --- shadows ---
-            foreach (var e in _soldiers.OrderBy(s => s.ShadowY))
+            foreach (var e in _meeples.OrderBy(s => s.ShadowY))
             {
                 DrawShadow(e);
             }
 
             // --- soldiers/entities ---
-            foreach (var e in _soldiers.OrderBy(e => e.ShadowY))
+            foreach (var e in _meeples.OrderBy(e => e.ShadowY))
             {
-                bool isDead = e.State == SoldierState.Dead;
+                bool isDead = e.State == MeepleState.Dead;
                 float decomp = isDead
                     ? MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION)
                     : 0f;
@@ -292,7 +292,7 @@ namespace PixelTowerDefense
                     {
                         c = ApplyDecomposition(c, decomp);
                     }
-                    else if (e.State == SoldierState.Ragdoll)
+                    else if (e.State == MeepleState.Ragdoll)
                     {
                         c = Color.Lerp(c, Color.LightGray, 0.5f);
                     }
@@ -364,7 +364,7 @@ namespace PixelTowerDefense
                     {
                         handCol = ApplyDecomposition(handCol, decomp);
                     }
-                    else if (e.State == SoldierState.Ragdoll)
+                    else if (e.State == MeepleState.Ragdoll)
                     {
                         handCol = Color.Lerp(handCol, Color.LightGray, 0.5f);
                     }
@@ -393,7 +393,7 @@ namespace PixelTowerDefense
         }
 
 
-        private void SpawnWave(Faction side, int count)
+        private void SpawnWave(Faction side, int count, bool withCombat = true)
         {
             float x0 = side == Faction.Friendly ? Constants.ARENA_LEFT + 2 : Constants.ARENA_RIGHT - 30;
             float x1 = side == Faction.Friendly ? Constants.ARENA_LEFT + 30 : Constants.ARENA_RIGHT - 2;
@@ -401,9 +401,9 @@ namespace PixelTowerDefense
             {
                 var x = _rng.NextFloat(x0, x1);
                 var y = _rng.NextFloat(Constants.ARENA_TOP + 2, Constants.ARENA_BOTTOM - 2);
-                var pal = side == Faction.Friendly ? Soldier.FRIENDLY_SHIRTS : Soldier.ENEMY_SHIRTS;
+                var pal = side == Faction.Friendly ? Meeple.FRIENDLY_SHIRTS : Meeple.ENEMY_SHIRTS;
                 var shirt = pal[_rng.Next(pal.Length)];
-                _soldiers.Add(new Soldier(new Vector2(x, y), side, shirt));
+                _meeples.Add(new Meeple(new Vector2(x, y), side, shirt){Combatant = withCombat ? new Combatant() : (Combatant?)null});
             }
         }
 
@@ -434,7 +434,7 @@ namespace PixelTowerDefense
             }
         }
 
-        private void DrawFlame(Soldier e)
+        private void DrawFlame(Meeple e)
         {
             var pos = e.GetPartPos(0);
             pos.Y -= e.z + 1f;
@@ -458,9 +458,9 @@ namespace PixelTowerDefense
             _sb.Draw(_px, rect, col);
         }
 
-        private void DrawShadow(Soldier e)
+        private void DrawShadow(Meeple e)
         {
-            bool isDead = e.State == SoldierState.Dead;
+            bool isDead = e.State == MeepleState.Dead;
             float decomp = isDead
                 ? MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION)
                 : 0f;
@@ -483,9 +483,9 @@ namespace PixelTowerDefense
         private void TriggerExplosion(Vector2 pos)
         {
             // push soldiers away
-            for (int i = 0; i < _soldiers.Count; i++)
+            for (int i = 0; i < _meeples.Count; i++)
             {
-                var s = _soldiers[i];
+                var s = _meeples[i];
                 Vector2 dir = s.Pos - pos;
                 float dist = dir.Length();
                 if (dist > Constants.EXPLOSION_RADIUS)
@@ -494,8 +494,8 @@ namespace PixelTowerDefense
                 float strength = (1f - dist / Constants.EXPLOSION_RADIUS) * Constants.EXPLOSION_PUSH;
                 s.Vel += dir * strength;
                 s.vz += Constants.EXPLOSION_UPWARD;
-                s.State = SoldierState.Launched;
-                _soldiers[i] = s;
+                s.State = MeepleState.Launched;
+                _meeples[i] = s;
             }
 
             // visual particles
