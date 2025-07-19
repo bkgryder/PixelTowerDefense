@@ -292,12 +292,10 @@ namespace PixelTowerDefense
                         c = new Color(16, 16, 64);             // feet
 
                     int w = Constants.ENEMY_W;
-                    int h = (int)Constants.PART_LEN;
-                    var dest = new Rectangle(
-                        (int)(pt.X - w / 2f),
-                        (int)(pt.Y - h / 2f),
-                        w, h
-                    );
+                    float h = Constants.PART_LEN;
+                    var pos = pt;
+                    var scale = new Vector2(w, h);
+                    var origin = new Vector2(0.5f, 0.5f);
 
                     if (e.IsBurning)
                     {
@@ -321,9 +319,9 @@ namespace PixelTowerDefense
                     }
 
                     _sb.Draw(
-                        _px, dest, null, c,
+                        _px, pos, null, c,
                         e.Angle,
-                        new Vector2(w / 2f, h / 2f),
+                        origin, scale,
                         SpriteEffects.None, 0f
                     );
                 }
