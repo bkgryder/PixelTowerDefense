@@ -75,9 +75,6 @@ using Microsoft.Xna.Framework;
         // How long corpses take to fully decompose
         public const float DECOMP_DURATION = 12f;
 
-        // How long corpses take to fully decompose
-        public const float DECOMP_DURATION = 12f;
-
         // Palette for corpse decomposition
         public static readonly Color DECOMP_PURPLE = new Color(60, 0, 80);
         public static readonly Color BONE_COLOR = new Color(245, 245, 235);

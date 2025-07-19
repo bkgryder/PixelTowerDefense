@@ -73,8 +73,6 @@ namespace PixelTowerDefense.Entities
             BurnTimer = 0f;
             DecompTimer = 0f;
 
-            ShadowY = spawn.Y + Constants.ENEMY_H * 0.5f * Constants.PART_LEN;
-
         }
 
         /// <summary>
