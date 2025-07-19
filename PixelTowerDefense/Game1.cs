@@ -299,11 +299,23 @@ namespace PixelTowerDefense
 
                     if (e.IsBurning)
                     {
-                        var glowScale = new Vector2(w + 2, h + 2);
-                        var glowCol = new Color(255, 160 + _rng.Next(95), 0,
-                            80 + _rng.Next(60));
-                        _sb.Draw(_px, pos, null, glowCol, e.Angle,
-                            origin, glowScale, SpriteEffects.None, 0f);
+                        int offX = _rng.Next(-1, 2);
+                        int offY = _rng.Next(-1, 2);
+                        var glow = new Rectangle(dest.X - 1 + offX,
+                            dest.Y - 1 + offY,
+                            dest.Width + 2 + _rng.Next(2),
+                            dest.Height + 2 + _rng.Next(2));
+                        Color[] firePal =
+                        {
+                            Color.OrangeRed,
+                            Color.Orange,
+                            Color.Yellow,
+                            new Color(255, 100, 0)
+                        };
+                        var col = firePal[_rng.Next(firePal.Length)];
+                        var glowCol = new Color(col.R, col.G, col.B,
+                            (byte)(80 + _rng.Next(60)));
+                        _sb.Draw(_px, glow, glowCol);
                     }
 
                     _sb.Draw(
@@ -312,6 +324,10 @@ namespace PixelTowerDefense
                         origin, scale,
                         SpriteEffects.None, 0f
                     );
+                }
+                if (e.IsBurning)
+                {
+                    DrawFlame(e);
                 }
             }
 
@@ -368,6 +384,30 @@ namespace PixelTowerDefense
                     _sb.Draw(_px, rect, AbilityColor(_abilityOptions[i]));
                 }
             }
+        }
+
+        private void DrawFlame(Enemy e)
+        {
+            var pos = e.GetPartPos(0);
+            pos.Y -= e.z + 1f;
+            int size = 3 + _rng.Next(2);
+            int offX = _rng.Next(-1, 2);
+            int offY = _rng.Next(-2, 1);
+            var rect = new Rectangle(
+                (int)pos.X - size / 2 + offX,
+                (int)pos.Y - size + offY,
+                size,
+                size * 2
+            );
+            Color[] firePal =
+            {
+                Color.OrangeRed,
+                Color.Orange,
+                Color.Yellow,
+                new Color(255, 100, 0)
+            };
+            var col = firePal[_rng.Next(firePal.Length)];
+            _sb.Draw(_px, rect, col);
         }
     }
 }
