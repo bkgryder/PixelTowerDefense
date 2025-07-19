@@ -259,7 +259,7 @@ namespace PixelTowerDefense
             }
 
             // --- soldiers/entities ---
-            foreach (var e in _soldiers.OrderBy(e => e.z))
+            foreach (var e in _soldiers.OrderBy(e => e.ShadowY))
             {
                 bool isDead = e.State == SoldierState.Dead;
                 float decomp = isDead
