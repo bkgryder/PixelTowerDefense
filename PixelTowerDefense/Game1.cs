@@ -17,7 +17,7 @@ namespace PixelTowerDefense
         Texture2D _px;
 
         List<Soldier> _soldiers = new();
-        List<Pixel> _pixels = new();
+        List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
         Random _rng = new();
 
         float _camX, _camY, _zoom = 3.5f;
@@ -493,7 +493,7 @@ namespace PixelTowerDefense
                 float spd = _rng.NextFloat(10f, Constants.EXPLOSION_PUSH);
                 var vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * spd;
                 var col = smokePal[_rng.Next(smokePal.Length)];
-                _pixels.Add(new Pixel(
+                _pixels.Spawn(new Pixel(
                     pos,
                     vel,
                     col,

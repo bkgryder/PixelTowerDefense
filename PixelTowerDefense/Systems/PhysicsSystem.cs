@@ -43,7 +43,7 @@ namespace PixelTowerDefense.Systems
                                 new Color(255, 100, 0)
                             };
                             var c = firePal[_rng.Next(firePal.Length)];
-                            debris.Add(new Pixel(
+                            debris.Spawn(new Pixel(
                                 pos,
                                 pv,
                                 c,
@@ -268,7 +268,7 @@ namespace PixelTowerDefense.Systems
                             _rng.NextFloat(-0.5f, 0.5f),
                             _rng.NextFloat(-0.5f, 0.5f)
                         );
-                        debris.Add(new Pixel(
+                        debris.Spawn(new Pixel(
                             pos + offset,
                             vel,
                             c,
@@ -280,7 +280,7 @@ namespace PixelTowerDefense.Systems
                 else
                 {
                     // single‐pixel fallback
-                    debris.Add(new Pixel(
+                    debris.Spawn(new Pixel(
                         pos,
                         vel,
                         c,
@@ -319,7 +319,7 @@ namespace PixelTowerDefense.Systems
                     );
                     Vector2 vel = dir * mag;
 
-                    debris.Add(new Pixel(
+                    debris.Spawn(new Pixel(
                         pos,
                         vel,
                         c,
@@ -349,7 +349,7 @@ namespace PixelTowerDefense.Systems
                     _rng.NextFloat(-0.5f, 0.5f),
                     -_rng.NextFloat(Constants.SMOKE_FORCE_MIN, Constants.SMOKE_FORCE_MAX)
                 );
-                debris.Add(new Pixel(pos, v, c, 0f, Constants.SMOKE_LIFETIME));
+                debris.Spawn(new Pixel(pos, v, c, 0f, Constants.SMOKE_LIFETIME));
             }
         }
 
