@@ -35,6 +35,9 @@ namespace PixelTowerDefense.Entities
         // vertical
         public float z, vz;
 
+        // rendering helper
+        public float ShadowY;
+
         // stun
         public float StunTimer;
 
@@ -69,6 +72,8 @@ namespace PixelTowerDefense.Entities
             IsBurning = false;
             BurnTimer = 0f;
             DecompTimer = 0f;
+
+            ShadowY = spawn.Y + Constants.ENEMY_H * 0.5f * Constants.PART_LEN;
 
         }
 
