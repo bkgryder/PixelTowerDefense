@@ -73,7 +73,7 @@ namespace PixelTowerDefense.Systems
                         e.Hunger = MathF.Min(Constants.HUNGER_MAX, e.Hunger + Constants.HUNGER_RATE * dt);
                         if (e.Worker != null)
                         {
-                            if (e.CarriedBerries == 1 && e.Hunger > Constants.HUNGER_MAX)
+                            if (e.CarriedBerries == 1 && e.Hunger > Constants.HUNGER_THRESHOLD)
                             {
                                 int hidx = FindNearestDepositHut(e.Pos, buildings);
                                 if (hidx >= 0)
@@ -99,7 +99,7 @@ namespace PixelTowerDefense.Systems
                                 }
                             }
 
-                            if (e.Hunger <= 30f)
+                            if (e.Hunger >= Constants.HUNGER_THRESHOLD)
                             {
                                 if (e.CarriedBerries > 0)
                                 {
