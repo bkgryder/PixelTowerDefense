@@ -41,6 +41,9 @@ namespace PixelTowerDefense
         Vector2 _dragStartWorld;
         float _dragStartTime;
 
+        // hovered meeple index
+        int _hoverIdx;
+
         // precipitate state
         float _rainAlpha;
         bool _raining;
@@ -68,6 +71,7 @@ namespace PixelTowerDefense
             _raining = false;
             _cloudPixels.Clear();
             _cloudCenter = Vector2.Zero;
+            _hoverIdx = -1;
             base.Initialize();
         }
 
@@ -180,6 +184,23 @@ namespace PixelTowerDefense
                                      _camY + mscr.Y / _zoom);
             var prevWorld = new Vector2(_camX + _prevMs.X / _zoom,
                                         _camY + _prevMs.Y / _zoom);
+
+            // determine hovered meeple
+            _hoverIdx = -1;
+            float hoverDist = Constants.PICKUP_RADIUS;
+            for (int i = _meeples.Count - 1; i >= 0; i--)
+            {
+                var e = _meeples[i];
+                for (int p = -2; p <= 2; p++)
+                {
+                    float d = Vector2.Distance(e.GetPartPos(p), mworld);
+                    if (d < hoverDist)
+                    {
+                        hoverDist = d;
+                        _hoverIdx = i;
+                    }
+                }
+            }
 
             if (_currentAbility == Ability.Fire)
             {
@@ -474,6 +495,9 @@ namespace PixelTowerDefense
                 var col = new Color((byte)40, (byte)40, (byte)40, (byte)(_rainAlpha * 255));
                 _sb.Draw(_px, new Rectangle(0, 0, GraphicsDevice.Viewport.Width, 20), col);
             }
+            var uiMouse = Mouse.GetState();
+            if (_hoverIdx >= 0 && _hoverIdx < _meeples.Count)
+                DrawMeepleStats(_meeples[_hoverIdx], new Point(uiMouse.X, uiMouse.Y));
             DrawAbilityToolbar();
             DrawHint();
             _sb.End();
@@ -555,6 +579,25 @@ namespace PixelTowerDefense
             int total = _buildings.Where(b => b.Kind == BuildingType.StockpileHut)
                                   .Sum(b => b.StoredBerries);
             DrawTinyString($"B{total}", new Vector2(35, 8), Color.White);
+        }
+
+        private void DrawMeepleStats(Meeple m, Point mouse)
+        {
+            string[] lines =
+            {
+                $"HP{(int)MathF.Ceiling(m.Health)}",
+                $"HU{(int)MathF.Ceiling(m.Hunger)}",
+                $"B{m.CarriedBerries}"
+            };
+
+            int width = 40;
+            int height = lines.Length * 6 + 2;
+            int x = mouse.X + 8;
+            int y = mouse.Y + 8;
+
+            _sb.Draw(_px, new Rectangle(x, y, width, height), new Color(0, 0, 0, 180));
+            for (int i = 0; i < lines.Length; i++)
+                DrawTinyString(lines[i], new Vector2(x + 1, y + 1 + i * 6), Color.White);
         }
 
         private void InitCloud()
@@ -723,7 +766,13 @@ namespace PixelTowerDefense
             ['7'] = new[]{"###","  #","  #","  #","  #"},
             ['8'] = new[]{"###","# #","###","# #","###"},
             ['9'] = new[]{"###","# #","###","  #","###"},
-            ['B'] = new[]{"## ","# #","## ","# #","## "}
+            ['B'] = new[]{"## ","# #","## ","# #","## "},
+            ['H'] = new[]{"# #","###","# #","# #","# #"},
+            ['P'] = new[]{"## ","# #","## ","#  ","#  "},
+            ['U'] = new[]{"# #","# #","# #","# #","###"},
+            ['N'] = new[]{"## ","## ","###","###","# #"},
+            ['G'] = new[]{"## ","#  ","# #","# #","## "},
+            ['R'] = new[]{"## ","# #","## ","# #","# #"}
         };
 
         private void DrawTinyString(string text, Vector2 pos, Color col)
