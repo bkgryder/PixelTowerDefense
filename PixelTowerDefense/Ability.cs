@@ -5,6 +5,7 @@ namespace PixelTowerDefense
         None,
         Fire,
         Telekinesis,
-        Explosion
+        Explosion,
+        Precipitate
     }
 }

@@ -91,5 +91,9 @@ using Microsoft.Xna.Framework;
         public const float HARVEST_RANGE = 2f;
         public const int BUSH_BERRIES = 5;
 
+        // Precipitate ability
+        public const float PRECIPITATE_DROP_SPEED = 30f;
+        public const float PRECIPITATE_FADE_SPEED = 2f;
+
     }
 }

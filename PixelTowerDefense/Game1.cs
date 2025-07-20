@@ -32,7 +32,7 @@ namespace PixelTowerDefense
         Rectangle _abilityButtonRect;
         Rectangle[] _abilityOptionRects;
         readonly Ability[] _abilityOptions =
-            { Ability.None, Ability.Fire, Ability.Telekinesis, Ability.Explosion };
+            { Ability.None, Ability.Fire, Ability.Telekinesis, Ability.Explosion, Ability.Precipitate };
         bool _abilityMenuOpen;
 
         // drag state
@@ -40,6 +40,10 @@ namespace PixelTowerDefense
         int _dragIdx, _dragPart;
         Vector2 _dragStartWorld;
         float _dragStartTime;
+
+        // precipitate state
+        float _rainAlpha;
+        bool _raining;
 
         public Game1()
         {
@@ -58,6 +62,8 @@ namespace PixelTowerDefense
             for (int i = 0; i < _abilityOptionRects.Length; i++)
                 _abilityOptionRects[i] =
                     new Rectangle(5, 31 + i * 26, 24, 24);
+            _rainAlpha = 0f;
+            _raining = false;
             base.Initialize();
         }
 
@@ -136,6 +142,8 @@ namespace PixelTowerDefense
                 _currentAbility = Ability.Telekinesis;
             if (Edge(kb, Keys.D4) || Edge(kb, Keys.NumPad4))
                 _currentAbility = Ability.Explosion;
+            if (Edge(kb, Keys.D5) || Edge(kb, Keys.NumPad5))
+                _currentAbility = Ability.Precipitate;
 
             // toolbar interaction
             var mousePoint = new Point(ms.X, ms.Y);
@@ -211,6 +219,44 @@ namespace PixelTowerDefense
                 if (mPress)
                 {
                     TriggerExplosion(mworld);
+                }
+            }
+            else if (_currentAbility == Ability.Precipitate)
+            {
+                bool held = ms.LeftButton == ButtonState.Pressed;
+                bool released = ms.LeftButton == ButtonState.Released &&
+                                 _prevMs.LeftButton == ButtonState.Pressed;
+                if (held)
+                    _raining = true;
+                if (released)
+                    _raining = false;
+
+                float fade = Constants.PRECIPITATE_FADE_SPEED * dt;
+                if (_raining)
+                    _rainAlpha = MathF.Min(1f, _rainAlpha + fade);
+                else
+                    _rainAlpha = MathF.Max(0f, _rainAlpha - fade);
+
+                if (_raining)
+                {
+                    int spawn = (int)(dt * 40f);
+                    for (int i = 0; i < spawn; i++)
+                    {
+                        float x = _rng.NextFloat(Constants.ARENA_LEFT, Constants.ARENA_RIGHT);
+                        var pos = new Vector2(x, Constants.ARENA_TOP - 2);
+                        var vel = new Vector2(0f, Constants.PRECIPITATE_DROP_SPEED);
+                        _pixels.Spawn(new Pixel(pos, vel, Color.CornflowerBlue, 0f, 1f));
+                    }
+
+                    for (int b = 0; b < _bushes.Count; b++)
+                    {
+                        var bush = _bushes[b];
+                        if (bush.Berries < Constants.BUSH_BERRIES)
+                        {
+                            bush.Berries++;
+                            _bushes[b] = bush;
+                        }
+                    }
                 }
             }
             else
@@ -393,6 +439,11 @@ namespace PixelTowerDefense
 
             // --- UI ---
             _sb.Begin();
+            if (_rainAlpha > 0f)
+            {
+                var col = new Color((byte)40, (byte)40, (byte)40, (byte)(_rainAlpha * 255));
+                _sb.Draw(_px, new Rectangle(0, 0, GraphicsDevice.Viewport.Width, 20), col);
+            }
             DrawAbilityToolbar();
             DrawHint();
             _sb.End();
@@ -451,6 +502,7 @@ namespace PixelTowerDefense
                 Ability.Fire => Color.OrangeRed,
                 Ability.Telekinesis => Color.MediumPurple,
                 Ability.Explosion => Color.Gold,
+                Ability.Precipitate => Color.SkyBlue,
                 _ => Color.White
             };
 
