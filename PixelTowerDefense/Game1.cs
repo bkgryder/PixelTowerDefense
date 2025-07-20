@@ -385,6 +385,8 @@ namespace PixelTowerDefense
                         handCol = Color.Lerp(handCol, Color.LightGray, 0.5f);
                     }
                     _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly), 1, 1), handCol);
+                    if (e.CarriedBerries > 0)
+                        _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly - 1), 1, 1), Color.Red);
 
                     // Right hand
                     float rx = bodyPos.X + sideX * handOffset;
