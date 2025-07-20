@@ -25,7 +25,7 @@ namespace PixelTowerDefense.Systems
                 }
 
                 float target = bottom + 1f;
-                float lerp = MathHelper.Clamp(4f * dt, 0f, 1f);
+                float lerp = MathHelper.Clamp(48f * dt, 0f, 1f);
                 e.ShadowY = MathHelper.Lerp(e.ShadowY, target, lerp);
                 meeples[i] = e;
             }
