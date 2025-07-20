@@ -7,6 +7,7 @@ namespace PixelTowerDefense.Entities
     {
         public Vector2 Pos;
         public int Berries;
+        public float RegrowTimer;
         public Point[] Shape;
         public Point[] BerryPixels;
 
@@ -14,6 +15,7 @@ namespace PixelTowerDefense.Entities
         {
             Pos = pos;
             Berries = Utils.Constants.BUSH_BERRIES;
+            RegrowTimer = 0f;
 
             var shapeList = new List<Point>();
             for (int y = -3; y < 3; y++)

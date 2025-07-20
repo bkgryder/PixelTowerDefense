@@ -291,14 +291,33 @@ namespace PixelTowerDefense
                         _cloudPixels[i] = cp;
                     }
 
+                    var ground = _cloudCenter - new Vector2(0f, Constants.PRECIPITATE_CLOUD_OFFSET_Y);
                     for (int b = 0; b < _bushes.Count; b++)
                     {
                         var bush = _bushes[b];
-                        if (bush.Berries < Constants.BUSH_BERRIES)
+                        if (bush.Berries >= Constants.BUSH_BERRIES)
                         {
-                            bush.Berries++;
+                            bush.RegrowTimer = 0f;
                             _bushes[b] = bush;
+                            continue;
                         }
+
+                        var diff = bush.Pos - ground;
+                        float ellipse = (diff.X / 2f) * (diff.X / 2f) + diff.Y * diff.Y;
+                        if (ellipse <= 1f)
+                        {
+                            bush.RegrowTimer += dt;
+                            if (bush.RegrowTimer >= Constants.BUSH_REGROW_INTERVAL)
+                            {
+                                bush.RegrowTimer = 0f;
+                                bush.Berries++;
+                            }
+                        }
+                        else
+                        {
+                            bush.RegrowTimer = 0f;
+                        }
+                        _bushes[b] = bush;
                     }
                 }
             }
@@ -327,11 +346,7 @@ namespace PixelTowerDefense
             _sb.Begin(transformMatrix: cam, samplerState: SamplerState.PointClamp);
 
             // --- arena border ---
-            int t = 2;
-            _sb.Draw(_px, new Rectangle(Constants.ARENA_LEFT, Constants.ARENA_TOP, Constants.ARENA_RIGHT - Constants.ARENA_LEFT, t), Color.Black);
-            _sb.Draw(_px, new Rectangle(Constants.ARENA_LEFT, Constants.ARENA_BOTTOM, Constants.ARENA_RIGHT - Constants.ARENA_LEFT, t), Color.Black);
-            _sb.Draw(_px, new Rectangle(Constants.ARENA_LEFT, Constants.ARENA_TOP, t, Constants.ARENA_BOTTOM - Constants.ARENA_TOP), Color.Black);
-            _sb.Draw(_px, new Rectangle(Constants.ARENA_RIGHT - t, Constants.ARENA_TOP, t, Constants.ARENA_BOTTOM - Constants.ARENA_TOP), Color.Black);
+            // Removed dark border bars
 
             // --- debris ---
             foreach (var p in _pixels)
