@@ -264,6 +264,10 @@ namespace PixelTowerDefense
             foreach (var b in _bushes)
                 DrawBush(b);
 
+            // --- buildings ---
+            foreach (var b in _buildings)
+                DrawBuilding(b);
+
             // --- shadows ---
             foreach (var e in _meeples.OrderBy(s => s.ShadowY))
             {
@@ -515,6 +519,27 @@ namespace PixelTowerDefense
             {
                 var off = b.BerryPixels[i];
                 _sb.Draw(_px, new Rectangle(baseX + off.X, baseY + off.Y, 1, 1), Color.Red);
+            }
+        }
+
+        private void DrawBuilding(Building b)
+        {
+            var pos = b.Pos;
+            switch (b.Kind)
+            {
+                case BuildingType.StockpileHut:
+                    _sb.Draw(_px, new Rectangle((int)pos.X - 1, (int)pos.Y - 1, 3, 3), Color.SaddleBrown);
+                    _sb.Draw(_px, new Rectangle((int)pos.X, (int)pos.Y - 2, 1, 1), Color.BurlyWood);
+                    int stackH = Building.CAPACITY / 3;
+                    for (int i = 0; i < b.StoredBerries; i++)
+                    {
+                        int col = i / stackH;
+                        int level = i % stackH;
+                        int x = (int)pos.X - 1 + col;
+                        int y = (int)pos.Y - 3 - level;
+                        _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.Red);
+                    }
+                    break;
             }
         }
 
