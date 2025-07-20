@@ -44,6 +44,8 @@ namespace PixelTowerDefense
         // precipitate state
         float _rainAlpha;
         bool _raining;
+        List<Pixel> _cloudPixels = new();
+        Vector2 _cloudCenter;
 
         public Game1()
         {
@@ -64,6 +66,8 @@ namespace PixelTowerDefense
                     new Rectangle(5, 31 + i * 26, 24, 24);
             _rainAlpha = 0f;
             _raining = false;
+            _cloudPixels.Clear();
+            _cloudCenter = Vector2.Zero;
             base.Initialize();
         }
 
@@ -226,10 +230,18 @@ namespace PixelTowerDefense
                 bool held = ms.LeftButton == ButtonState.Pressed;
                 bool released = ms.LeftButton == ButtonState.Released &&
                                  _prevMs.LeftButton == ButtonState.Pressed;
+                bool prev = _raining;
                 if (held)
                     _raining = true;
                 if (released)
                     _raining = false;
+
+                if (_raining)
+                {
+                    var target = mworld + new Vector2(0f, Constants.PRECIPITATE_CLOUD_OFFSET_Y);
+                    float lerp = MathHelper.Clamp(Constants.PRECIPITATE_CLOUD_LERP * dt, 0f, 1f);
+                    _cloudCenter = Vector2.Lerp(_cloudCenter, target, lerp);
+                }
 
                 float fade = Constants.PRECIPITATE_FADE_SPEED * dt;
                 if (_raining)
@@ -237,15 +249,25 @@ namespace PixelTowerDefense
                 else
                     _rainAlpha = MathF.Max(0f, _rainAlpha - fade);
 
+                if (_raining && !prev)
+                    InitCloud();
+
+                UpdateCloud(dt);
+
                 if (_raining)
                 {
-                    int spawn = (int)(dt * 40f);
-                    for (int i = 0; i < spawn; i++)
+                    for (int i = 0; i < _cloudPixels.Count; i++)
                     {
-                        float x = _rng.NextFloat(Constants.ARENA_LEFT, Constants.ARENA_RIGHT);
-                        var pos = new Vector2(x, Constants.ARENA_TOP - 2);
-                        var vel = new Vector2(0f, Constants.PRECIPITATE_DROP_SPEED);
-                        _pixels.Spawn(new Pixel(pos, vel, Color.CornflowerBlue, 0f, 1f));
+                        var cp = _cloudPixels[i];
+                        cp.Lifetime -= dt;
+                        if (cp.Lifetime <= 0f)
+                        {
+                            var pos = _cloudCenter + cp.Pos;
+                            var vel = new Vector2(0f, Constants.PRECIPITATE_DROP_SPEED);
+                            _pixels.Spawn(new Pixel(pos, vel, Color.CornflowerBlue, 0f, 1f));
+                            cp.Lifetime = _rng.NextFloat(0.05f, 0.15f);
+                        }
+                        _cloudPixels[i] = cp;
                     }
 
                     for (int b = 0; b < _bushes.Count; b++)
@@ -293,6 +315,14 @@ namespace PixelTowerDefense
             // --- debris ---
             foreach (var p in _pixels)
                 _sb.Draw(_px, p.Bounds, p.Col);
+
+            foreach (var cp in _cloudPixels)
+            {
+                var pos = _cloudCenter + cp.Pos;
+                var rect = new Rectangle((int)MathF.Round(pos.X), (int)MathF.Round(pos.Y), 1, 1);
+                var col = new Color(cp.Col.R, cp.Col.G, cp.Col.B, (byte)(_rainAlpha * 255));
+                _sb.Draw(_px, rect, col);
+            }
 
             // --- berry bushes ---
             foreach (var b in _bushes)
@@ -525,6 +555,36 @@ namespace PixelTowerDefense
             int total = _buildings.Where(b => b.Kind == BuildingType.StockpileHut)
                                   .Sum(b => b.StoredBerries);
             DrawTinyString($"B{total}", new Vector2(35, 8), Color.White);
+        }
+
+        private void InitCloud()
+        {
+            _cloudPixels.Clear();
+            int count = 40;
+            for (int i = 0; i < count; i++)
+            {
+                float ang = MathHelper.ToRadians(_rng.Next(360));
+                float r = _rng.NextFloat(0f, 1f);
+                float rx = 8f * r;
+                float ry = 3f * r;
+                var off = new Vector2(MathF.Cos(ang) * rx, MathF.Sin(ang) * ry);
+                byte g = (byte)_rng.Next(150, 220);
+                _cloudPixels.Add(new Pixel(off, Vector2.Zero, new Color(g, g, g)));
+            }
+        }
+
+        private void UpdateCloud(float dt)
+        {
+            for (int i = 0; i < _cloudPixels.Count; i++)
+            {
+                var p = _cloudPixels[i];
+                p.Pos += p.Vel * dt;
+                p.Vel *= 0.9f;
+                p.Vel += new Vector2(
+                    _rng.NextFloat(-1f, 1f),
+                    _rng.NextFloat(-1f, 1f)) * Constants.PRECIPITATE_CLOUD_JITTER * dt;
+                _cloudPixels[i] = p;
+            }
         }
 
         private void DrawFlame(Meeple e)
