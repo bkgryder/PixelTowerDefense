@@ -14,6 +14,7 @@ namespace PixelTowerDefense.Systems
             List<Meeple> meeples,
             List<Pixel> debris,
             List<BerryBush> bushes,
+            List<Building> buildings,
             float dt
         )
         {
@@ -70,31 +71,98 @@ namespace PixelTowerDefense.Systems
                 {
                     case MeepleState.Idle:
                         e.Hunger = MathF.Min(Constants.HUNGER_MAX, e.Hunger + Constants.HUNGER_RATE * dt);
-                        if (e.Hunger >= Constants.HUNGER_THRESHOLD && e.Worker != null)
+                        if (e.Worker != null)
                         {
-                            int bidx = FindNearestBush(e.Pos, bushes);
-                            if (bidx >= 0)
+                            if (e.CarriedBerries == 1 && e.Hunger > 30f)
                             {
-                                var bush = bushes[bidx];
-                                Vector2 dir = bush.Pos - e.Pos;
-                                float dist = dir.Length();
-                                if (dist < Constants.HARVEST_RANGE)
+                                int hidx = FindNearestDepositHut(e.Pos, buildings);
+                                if (hidx >= 0)
                                 {
-                                    if (bush.Berries > 0)
+                                    var hut = buildings[hidx];
+                                    Vector2 dir = hut.Pos - e.Pos;
+                                    float dist = dir.Length();
+                                    if (dist < 1f)
                                     {
-                                        bush.Berries--;
-                                        e.Hunger = 0f;
-                                        bushes[bidx] = bush;
+                                        hut.StoredBerries++;
+                                        e.CarriedBerries = 0;
+                                        buildings[hidx] = hut;
+                                        e.WanderTimer = 0f;
                                     }
+                                    else
+                                    {
+                                        if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                        e.Vel = dir * Constants.WANDER_SPEED;
+                                        e.Pos += e.Vel * dt;
+                                    }
+                                    e.Angle = 0f;
+                                    break;
+                                }
+                            }
+
+                            if (e.Hunger <= 30f)
+                            {
+                                if (e.CarriedBerries > 0)
+                                {
+                                    e.CarriedBerries--;
+                                    e.Hunger = 0f;
+                                    e.WanderTimer = 0f;
                                 }
                                 else
                                 {
-                                    if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                                    e.Vel = dir * Constants.WANDER_SPEED;
-                                    e.Pos += e.Vel * dt;
+                                    int hidx = FindNearestFoodHut(e.Pos, buildings);
+                                    if (hidx >= 0)
+                                    {
+                                        var hut = buildings[hidx];
+                                        Vector2 dir = hut.Pos - e.Pos;
+                                        float dist = dir.Length();
+                                        if (dist < 1f)
+                                        {
+                                            if (hut.StoredBerries > 0)
+                                            {
+                                                hut.StoredBerries--;
+                                                e.Hunger = 0f;
+                                                buildings[hidx] = hut;
+                                            }
+                                            e.WanderTimer = 0f;
+                                        }
+                                        else
+                                        {
+                                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                            e.Vel = dir * Constants.WANDER_SPEED;
+                                            e.Pos += e.Vel * dt;
+                                        }
+                                        e.Angle = 0f;
+                                        break;
+                                    }
                                 }
-                                e.Angle = 0f;
-                                break;
+                            }
+
+                            if (e.Hunger >= Constants.HUNGER_THRESHOLD && e.CarriedBerries == 0)
+                            {
+                                int bidx = FindNearestBush(e.Pos, bushes);
+                                if (bidx >= 0)
+                                {
+                                    var bush = bushes[bidx];
+                                    Vector2 dir = bush.Pos - e.Pos;
+                                    float dist = dir.Length();
+                                    if (dist < Constants.HARVEST_RANGE)
+                                    {
+                                        if (bush.Berries > 0)
+                                        {
+                                            bush.Berries--;
+                                            e.CarriedBerries = 1;
+                                            bushes[bidx] = bush;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                        e.Vel = dir * Constants.WANDER_SPEED;
+                                        e.Pos += e.Vel * dt;
+                                    }
+                                    e.Angle = 0f;
+                                    break;
+                                }
                             }
                         }
                         e.WanderTimer -= dt;
@@ -404,6 +472,42 @@ namespace PixelTowerDefense.Systems
             {
                 if (bushes[i].Berries <= 0) continue;
                 float d = Vector2.Distance(pos, bushes[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestDepositHut(Vector2 pos, List<Building> huts)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < huts.Count; i++)
+            {
+                if (huts[i].Kind != BuildingType.StockpileHut) continue;
+                if (huts[i].StoredBerries >= Building.CAPACITY) continue;
+                float d = Vector2.Distance(pos, huts[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestFoodHut(Vector2 pos, List<Building> huts)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < huts.Count; i++)
+            {
+                if (huts[i].Kind != BuildingType.StockpileHut) continue;
+                if (huts[i].StoredBerries <= 0) continue;
+                float d = Vector2.Distance(pos, huts[i].Pos);
                 if (d < best)
                 {
                     best = d;
