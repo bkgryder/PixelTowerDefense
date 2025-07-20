@@ -227,7 +227,6 @@ namespace PixelTowerDefense
             }
             else if (_currentAbility == Ability.Precipitate)
             {
-                _cloudCenter = mworld + new Vector2(0f, -Constants.PRECIPITATE_CLOUD_OFFSET);
                 bool held = ms.LeftButton == ButtonState.Pressed;
                 bool released = ms.LeftButton == ButtonState.Released &&
                                  _prevMs.LeftButton == ButtonState.Pressed;
@@ -236,6 +235,13 @@ namespace PixelTowerDefense
                     _raining = true;
                 if (released)
                     _raining = false;
+
+                if (_raining)
+                {
+                    var target = mworld + new Vector2(0f, Constants.PRECIPITATE_CLOUD_OFFSET_Y);
+                    float lerp = MathHelper.Clamp(Constants.PRECIPITATE_CLOUD_LERP * dt, 0f, 1f);
+                    _cloudCenter = Vector2.Lerp(_cloudCenter, target, lerp);
+                }
 
                 float fade = Constants.PRECIPITATE_FADE_SPEED * dt;
                 if (_raining)
