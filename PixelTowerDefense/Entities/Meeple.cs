@@ -90,7 +90,9 @@ namespace PixelTowerDefense.Entities
         }
 
         /// <summary>
-        /// Get world-pos of segment -2..+2 (head..foot)
+        /// Get world position of a body segment.
+        /// Segment indices range from -ENEMY_H/2 to ENEMY_H/2-1
+        /// (head to feet).
         /// </summary>
         public Vector2 GetPartPos(int part)
         {

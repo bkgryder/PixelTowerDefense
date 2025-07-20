@@ -82,12 +82,12 @@ namespace PixelTowerDefense.Systems
                 float targetAngle = MathF.Atan2(mouseWorld.X - e.Pos.X,
                                                 mouseWorld.Y - e.Pos.Y);
                 if (dragPart != 0)
-                    targetAngle -= MathF.Asin(dragPart * Constants.PART_LEN / Constants.ENEMY_H);
+                    targetAngle -= MathF.Asin(dragPart * Constants.PART_LEN / (Constants.ENEMY_H * 0.5f));
 
                 float prevTargetAngle = MathF.Atan2(prevMouseWorld.X - e.Pos.X,
                                                    prevMouseWorld.Y - e.Pos.Y);
                 if (dragPart != 0)
-                    prevTargetAngle -= MathF.Asin(dragPart * Constants.PART_LEN / Constants.ENEMY_H);
+                    prevTargetAngle -= MathF.Asin(dragPart * Constants.PART_LEN / (Constants.ENEMY_H * 0.5f));
 
                 float diff = targetAngle - e.Angle;
                 diff = (diff + MathF.PI) % (2 * MathF.PI) - MathF.PI;
