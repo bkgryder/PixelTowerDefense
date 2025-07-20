@@ -93,9 +93,9 @@ using Microsoft.Xna.Framework;
         public const float BUSH_REGROW_INTERVAL = 1f;
 
         // Precipitate ability
-        public const float PRECIPITATE_DROP_SPEED = 30f;
-        public const float PRECIPITATE_FADE_SPEED = 2f;
-        public const float PRECIPITATE_CLOUD_OFFSET_Y = -12f;
+        public const float PRECIPITATE_DROP_SPEED = 130f;
+        public const float PRECIPITATE_FADE_SPEED = .1f;
+        public const float PRECIPITATE_CLOUD_OFFSET_Y = -50f;
         public const float PRECIPITATE_CLOUD_JITTER = 10f;
         public const float PRECIPITATE_CLOUD_LERP = 8f;
 
