@@ -316,6 +316,9 @@ namespace PixelTowerDefense
             foreach (var p in _pixels)
                 _sb.Draw(_px, p.Bounds, p.Col);
 
+            if (_rainAlpha > 0f)
+                DrawCloudShadow();
+
             foreach (var cp in _cloudPixels)
             {
                 var pos = _cloudCenter + cp.Pos;
@@ -571,6 +574,19 @@ namespace PixelTowerDefense
                 byte g = (byte)_rng.Next(150, 220);
                 _cloudPixels.Add(new Pixel(off, Vector2.Zero, new Color(g, g, g)));
             }
+
+            // Add some darker pixels for depth
+            int darkCount = count / 4;
+            for (int i = 0; i < darkCount; i++)
+            {
+                float ang = MathHelper.ToRadians(_rng.Next(360));
+                float r = _rng.NextFloat(0f, 1f);
+                float rx = 8f * r;
+                float ry = 3f * r;
+                var off = new Vector2(MathF.Cos(ang) * rx, MathF.Sin(ang) * ry);
+                byte g = (byte)_rng.Next(80, 150);
+                _cloudPixels.Add(new Pixel(off, Vector2.Zero, new Color(g, g, g)));
+            }
         }
 
         private void UpdateCloud(float dt)
@@ -665,6 +681,26 @@ namespace PixelTowerDefense
             );
             byte shAlpha = (byte)(100 * (1f - decomp));
             _sb.Draw(_px, shRect, new Color((byte)0, (byte)0, (byte)0, shAlpha));
+        }
+
+        private void DrawCloudShadow()
+        {
+            var ground = _cloudCenter - new Vector2(0f, Constants.PRECIPITATE_CLOUD_OFFSET_Y);
+            int gx = (int)MathF.Round(ground.X);
+            int gy = (int)MathF.Round(ground.Y);
+
+            byte alpha = (byte)(80 * _rainAlpha);
+            var col = new Color((byte)0, (byte)0, (byte)0, alpha);
+
+            for (int y = -1; y <= 1; y++)
+            {
+                for (int x = -2; x <= 2; x++)
+                {
+                    float nx = x / 2f;
+                    if (nx * nx + y * y <= 1f)
+                        _sb.Draw(_px, new Rectangle(gx + x, gy + y, 1, 1), col);
+                }
+            }
         }
 
         private void TriggerExplosion(Vector2 pos)
