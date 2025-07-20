@@ -19,6 +19,7 @@ namespace PixelTowerDefense
         List<Meeple> _meeples = new();
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
         List<BerryBush> _bushes = new();
+        List<Building> _buildings = new();
         Random _rng = new();
 
         float _camX, _camY, _zoom = 3.5f;
@@ -71,6 +72,12 @@ namespace PixelTowerDefense
 
             var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
             var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
+            _buildings.Add(new Building
+            {
+                Pos = new Vector2(midX, midY),
+                Kind = BuildingType.StockpileHut,
+                StoredBerries = 0
+            });
             _camX = midX - (GraphicsDevice.Viewport.Width * 0.5f) / _zoom;
             _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
         }
