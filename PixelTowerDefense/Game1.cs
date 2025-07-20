@@ -50,6 +50,8 @@ namespace PixelTowerDefense
         List<Pixel> _cloudPixels = new();
         Vector2 _cloudCenter;
 
+        float _mana = Constants.MANA_MAX;
+
         public Game1()
         {
             _gfx = new GraphicsDeviceManager(this);
@@ -101,6 +103,7 @@ namespace PixelTowerDefense
             float dt = (float)gt.ElapsedGameTime.TotalSeconds;
             var kb = Keyboard.GetState();
             var ms = Mouse.GetState();
+            _mana = MathF.Min(Constants.MANA_MAX, _mana + Constants.MANA_REGEN * dt);
             if (kb.IsKeyDown(Keys.Escape)) Exit();
 
             // zoom
@@ -206,7 +209,7 @@ namespace PixelTowerDefense
             {
                 bool mPress = ms.LeftButton == ButtonState.Pressed &&
                               _prevMs.LeftButton == ButtonState.Released;
-                if (mPress)
+                if (mPress && _mana >= Constants.FIRE_COST)
                 {
                     float minD = Constants.PICKUP_RADIUS;
                     for (int i = _meeples.Count - 1; i >= 0; i--)
@@ -225,25 +228,36 @@ namespace PixelTowerDefense
                             }
                         }
                     }
+                    _mana = MathF.Max(0f, _mana - Constants.FIRE_COST);
                 }
             }
             else if (_currentAbility == Ability.Telekinesis)
             {
-                InputSystem.HandleDrag(
-                    gt, ms, _prevMs,
-                    ref _dragging, ref _dragIdx, ref _dragPart,
-                    ref _dragStartWorld, ref _dragStartTime,
-                    mworld, prevWorld,
-                    _meeples, _pixels
-                );
+                if (_mana > 0f)
+                {
+                    InputSystem.HandleDrag(
+                        gt, ms, _prevMs,
+                        ref _dragging, ref _dragIdx, ref _dragPart,
+                        ref _dragStartWorld, ref _dragStartTime,
+                        mworld, prevWorld,
+                        _meeples, _pixels
+                    );
+                    if (_dragging)
+                        _mana = MathF.Max(0f, _mana - Constants.TELEKINESIS_DRAIN * dt);
+                }
+                else
+                {
+                    _dragging = false;
+                }
             }
             else if (_currentAbility == Ability.Explosion)
             {
                 bool mPress = ms.LeftButton == ButtonState.Pressed &&
                               _prevMs.LeftButton == ButtonState.Released;
-                if (mPress)
+                if (mPress && _mana >= Constants.EXPLOSION_COST)
                 {
                     TriggerExplosion(mworld);
+                    _mana = MathF.Max(0f, _mana - Constants.EXPLOSION_COST);
                 }
             }
             else if (_currentAbility == Ability.Precipitate)
@@ -252,9 +266,9 @@ namespace PixelTowerDefense
                 bool released = ms.LeftButton == ButtonState.Released &&
                                  _prevMs.LeftButton == ButtonState.Pressed;
                 bool prev = _raining;
-                if (held)
+                if (held && _mana > 0f)
                     _raining = true;
-                if (released)
+                if (released || _mana <= 0f)
                     _raining = false;
 
                 if (_raining)
@@ -277,6 +291,7 @@ namespace PixelTowerDefense
 
                 if (_raining)
                 {
+                    _mana = MathF.Max(0f, _mana - Constants.PRECIPITATE_DRAIN * dt);
                     for (int i = 0; i < _cloudPixels.Count; i++)
                     {
                         var cp = _cloudPixels[i];
@@ -518,6 +533,7 @@ namespace PixelTowerDefense
                 DrawMeepleStats(_meeples[_hoverIdx], new Point(uiMouse.X, uiMouse.Y));
             DrawAbilityToolbar();
             DrawHint();
+            DrawManaRing(new Point(uiMouse.X, uiMouse.Y));
             _sb.End();
             base.Draw(gt);
         }
@@ -616,6 +632,22 @@ namespace PixelTowerDefense
             _sb.Draw(_px, new Rectangle(x, y, width, height), new Color(0, 0, 0, 180));
             for (int i = 0; i < lines.Length; i++)
                 DrawTinyString(lines[i], new Vector2(x + 1, y + 1 + i * 6), Color.White);
+        }
+
+        private void DrawManaRing(Point mouse)
+        {
+            float ratio = _mana / Constants.MANA_MAX;
+            int radius = 10;
+            int segments = 32;
+            for (int i = 0; i < segments; i++)
+            {
+                float t = i / (float)segments;
+                if (t > ratio) break;
+                float ang = t * MathF.PI * 2f;
+                int x = (int)MathF.Round(mouse.X + MathF.Cos(ang) * radius);
+                int y = (int)MathF.Round(mouse.Y + MathF.Sin(ang) * radius);
+                _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.SkyBlue);
+            }
         }
 
         private void InitCloud()

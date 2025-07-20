@@ -99,5 +99,13 @@ using Microsoft.Xna.Framework;
         public const float PRECIPITATE_CLOUD_JITTER = 10f;
         public const float PRECIPITATE_CLOUD_LERP = 8f;
 
+        // Mana system
+        public const float MANA_MAX = 100f;
+        public const float MANA_REGEN = 20f; // mana per second
+        public const float FIRE_COST = 20f;
+        public const float EXPLOSION_COST = 40f;
+        public const float TELEKINESIS_DRAIN = 10f; // per second
+        public const float PRECIPITATE_DRAIN = 5f;  // per second
+
     }
 }
