@@ -250,13 +250,18 @@ namespace PixelTowerDefense
 
                 if (_raining)
                 {
-                    int spawn = (int)(dt * 40f);
-                    for (int i = 0; i < spawn; i++)
+                    for (int i = 0; i < _cloudPixels.Count; i++)
                     {
-                        float x = _rng.NextFloat(Constants.ARENA_LEFT, Constants.ARENA_RIGHT);
-                        var pos = new Vector2(x, Constants.ARENA_TOP - 2);
-                        var vel = new Vector2(0f, Constants.PRECIPITATE_DROP_SPEED);
-                        _pixels.Spawn(new Pixel(pos, vel, Color.CornflowerBlue, 0f, 1f));
+                        var cp = _cloudPixels[i];
+                        cp.Lifetime -= dt;
+                        if (cp.Lifetime <= 0f)
+                        {
+                            var pos = _cloudCenter + cp.Pos;
+                            var vel = new Vector2(0f, Constants.PRECIPITATE_DROP_SPEED);
+                            _pixels.Spawn(new Pixel(pos, vel, Color.CornflowerBlue, 0f, 1f));
+                            cp.Lifetime = _rng.NextFloat(0.05f, 0.15f);
+                        }
+                        _cloudPixels[i] = cp;
                     }
 
                     for (int b = 0; b < _bushes.Count; b++)
