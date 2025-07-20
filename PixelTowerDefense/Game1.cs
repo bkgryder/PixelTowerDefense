@@ -222,20 +222,8 @@ namespace PixelTowerDefense
             PhysicsSystem.UpdatePixels(_pixels, dt);
             CombatSystem.ResolveCombat(_meeples, _pixels, dt);
 
-            // smooth shadow placement
-            for (int i = 0; i < _meeples.Count; i++)
-            {
-                var s = _meeples[i];
-                int halfSeg = Constants.ENEMY_H / 2;
-                float bottom = float.MinValue;
-                for (int p = -halfSeg; p < halfSeg; p++)
-                    bottom = MathF.Max(bottom, s.GetPartPos(p).Y - s.z);
-                float target = bottom + 1f;
-                // slower interpolation so shadows follow movement smoothly
-                float lerp = MathHelper.Clamp(4f * dt, 0f, 1f);
-                s.ShadowY = MathHelper.Lerp(s.ShadowY, target, lerp);
-                _meeples[i] = s;
-            }
+            // update shadow positions after all movement/physics
+            ShadowSystem.UpdateShadows(_meeples, dt);
 
             _prevKb = kb;
             _prevMs = ms;
