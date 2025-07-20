@@ -94,6 +94,8 @@ using Microsoft.Xna.Framework;
         // Precipitate ability
         public const float PRECIPITATE_DROP_SPEED = 30f;
         public const float PRECIPITATE_FADE_SPEED = 2f;
+        public const float PRECIPITATE_CLOUD_OFFSET = 12f;
+        public const float PRECIPITATE_CLOUD_JITTER = 10f;
 
     }
 }
