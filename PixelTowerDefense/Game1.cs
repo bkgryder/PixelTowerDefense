@@ -482,8 +482,8 @@ namespace PixelTowerDefense
 
         private void DrawHint()
         {
-            int total = 0;
-            foreach (var b in _bushes) total += b.Berries;
+            int total = _buildings.Where(b => b.Kind == BuildingType.StockpileHut)
+                                  .Sum(b => b.StoredBerries);
             DrawTinyString($"B{total}", new Vector2(35, 8), Color.White);
         }
 
