@@ -436,7 +436,8 @@ namespace PixelTowerDefense
                     float cos = MathF.Cos(angle);
                     float sin = MathF.Sin(angle);
 
-                    if (MathF.Abs(e.AngularVel) > 0.01f)
+                    if (e.State == MeepleState.Launched &&
+                        MathF.Abs(e.AngularVel) > 0.01f)
                         DrawFatSegment(segPos, angle,
                             Constants.ENEMY_W,
                             Constants.PART_LEN,
