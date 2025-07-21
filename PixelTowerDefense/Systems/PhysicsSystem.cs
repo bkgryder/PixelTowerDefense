@@ -295,6 +295,8 @@ namespace PixelTowerDefense.Systems
 
                 meeples[i] = e;
             }
+
+            ResolveDominoCollisions(meeples);
         }
 
         private static void ExplodeEnemy(Meeple e, List<Pixel> debris)
@@ -461,6 +463,42 @@ namespace PixelTowerDefense.Systems
                 { p.Pos.Y = Constants.ARENA_BOTTOM - 1; p.Vel.Y *= -0.5f; }
 
                 debris[i] = p;
+            }
+        }
+
+        private static void ResolveDominoCollisions(List<Meeple> meeples)
+        {
+            for (int i = 0; i < meeples.Count; i++)
+            {
+                var a = meeples[i];
+                if (!a.Alive || a.State != MeepleState.Launched) continue;
+
+                for (int j = 0; j < meeples.Count; j++)
+                {
+                    if (i == j) continue;
+                    var b = meeples[j];
+                    if (!b.Alive) continue;
+                    if (b.State == MeepleState.Launched ||
+                        b.State == MeepleState.Ragdoll ||
+                        b.State == MeepleState.Stunned ||
+                        b.State == MeepleState.Dead)
+                        continue;
+
+                    if (Vector2.Distance(a.Pos, b.Pos) < Constants.DOMINO_RANGE)
+                    {
+                        Vector2 dir = b.Pos - a.Pos;
+                        if (dir.LengthSquared() > 0f)
+                            dir.Normalize();
+                        else
+                            dir = new Vector2(0f, -1f);
+
+                        b.State = MeepleState.Launched;
+                        b.Vel += dir * Constants.DOMINO_KNOCKBACK;
+                        b.vz += Constants.DOMINO_KNOCKBACK_UPWARD;
+                        b.AngularVel = _rng.NextFloat(-4f, 4f);
+                        meeples[j] = b;
+                    }
+                }
             }
         }
 
