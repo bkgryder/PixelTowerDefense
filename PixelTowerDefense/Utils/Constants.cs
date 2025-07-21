@@ -19,6 +19,7 @@ using Microsoft.Xna.Framework;
         public const float THROW_VZ_SCALE = 0.65f;
         public const float INITIAL_Z = 2f;
         public const float THROW_SENSITIVITY = .25f;
+        public const float THROW_SPIN_SCALE = 0.05f;
         public const float GRAB_Z = 4f;
         public const float VOMIT_SPIN_THRESHOLD = 30f;
         public const float ANGULAR_DAMPING = 1.5f;

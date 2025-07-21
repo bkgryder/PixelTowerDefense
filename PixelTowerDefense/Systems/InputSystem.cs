@@ -146,7 +146,9 @@ namespace PixelTowerDefense.Systems
                 }
 
                 e.State = MeepleState.Launched;
-                e.AngularVel = e.Vel.X * 0.05f;
+                float baseSpin = e.Vel.Length() * Constants.THROW_SPIN_SCALE;
+                float spin = _rng.NextFloat(0.5f, 1.5f) * baseSpin;
+                e.AngularVel = MathF.Sign(e.Vel.X) * spin;
                 meeples[dragIdx] = e;
 
                 dragging = false;
