@@ -410,137 +410,17 @@ namespace PixelTowerDefense
                 DrawShadow(e);
             }
 
-            // --- soldiers/entities ---
-            foreach (var e in _meeples.OrderBy(e => e.ShadowY))
-            {
-                bool isDead = e.State == MeepleState.Dead;
-                float decomp = isDead
-                    ? MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION)
-                    : 0f;
-
-                // ---- BODY: Each segment as pixels ----
-
-                int half = Constants.ENEMY_H / 2;
-                for (int part = -half; part < half; part++)
-                {
-                    var segPos = e.GetPartPos(part);
-                    segPos.Y -= e.z;
-
-                    // Determine color for this part
-                    int seg = part + half;
-                    Color c;
-                    if (seg <= 1)
-                        c = Constants.HAND_COLOR;
-                    else if (seg <= Constants.ENEMY_H * 2 / 5)
-                        c = e.ShirtColor;
-                    else if (seg <= Constants.ENEMY_H * 3 / 5)
-                        c = e.ShirtColor;
-                    else if (seg <= Constants.ENEMY_H * 4 / 5)
-                        c = e.Side == Faction.Friendly ? new Color(40, 70, 40) : new Color(128, 110, 90);
-                    else
-                        c = e.Side == Faction.Friendly ? new Color(20, 40, 20) : new Color(80, 60, 40);
-
-                    if (isDead)
-                    {
-                        c = ApplyDecomposition(c, decomp);
-                    }
-                    else if (e.State == MeepleState.Ragdoll)
-                    {
-                        c = Color.Lerp(c, Color.LightGray, 0.5f);
-                    }
-
-                    // Pixel-by-pixel for a 2x1 "block", rotated in world space
-                    float angle = e.Angle;
-                    float cos = MathF.Cos(angle);
-                    float sin = MathF.Sin(angle);
-
-                    if (e.State == MeepleState.Launched &&
-                        MathF.Abs(e.AngularVel) > 0.01f)
-                        DrawFatSegment(segPos, angle,
-                            Constants.ENEMY_W,
-                            Constants.PART_LEN,
-                            c);
-
-                    for (int dx = 0; dx < Constants.ENEMY_W; dx++)
-                        for (int dy = 0; dy < (int)Constants.PART_LEN; dy++)
-                        {
-                            // Local offset, so body is centered on segPos
-                            float localX = dx - (Constants.ENEMY_W * 0.5f - 0.5f);
-                            float localY = dy - (Constants.PART_LEN * 0.5f - 0.5f);
-
-                            // Apply rotation
-                            float x = segPos.X + localX * cos - localY * sin;
-                            float y = segPos.Y + localX * sin + localY * cos;
-
-                            // skip pixels as corpse decomposes
-                            if (isDead)
-                            {
-                                if (decomp > 0.5f)
-                                {
-                                    // fewer pixels vanish as the corpse decays
-                                    float skipChance = MathF.Min((decomp - 0.5f) * 2f * 0.5f, 0.9f * 0.5f);
-                                    int hx = (int)MathF.Round(x), hy = (int)MathF.Round(y);
-                                    int hash = (hx * 73856093) ^ (hy * 19349663) ^ part;
-                                    double r = ((hash & 0x7fffffff) / (double)int.MaxValue);
-                                    if (r < skipChance)
-                                        continue;
-                                }
-                            }
-
-                            _sb.Draw(_px, new Rectangle((int)MathF.Round(x), (int)MathF.Round(y), 1, 1), c);
-
-                            // Optionally: Burning glow behind pixels
-                            if (e.IsBurning && _rng.NextDouble() < 0.03)
-                            {
-                                Color[] firePal = { Color.OrangeRed, Color.Orange, Color.Yellow, new Color(255, 100, 0) };
-                                Color glowCol = firePal[_rng.Next(firePal.Length)];
-                                var glow = new Rectangle((int)MathF.Round(x) + _rng.Next(-1, 2), (int)MathF.Round(y) + _rng.Next(-1, 2), 1, 1);
-                                _sb.Draw(_px, glow, new Color(glowCol, 90));
-                            }
-                        }
-                }
-
-                // draw 1px hands at the sides of the body
-                {
-                    var bodyPos = e.GetPartPos(-1);
-                    bodyPos.Y -= e.z;
-                    float angle = e.Angle;
-                    float sideX = MathF.Cos(angle);
-                    float sideY = MathF.Sin(angle);
-                    float handOffset = Constants.ENEMY_W * 0.5f + 0.5f;
-
-                    // Left hand
-                    float lx = bodyPos.X - sideX * handOffset;
-                    float ly = bodyPos.Y - sideY * handOffset;
-                    Color handCol = Constants.HAND_COLOR;
-                    if (isDead)
-                    {
-                        handCol = ApplyDecomposition(handCol, decomp);
-                    }
-                    else if (e.State == MeepleState.Ragdoll)
-                    {
-                        handCol = Color.Lerp(handCol, Color.LightGray, 0.5f);
-                    }
-                    _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly), 1, 1), handCol);
-                    if (e.CarriedBerries > 0)
-                        _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly - 1), 1, 1), Color.Red);
-
-                    // Right hand
-                    float rx = bodyPos.X + sideX * handOffset;
-                    float ry = bodyPos.Y + sideY * handOffset;
-                    _sb.Draw(_px, new Rectangle((int)MathF.Round(rx), (int)MathF.Round(ry), 1, 1), handCol);
-                }
-
-                // ---- FLAME EFFECT on burning ----
-                if (e.IsBurning)
-                {
-                    DrawFlame(e);
-                }
-            }
+            // --- soldiers/entities on ground ---
+            foreach (var e in _meeples.Where(m => m.z <= 0f).OrderBy(m => m.ShadowY))
+                DrawMeepleSprite(e);
 
             // --- tree leaves ---
             foreach (var t in _trees)
                 DrawTreeTop(t);
+
+            // --- airborne soldiers/entities ---
+            foreach (var e in _meeples.Where(m => m.z > 0f).OrderBy(m => m.ShadowY))
+                DrawMeepleSprite(e);
 
             _sb.End();
 
@@ -862,6 +742,103 @@ namespace PixelTowerDefense
             );
             byte shAlpha = (byte)(100 * (1f - decomp));
             _sb.Draw(_px, shRect, new Color((byte)0, (byte)0, (byte)0, shAlpha));
+        }
+
+        private void DrawMeepleSprite(Meeple e)
+        {
+            bool isDead = e.State == MeepleState.Dead;
+            float decomp = isDead
+                ? MathF.Min(1f, e.DecompTimer / Constants.DECOMP_DURATION)
+                : 0f;
+
+            int half = Constants.ENEMY_H / 2;
+            for (int part = -half; part < half; part++)
+            {
+                var segPos = e.GetPartPos(part);
+                segPos.Y -= e.z;
+
+                int seg = part + half;
+                Color c;
+                if (seg <= 1)
+                    c = Constants.HAND_COLOR;
+                else if (seg <= Constants.ENEMY_H * 2 / 5)
+                    c = e.ShirtColor;
+                else if (seg <= Constants.ENEMY_H * 3 / 5)
+                    c = e.ShirtColor;
+                else if (seg <= Constants.ENEMY_H * 4 / 5)
+                    c = e.Side == Faction.Friendly ? new Color(40, 70, 40) : new Color(128, 110, 90);
+                else
+                    c = e.Side == Faction.Friendly ? new Color(20, 40, 20) : new Color(80, 60, 40);
+
+                if (isDead)
+                    c = ApplyDecomposition(c, decomp);
+                else if (e.State == MeepleState.Ragdoll)
+                    c = Color.Lerp(c, Color.LightGray, 0.5f);
+
+                float angle = e.Angle;
+                float cos = MathF.Cos(angle);
+                float sin = MathF.Sin(angle);
+
+                if (e.State == MeepleState.Launched && MathF.Abs(e.AngularVel) > 0.01f)
+                    DrawFatSegment(segPos, angle, Constants.ENEMY_W, Constants.PART_LEN, c);
+
+                for (int dx = 0; dx < Constants.ENEMY_W; dx++)
+                    for (int dy = 0; dy < (int)Constants.PART_LEN; dy++)
+                    {
+                        float localX = dx - (Constants.ENEMY_W * 0.5f - 0.5f);
+                        float localY = dy - (Constants.PART_LEN * 0.5f - 0.5f);
+
+                        float x = segPos.X + localX * cos - localY * sin;
+                        float y = segPos.Y + localX * sin + localY * cos;
+
+                        if (isDead && decomp > 0.5f)
+                        {
+                            float skipChance = MathF.Min((decomp - 0.5f) * 2f * 0.5f, 0.9f * 0.5f);
+                            int hx = (int)MathF.Round(x), hy = (int)MathF.Round(y);
+                            int hash = (hx * 73856093) ^ (hy * 19349663) ^ part;
+                            double r = ((hash & 0x7fffffff) / (double)int.MaxValue);
+                            if (r < skipChance)
+                                continue;
+                        }
+
+                        _sb.Draw(_px, new Rectangle((int)MathF.Round(x), (int)MathF.Round(y), 1, 1), c);
+
+                        if (e.IsBurning && _rng.NextDouble() < 0.03)
+                        {
+                            Color[] firePal = { Color.OrangeRed, Color.Orange, Color.Yellow, new Color(255, 100, 0) };
+                            Color glowCol = firePal[_rng.Next(firePal.Length)];
+                            var glow = new Rectangle((int)MathF.Round(x) + _rng.Next(-1, 2), (int)MathF.Round(y) + _rng.Next(-1, 2), 1, 1);
+                            _sb.Draw(_px, glow, new Color(glowCol, 90));
+                        }
+                    }
+            }
+
+            {
+                var bodyPos = e.GetPartPos(-1);
+                bodyPos.Y -= e.z;
+                float angle = e.Angle;
+                float sideX = MathF.Cos(angle);
+                float sideY = MathF.Sin(angle);
+                float handOffset = Constants.ENEMY_W * 0.5f + 0.5f;
+
+                float lx = bodyPos.X - sideX * handOffset;
+                float ly = bodyPos.Y - sideY * handOffset;
+                Color handCol = Constants.HAND_COLOR;
+                if (isDead)
+                    handCol = ApplyDecomposition(handCol, decomp);
+                else if (e.State == MeepleState.Ragdoll)
+                    handCol = Color.Lerp(handCol, Color.LightGray, 0.5f);
+                _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly), 1, 1), handCol);
+                if (e.CarriedBerries > 0)
+                    _sb.Draw(_px, new Rectangle((int)MathF.Round(lx), (int)MathF.Round(ly - 1), 1, 1), Color.Red);
+
+                float rx = bodyPos.X + sideX * handOffset;
+                float ry = bodyPos.Y + sideY * handOffset;
+                _sb.Draw(_px, new Rectangle((int)MathF.Round(rx), (int)MathF.Round(ry), 1, 1), handCol);
+            }
+
+            if (e.IsBurning)
+                DrawFlame(e);
         }
 
         private void DrawCloudShadow()
