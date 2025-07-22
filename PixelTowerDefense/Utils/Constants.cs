@@ -17,7 +17,7 @@ using Microsoft.Xna.Framework;
         public const float Z_GRAVITY = 120f;
         public const float PICKUP_RADIUS = 5f;
         public const float THROW_VZ_SCALE = 0.25f;
-        public const float INITIAL_Z = 2f;\
+        public const float INITIAL_Z = 2f;
         public const float THROW_SPIN_SCALE = 0.05f;
         public const float THROW_SENSITIVITY = .15f;
         public const float GRAB_Z = 4f;
