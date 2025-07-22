@@ -141,7 +141,22 @@ namespace PixelTowerDefense.Systems
 
                             if (e.Hunger >= Constants.HUNGER_THRESHOLD && e.CarriedBerries == 0)
                             {
-                                int bidx = FindNearestBush(e.Pos, bushes);
+                                int bidx;
+                                var wdata = e.Worker.Value;
+                                if (wdata.CurrentJob == JobType.HarvestBerries && wdata.TargetIdx != null)
+                                    bidx = wdata.TargetIdx.Value;
+                                else
+                                {
+                                    bidx = FindNearestBush(e.Pos, bushes);
+                                    if (bidx >= 0)
+                                    {
+                                        wdata.CurrentJob = JobType.HarvestBerries;
+                                        wdata.TargetIdx = bidx;
+                                        var rbush = bushes[bidx];
+                                        rbush.ReservedBy = i;
+                                        bushes[bidx] = rbush;
+                                    }
+                                }
                                 if (bidx >= 0)
                                 {
                                     var bush = bushes[bidx];
@@ -153,7 +168,10 @@ namespace PixelTowerDefense.Systems
                                         {
                                             bush.Berries--;
                                             e.CarriedBerries = 1;
+                                            bush.ReservedBy = null;
                                             bushes[bidx] = bush;
+                                            wdata.CurrentJob = JobType.None;
+                                            wdata.TargetIdx = null;
                                         }
                                     }
                                     else
@@ -163,6 +181,7 @@ namespace PixelTowerDefense.Systems
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
+                                    e.Worker = wdata;
                                     break;
                                 }
                             }
@@ -170,12 +189,27 @@ namespace PixelTowerDefense.Systems
                             // --- log & tree jobs ---
                             if (e.CarriedLogIdx >= 0)
                             {
+                                var wdata = e.Worker.Value;
                                 if (e.CarriedLogIdx < logs.Count)
                                 {
                                     var log = logs[e.CarriedLogIdx];
-                                    int hidx = FindNearestCarpenter(e.Pos, buildings);
-                                    if (hidx < 0)
-                                        hidx = FindNearestStockpileForLogs(e.Pos, buildings);
+                                    int hidx;
+                                    if (wdata.CurrentJob == JobType.DepositResource && wdata.TargetIdx != null)
+                                        hidx = wdata.TargetIdx.Value;
+                                    else
+                                    {
+                                        hidx = FindNearestCarpenter(e.Pos, buildings);
+                                        if (hidx < 0)
+                                            hidx = FindNearestStockpileForLogs(e.Pos, buildings);
+                                        if (hidx >= 0)
+                                        {
+                                            wdata.CurrentJob = JobType.DepositResource;
+                                            wdata.TargetIdx = hidx;
+                                            var hutReserve = buildings[hidx];
+                                            hutReserve.ReservedBy = i;
+                                            buildings[hidx] = hutReserve;
+                                        }
+                                    }
                                     if (hidx >= 0)
                                     {
                                         var hut = buildings[hidx];
@@ -187,6 +221,9 @@ namespace PixelTowerDefense.Systems
                                             buildings[hidx] = hut;
                                             logs.RemoveAt(e.CarriedLogIdx);
                                             e.CarriedLogIdx = -1;
+                                            hut.ReservedBy = null;
+                                            wdata.CurrentJob = JobType.None;
+                                            wdata.TargetIdx = null;
                                             e.WanderTimer = 0f;
                                         }
                                         else
@@ -198,6 +235,7 @@ namespace PixelTowerDefense.Systems
                                             logs[e.CarriedLogIdx] = log;
                                         }
                                         e.Angle = 0f;
+                                        e.Worker = wdata;
                                         break;
                                     }
                                 }
@@ -208,7 +246,22 @@ namespace PixelTowerDefense.Systems
                             }
                             else
                             {
-                                int lidx = FindNearestLooseLog(e.Pos, logs);
+                                var wdata2 = e.Worker.Value;
+                                int lidx;
+                                if (wdata2.CurrentJob == JobType.HaulLog && wdata2.TargetIdx != null)
+                                    lidx = wdata2.TargetIdx.Value;
+                                else
+                                {
+                                    lidx = FindNearestLooseLog(e.Pos, logs);
+                                    if (lidx >= 0)
+                                    {
+                                        wdata2.CurrentJob = JobType.HaulLog;
+                                        wdata2.TargetIdx = lidx;
+                                        var rlog = logs[lidx];
+                                        rlog.ReservedBy = i;
+                                        logs[lidx] = rlog;
+                                    }
+                                }
                                 if (lidx >= 0)
                                 {
                                     var log = logs[lidx];
@@ -219,6 +272,9 @@ namespace PixelTowerDefense.Systems
                                         log.IsCarried = true;
                                         logs[lidx] = log;
                                         e.CarriedLogIdx = lidx;
+                                        log.ReservedBy = null;
+                                        wdata2.CurrentJob = JobType.None;
+                                        wdata2.TargetIdx = null;
                                         e.WanderTimer = 0f;
                                     }
                                     else
@@ -228,10 +284,25 @@ namespace PixelTowerDefense.Systems
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
+                                    e.Worker = wdata2;
                                     break;
                                 }
 
-                                int tidx = FindNearestTree(e.Pos, trees);
+                                int tidx;
+                                if (wdata2.CurrentJob == JobType.ChopTree && wdata2.TargetIdx != null)
+                                    tidx = wdata2.TargetIdx.Value;
+                                else
+                                {
+                                    tidx = FindNearestTree(e.Pos, trees);
+                                    if (tidx >= 0)
+                                    {
+                                        wdata2.CurrentJob = JobType.ChopTree;
+                                        wdata2.TargetIdx = tidx;
+                                        var rt = trees[tidx];
+                                        rt.ReservedBy = i;
+                                        trees[tidx] = rt;
+                                    }
+                                }
                                 if (tidx >= 0)
                                 {
                                     var tree = trees[tidx];
@@ -251,6 +322,13 @@ namespace PixelTowerDefense.Systems
                                             trees[tidx] = tree;
                                         }
                                         e.WanderTimer = 0.5f;
+                                        if (tree.IsStump)
+                                        {
+                                            tree.ReservedBy = null;
+                                            trees[tidx] = tree;
+                                            wdata2.CurrentJob = JobType.None;
+                                            wdata2.TargetIdx = null;
+                                        }
                                     }
                                     else
                                     {
@@ -259,6 +337,7 @@ namespace PixelTowerDefense.Systems
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
+                                    e.Worker = wdata2;
                                     break;
                                 }
                             }
@@ -705,6 +784,7 @@ namespace PixelTowerDefense.Systems
             for (int i = 0; i < bushes.Count; i++)
             {
                 if (bushes[i].Berries <= 0) continue;
+                if (bushes[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, bushes[i].Pos);
                 if (d < best)
                 {
@@ -723,6 +803,7 @@ namespace PixelTowerDefense.Systems
             {
                 if (huts[i].Kind != BuildingType.StockpileHut) continue;
                 if (huts[i].StoredBerries >= Building.CAPACITY) continue;
+                if (huts[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
                 if (d < best)
                 {
@@ -741,6 +822,7 @@ namespace PixelTowerDefense.Systems
             {
                 if (huts[i].Kind != BuildingType.StockpileHut) continue;
                 if (huts[i].StoredBerries <= 0) continue;
+                if (huts[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
                 if (d < best)
                 {
@@ -758,6 +840,7 @@ namespace PixelTowerDefense.Systems
             for (int i = 0; i < huts.Count; i++)
             {
                 if (huts[i].Kind != BuildingType.CarpenterHut) continue;
+                if (huts[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
                 if (d < best)
                 {
@@ -775,6 +858,7 @@ namespace PixelTowerDefense.Systems
             for (int i = 0; i < huts.Count; i++)
             {
                 if (huts[i].Kind != BuildingType.StockpileHut) continue;
+                if (huts[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
                 if (d < best)
                 {
@@ -792,6 +876,7 @@ namespace PixelTowerDefense.Systems
             for (int i = 0; i < logs.Count; i++)
             {
                 if (logs[i].IsCarried) continue;
+                if (logs[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, logs[i].Pos);
                 if (d < best)
                 {
@@ -809,6 +894,7 @@ namespace PixelTowerDefense.Systems
             for (int i = 0; i < trees.Count; i++)
             {
                 if (trees[i].IsStump) continue;
+                if (trees[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, trees[i].Pos);
                 if (d < best)
                 {

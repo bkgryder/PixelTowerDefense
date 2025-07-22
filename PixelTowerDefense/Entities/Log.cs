@@ -10,12 +10,14 @@ namespace PixelTowerDefense.Entities
         public bool IsCarried;
         public Point[] Shape;
         public Color Color;
+        public int? ReservedBy;
 
         public Log(Vector2 pos, System.Random rng)
         {
             Pos = pos;
             Vel = Vector2.Zero;
             IsCarried = false;
+            ReservedBy = null;
             Color = new Color(
                 (byte)rng.Next(90, 130),
                 (byte)rng.Next(60, 90),
