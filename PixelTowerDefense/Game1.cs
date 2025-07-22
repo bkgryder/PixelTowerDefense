@@ -19,6 +19,8 @@ namespace PixelTowerDefense
         List<Meeple> _meeples = new();
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
         List<BerryBush> _bushes = new();
+        List<Log> _logs = new();
+        List<Stone> _stones = new();
         List<Building> _buildings = new();
         Random _rng = new();
 
@@ -85,6 +87,8 @@ namespace PixelTowerDefense
 
             SpawnMeeple(10);
             SpawnBerryBushes(5);
+            SpawnLogs(4);
+            SpawnStones(4);
 
             var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
             var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
@@ -382,6 +386,14 @@ namespace PixelTowerDefense
             foreach (var b in _bushes)
                 DrawBush(b);
 
+            // --- stones ---
+            foreach (var s in _stones)
+                DrawStone(s);
+
+            // --- logs ---
+            foreach (var l in _logs)
+                DrawLog(l);
+
             // --- buildings ---
             foreach (var b in _buildings)
                 DrawBuilding(b);
@@ -581,6 +593,30 @@ namespace PixelTowerDefense
             }
         }
 
+        private void SpawnLogs(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
+                                       Constants.ARENA_RIGHT - 5);
+                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
+                                       Constants.ARENA_BOTTOM - 5);
+                _logs.Add(new Log(new Vector2(x, y), _rng));
+            }
+        }
+
+        private void SpawnStones(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
+                                       Constants.ARENA_RIGHT - 5);
+                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
+                                       Constants.ARENA_BOTTOM - 5);
+                _stones.Add(new Stone(new Vector2(x, y), _rng));
+            }
+        }
+
         private bool Edge(KeyboardState kb, Keys k)
             => kb.IsKeyDown(k) && _prevKb.IsKeyUp(k);
 
@@ -750,6 +786,22 @@ namespace PixelTowerDefense
                     }
                     break;
             }
+        }
+
+        private void DrawStone(Stone s)
+        {
+            int baseX = (int)MathF.Round(s.Pos.X);
+            int baseY = (int)MathF.Round(s.Pos.Y);
+            foreach (var p in s.Shape)
+                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), s.Color);
+        }
+
+        private void DrawLog(Log l)
+        {
+            int baseX = (int)MathF.Round(l.Pos.X);
+            int baseY = (int)MathF.Round(l.Pos.Y);
+            foreach (var p in l.Shape)
+                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), l.Color);
         }
 
         private void DrawShadow(Meeple e)
