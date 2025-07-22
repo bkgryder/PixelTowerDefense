@@ -13,6 +13,7 @@ namespace PixelTowerDefense.Entities
         public int Health;
         public bool IsStump;
 
+
         public Tree(Vector2 pos, System.Random rng)
         {
             Pos = pos;
