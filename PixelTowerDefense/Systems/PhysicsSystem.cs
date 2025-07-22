@@ -93,7 +93,7 @@ namespace PixelTowerDefense.Systems
                                     else
                                     {
                                         if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                                        e.Vel = dir * Constants.WANDER_SPEED;
+                                        e.Vel = dir * e.MoveSpeed;
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
@@ -130,7 +130,7 @@ namespace PixelTowerDefense.Systems
                                         else
                                         {
                                             if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                                            e.Vel = dir * Constants.WANDER_SPEED;
+                                            e.Vel = dir * e.MoveSpeed;
                                             e.Pos += e.Vel * dt;
                                         }
                                         e.Angle = 0f;
@@ -177,7 +177,7 @@ namespace PixelTowerDefense.Systems
                                     else
                                     {
                                         if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                                        e.Vel = dir * Constants.WANDER_SPEED;
+                                        e.Vel = dir * e.MoveSpeed;
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
@@ -229,7 +229,7 @@ namespace PixelTowerDefense.Systems
                                         else
                                         {
                                             if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                                            e.Vel = dir * Constants.WANDER_SPEED;
+                                            e.Vel = dir * e.MoveSpeed;
                                             e.Pos += e.Vel * dt;
                                             log.Pos = e.Pos;
                                             logs[e.CarriedLogIdx] = log;
@@ -280,7 +280,7 @@ namespace PixelTowerDefense.Systems
                                     else
                                     {
                                         if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                                        e.Vel = dir * Constants.WANDER_SPEED;
+                                        e.Vel = dir * e.MoveSpeed;
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
@@ -333,7 +333,7 @@ namespace PixelTowerDefense.Systems
                                     else
                                     {
                                         if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                                        e.Vel = dir * Constants.WANDER_SPEED;
+                                        e.Vel = dir * e.MoveSpeed;
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
@@ -351,18 +351,18 @@ namespace PixelTowerDefense.Systems
                                                                Constants.BURN_WANDER_TIME_MAX);
                                 float ang = MathHelper.ToRadians(_rng.Next(360));
                                 e.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang))
-                                             * Constants.WANDER_SPEED * Constants.BURNING_SPEED_MULT;
+                                              * e.MoveSpeed * Constants.BURNING_SPEED_MULT;
                             }
                             else
                             {
                                 e.WanderTimer = _rng.NextFloat(1f, 3f);
                                 float ang = MathHelper.ToRadians(_rng.Next(360));
                                 e.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang))
-                                             * Constants.WANDER_SPEED;
+                                              * e.MoveSpeed;
                             }
                         }
                         if (e.IsBurning)
-                            e.Vel = Vector2.Normalize(e.Vel) * Constants.WANDER_SPEED * Constants.BURNING_SPEED_MULT;
+                            e.Vel = Vector2.Normalize(e.Vel) * e.MoveSpeed * Constants.BURNING_SPEED_MULT;
                         e.Pos += e.Vel * dt;
                         e.Angle = 0f;
                         break;
@@ -403,7 +403,7 @@ namespace PixelTowerDefense.Systems
                                 e.WanderTimer = _rng.NextFloat(0.5f, 2.5f);
                                 float landAng = MathHelper.ToRadians(_rng.Next(360));
                                 e.Vel = new Vector2(MathF.Cos(landAng), MathF.Sin(landAng))
-                                                  * Constants.WANDER_SPEED;
+                                                  * e.MoveSpeed;
                                 e.Angle = 0f;
                                 e.AngularVel = 0f;
                             }
@@ -450,7 +450,7 @@ namespace PixelTowerDefense.Systems
                             e.WanderTimer = _rng.NextFloat(0.5f, 2.5f);
                             float upAng = MathHelper.ToRadians(_rng.Next(360));
                             e.Vel = new Vector2(MathF.Cos(upAng), MathF.Sin(upAng))
-                                                 * Constants.WANDER_SPEED;
+                                                 * e.MoveSpeed;
                             e.Angle = 0f;
                         }
                         break;
