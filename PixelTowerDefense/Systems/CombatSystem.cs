@@ -58,7 +58,7 @@ namespace PixelTowerDefense.Systems
                         Vector2 dir = target.Pos - m.Pos;
                         float dist = dir.Length();
                         if (dist > 0f) dir /= dist;
-                        m.Vel = dir * Constants.WANDER_SPEED * 1.8f;
+                        m.Vel = dir * m.MoveSpeed * 1.8f;
                         m.Pos += m.Vel * dt;
                         if (dist < Constants.TOUCH_RANGE)
                             m.State = MeepleState.Melee;
