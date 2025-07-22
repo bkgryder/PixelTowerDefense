@@ -18,7 +18,7 @@ namespace PixelTowerDefense.Entities
             int height = rng.Next(12, 20);
             for (int i = 0; i < height; i++)
             {
-                trunk.Add(new Point(-5, -i));
+                trunk.Add(new Point(0, -i));
                 if (rng.NextDouble() < 0.3)
                     trunk.Add(new Point(rng.Next(-1, 2), -i));
             }
