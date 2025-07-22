@@ -19,6 +19,7 @@ namespace PixelTowerDefense.Entities
         HarvestBerries,
         ChopTree,
         HaulLog,
+        CarryLogToCarpenter,
         DepositResource
     }
 

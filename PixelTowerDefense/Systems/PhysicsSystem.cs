@@ -189,27 +189,12 @@ namespace PixelTowerDefense.Systems
                             // --- log & tree jobs ---
                             if (e.CarriedLogIdx >= 0)
                             {
-                                var wdata = e.Worker.Value;
                                 if (e.CarriedLogIdx < logs.Count)
                                 {
                                     var log = logs[e.CarriedLogIdx];
-                                    int hidx;
-                                    if (wdata.CurrentJob == JobType.DepositResource && wdata.TargetIdx != null)
-                                        hidx = wdata.TargetIdx.Value;
-                                    else
-                                    {
-                                        hidx = FindNearestCarpenter(e.Pos, buildings);
-                                        if (hidx < 0)
-                                            hidx = FindNearestStockpileForLogs(e.Pos, buildings);
-                                        if (hidx >= 0)
-                                        {
-                                            wdata.CurrentJob = JobType.DepositResource;
-                                            wdata.TargetIdx = hidx;
-                                            var hutReserve = buildings[hidx];
-                                            hutReserve.ReservedBy = i;
-                                            buildings[hidx] = hutReserve;
-                                        }
-                                    }
+                                    int hidx = FindNearestCarpenter(e.Pos, buildings);
+                                    if (hidx < 0)
+                                        hidx = FindNearestStockpileForLogs(e.Pos, buildings);
                                     if (hidx >= 0)
                                     {
                                         var hut = buildings[hidx];
@@ -221,10 +206,6 @@ namespace PixelTowerDefense.Systems
                                             buildings[hidx] = hut;
                                             logs.RemoveAt(e.CarriedLogIdx);
                                             e.CarriedLogIdx = -1;
-                                            hut.ReservedBy = null;
-                                            wdata.CurrentJob = JobType.None;
-                                            wdata.TargetIdx = null;
-                                            e.WanderTimer = 0f;
                                         }
                                         else
                                         {
@@ -235,7 +216,6 @@ namespace PixelTowerDefense.Systems
                                             logs[e.CarriedLogIdx] = log;
                                         }
                                         e.Angle = 0f;
-                                        e.Worker = wdata;
                                         break;
                                     }
                                 }
@@ -246,23 +226,13 @@ namespace PixelTowerDefense.Systems
                             }
                             else
                             {
-                                var wdata2 = e.Worker.Value;
-                                int lidx;
-                                if (wdata2.CurrentJob == JobType.HaulLog && wdata2.TargetIdx != null)
-                                    lidx = wdata2.TargetIdx.Value;
-                                else
-                                {
-                                    lidx = FindNearestLooseLog(e.Pos, logs);
-                                    if (lidx >= 0)
-                                    {
-                                        wdata2.CurrentJob = JobType.HaulLog;
-                                        wdata2.TargetIdx = lidx;
-                                        var rlog = logs[lidx];
-                                        rlog.ReservedBy = i;
-                                        logs[lidx] = rlog;
-                                    }
-                                }
-                                if (lidx >= 0)
+                                int lidx = FindNearestLooseLog(e.Pos, logs);
+                                int tidx = FindNearestTree(e.Pos, trees);
+
+                                float haulScore = lidx >= 0 ? JobAffinity(JobType.HaulLog, e) : -1f;
+                                float chopScore = tidx >= 0 ? JobAffinity(JobType.ChopTree, e) : -1f;
+
+                                if (haulScore >= chopScore && lidx >= 0)
                                 {
                                     var log = logs[lidx];
                                     Vector2 dir = log.Pos - e.Pos;
@@ -272,9 +242,6 @@ namespace PixelTowerDefense.Systems
                                         log.IsCarried = true;
                                         logs[lidx] = log;
                                         e.CarriedLogIdx = lidx;
-                                        log.ReservedBy = null;
-                                        wdata2.CurrentJob = JobType.None;
-                                        wdata2.TargetIdx = null;
                                         e.WanderTimer = 0f;
                                     }
                                     else
@@ -284,26 +251,9 @@ namespace PixelTowerDefense.Systems
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
-                                    e.Worker = wdata2;
                                     break;
                                 }
-
-                                int tidx;
-                                if (wdata2.CurrentJob == JobType.ChopTree && wdata2.TargetIdx != null)
-                                    tidx = wdata2.TargetIdx.Value;
-                                else
-                                {
-                                    tidx = FindNearestTree(e.Pos, trees);
-                                    if (tidx >= 0)
-                                    {
-                                        wdata2.CurrentJob = JobType.ChopTree;
-                                        wdata2.TargetIdx = tidx;
-                                        var rt = trees[tidx];
-                                        rt.ReservedBy = i;
-                                        trees[tidx] = rt;
-                                    }
-                                }
-                                if (tidx >= 0)
+                                else if (tidx >= 0)
                                 {
                                     var tree = trees[tidx];
                                     Vector2 dir = tree.Pos - e.Pos;
@@ -322,13 +272,6 @@ namespace PixelTowerDefense.Systems
                                             trees[tidx] = tree;
                                         }
                                         e.WanderTimer = 0.5f;
-                                        if (tree.IsStump)
-                                        {
-                                            tree.ReservedBy = null;
-                                            trees[tidx] = tree;
-                                            wdata2.CurrentJob = JobType.None;
-                                            wdata2.TargetIdx = null;
-                                        }
                                     }
                                     else
                                     {
@@ -337,7 +280,6 @@ namespace PixelTowerDefense.Systems
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
-                                    e.Worker = wdata2;
                                     break;
                                 }
                             }
@@ -903,6 +845,17 @@ namespace PixelTowerDefense.Systems
                 }
             }
             return idx;
+        }
+
+        private static float JobAffinity(JobType job, Meeple m)
+        {
+            return job switch
+            {
+                JobType.ChopTree => m.Strength,
+                JobType.HaulLog => m.Dexterity,
+                JobType.CarryLogToCarpenter => 100f,
+                _ => 0f
+            };
         }
     }
 }
