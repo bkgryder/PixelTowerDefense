@@ -10,6 +10,7 @@ namespace PixelTowerDefense.Entities
         public Point[] TrunkPixels;
         public Point[] LeafPixels;
         public float CollisionRadius;
+        public int Health;
 
         public Tree(Vector2 pos, System.Random rng)
         {
@@ -53,6 +54,7 @@ namespace PixelTowerDefense.Entities
             LeafPixels = leaves.ToArray();
 
             CollisionRadius = baseWidth + 0.5f;
+            Health = 3;
         }
     }
 }

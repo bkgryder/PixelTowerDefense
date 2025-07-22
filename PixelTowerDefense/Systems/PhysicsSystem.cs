@@ -503,6 +503,45 @@ namespace PixelTowerDefense.Systems
             }
         }
 
+        public static void WorkerChopTree(ref Meeple worker, ref Tree tree, List<Log> logs, Random rng)
+        {
+            if (Vector2.Distance(worker.Pos, tree.Pos) <= 1f && tree.Health > 0)
+            {
+                tree.Health--;
+                logs.Add(new Log(tree.Pos, rng));
+                logs.Add(new Log(tree.Pos, rng));
+            }
+        }
+
+        public static void WorkerDepositLog(ref Meeple worker, ref Building building)
+        {
+            if (building.Kind == BuildingType.CarpenterHut &&
+                Vector2.Distance(worker.Pos, building.Pos) <= 1f &&
+                worker.CarriedLogs > 0)
+            {
+                building.StoredLogs += worker.CarriedLogs;
+                worker.CarriedLogs = 0;
+                if (building.CraftTimer <= 0f)
+                    building.CraftTimer = Constants.CARPENTER_CRAFT_TIME;
+            }
+        }
+
+        public static void UpdateCarpenter(ref Building building, float dt)
+        {
+            if (building.Kind != BuildingType.CarpenterHut) return;
+
+            if (building.StoredLogs > 0)
+            {
+                building.CraftTimer -= dt;
+                if (building.CraftTimer <= 0f)
+                {
+                    building.StoredLogs--;
+                    building.StoredPlanks++;
+                    building.CraftTimer = building.StoredLogs > 0 ? Constants.CARPENTER_CRAFT_TIME : 0f;
+                }
+            }
+        }
+
         private static void ResolveDominoCollisions(List<Meeple> meeples)
         {
             for (int i = 0; i < meeples.Count; i++)
