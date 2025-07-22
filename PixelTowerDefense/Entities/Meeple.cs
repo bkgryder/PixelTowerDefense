@@ -75,10 +75,19 @@ namespace PixelTowerDefense.Entities
         public int CarriedLogs;
         public int CarriedLogIdx;
 
+        // basic attributes
+        public int Strength;
+        public int Dexterity;
+        public int Intellect;
+        public int Grit;
+
         public Combatant? Combatant;
         public Worker? Worker;
 
         public bool Alive => Health > 0f && State != MeepleState.Dead && State != MeepleState.Ragdoll;
+
+        public int CarryCapacity => Strength;
+        public float MoveSpeed => Constants.WANDER_SPEED * (1f + Dexterity / 10f);
 
         public Meeple(Vector2 spawn, Faction side, Color shirt, float health = Constants.ENEMY_MAX_HEALTH)
         {
@@ -106,6 +115,17 @@ namespace PixelTowerDefense.Entities
             Worker = null;
         }
 
+        public Meeple(Vector2 spawn, Faction side, Color shirt,
+                      int strength, int dexterity, int intellect, int grit,
+                      float health = Constants.ENEMY_MAX_HEALTH)
+            : this(spawn, side, shirt, health)
+        {
+            Strength = strength;
+            Dexterity = dexterity;
+            Intellect = intellect;
+            Grit = grit;
+        }
+
         /// <summary>
         /// Get world position of a body segment.
         /// Segment indices range from -ENEMY_H/2 to ENEMY_H/2-1
@@ -118,6 +138,17 @@ namespace PixelTowerDefense.Entities
                 Pos.X + MathF.Sin(Angle) * l,
                 Pos.Y + MathF.Cos(Angle) * l
             );
+        }
+
+        public static Meeple SpawnMeeple(Vector2 pos, Faction side, Color shirt, Random rng)
+        {
+            var m = new Meeple(pos, side, shirt);
+            m.Strength = rng.Next(3, 11);
+            m.Dexterity = rng.Next(3, 11);
+            m.Intellect = rng.Next(3, 11);
+            m.Grit = rng.Next(3, 11);
+            m.Health = Constants.ENEMY_MAX_HEALTH + (m.Grit - 5) * 10f;
+            return m;
         }
     }
 }

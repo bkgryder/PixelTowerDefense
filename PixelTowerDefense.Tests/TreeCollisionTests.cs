@@ -12,7 +12,16 @@ public class TreeCollisionTests
     {
         var rng = new System.Random(0);
         var trees = new List<Tree> { new Tree(Vector2.Zero, rng) };
-        var meeples = new List<Meeple> { new Meeple(Vector2.Zero, Faction.Friendly, Color.White) };
+        var meeples = new List<Meeple>
+        {
+            new Meeple(Vector2.Zero, Faction.Friendly, Color.White)
+            {
+                Strength = 5,
+                Dexterity = 5,
+                Intellect = 5,
+                Grit = 5
+            }
+        };
         var debris = new List<Pixel>();
         var bushes = new List<BerryBush>();
         var buildings = new List<Building>();
@@ -34,7 +43,16 @@ public class TreeCollisionTests
             CollisionRadius = Constants.STUMP_RADIUS
         };
         var trees = new List<Tree> { stump };
-        var meeples = new List<Meeple> { new Meeple(new Vector2(5f, 5f), Faction.Friendly, Color.White) };
+        var meeples = new List<Meeple>
+        {
+            new Meeple(new Vector2(5f, 5f), Faction.Friendly, Color.White)
+            {
+                Strength = 5,
+                Dexterity = 5,
+                Intellect = 5,
+                Grit = 5
+            }
+        };
         var debris = new List<Pixel>();
         var bushes = new List<BerryBush>();
         var buildings = new List<Building>();
