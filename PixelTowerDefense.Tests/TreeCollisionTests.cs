@@ -16,8 +16,9 @@ public class TreeCollisionTests
         var debris = new List<Pixel>();
         var bushes = new List<BerryBush>();
         var buildings = new List<Building>();
+        var logs = new List<Log>();
 
-        PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, trees, 0.1f);
+        PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, trees, logs, 0.1f);
 
         float dist = Vector2.Distance(meeples[0].Pos, trees[0].Pos);
         Assert.True(dist >= trees[0].CollisionRadius - 0.001f);

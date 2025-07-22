@@ -347,7 +347,7 @@ namespace PixelTowerDefense
                 _dragging = false;
             }
 
-            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, dt);
+            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             CombatSystem.ResolveCombat(_meeples, _pixels, dt);
 

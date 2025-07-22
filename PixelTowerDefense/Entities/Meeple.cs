@@ -13,7 +13,10 @@ namespace PixelTowerDefense.Entities
         public float AttackCooldown;
     }
 
-    public struct Worker { }
+    public struct Worker
+    {
+        public float ChopTimer;
+    }
 
     public struct Meeple
     {
