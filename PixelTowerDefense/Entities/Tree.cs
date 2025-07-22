@@ -15,17 +15,17 @@ namespace PixelTowerDefense.Entities
             Pos = pos;
 
             var trunk = new List<Point>();
-            int height = rng.Next(3, 6);
+            int height = rng.Next(12, 20);
             for (int i = 0; i < height; i++)
             {
-                trunk.Add(new Point(0, -i));
+                trunk.Add(new Point(-5, -i));
                 if (rng.NextDouble() < 0.3)
                     trunk.Add(new Point(rng.Next(-1, 2), -i));
             }
             TrunkPixels = trunk.ToArray();
 
             var leaves = new List<Point>();
-            int radius = rng.Next(2, 4);
+            int radius = rng.Next(4, 8);
             for (int y = -radius; y <= radius; y++)
             {
                 for (int x = -radius; x <= radius; x++)
