@@ -7,6 +7,7 @@ namespace PixelTowerDefense.Entities
     {
         public Vector2 Pos;
         public Vector2 Vel;
+        public bool IsCarried;
         public Point[] Shape;
         public Color Color;
 
@@ -14,6 +15,7 @@ namespace PixelTowerDefense.Entities
         {
             Pos = pos;
             Vel = Vector2.Zero;
+            IsCarried = false;
             Color = new Color(
                 (byte)rng.Next(90, 130),
                 (byte)rng.Next(60, 90),
