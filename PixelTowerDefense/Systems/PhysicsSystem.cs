@@ -15,6 +15,7 @@ namespace PixelTowerDefense.Systems
             List<Pixel> debris,
             List<BerryBush> bushes,
             List<Building> buildings,
+            List<Tree> trees,
             float dt
         )
         {
@@ -282,9 +283,23 @@ namespace PixelTowerDefense.Systems
                 e.Pos.X = MathHelper.Clamp(e.Pos.X,
                            Constants.ARENA_LEFT + 2,
                            Constants.ARENA_RIGHT - 2);
-                e.Pos.Y = MathHelper.Clamp(e.Pos.Y,
-                           Constants.ARENA_TOP + 2,
-                           Constants.ARENA_BOTTOM - 2);
+               e.Pos.Y = MathHelper.Clamp(e.Pos.Y,
+                          Constants.ARENA_TOP + 2,
+                          Constants.ARENA_BOTTOM - 2);
+
+                foreach (var t in trees)
+                {
+                    Vector2 diff = e.Pos - t.Pos;
+                    float dist = diff.Length();
+                    if (dist < t.CollisionRadius)
+                    {
+                        if (dist > 0f)
+                            diff /= dist;
+                        else
+                            diff = new Vector2(0f, -1f);
+                        e.Pos = t.Pos + diff * t.CollisionRadius;
+                    }
+                }
 
                 if (e.Health <= 0f && e.State != MeepleState.Dead && e.State != MeepleState.Ragdoll)
                 {

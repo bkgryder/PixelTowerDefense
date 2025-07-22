@@ -21,6 +21,7 @@ namespace PixelTowerDefense
         List<BerryBush> _bushes = new();
         List<Log> _logs = new();
         List<Stone> _stones = new();
+        List<Tree> _trees = new();
         List<Building> _buildings = new();
         Random _rng = new();
 
@@ -89,6 +90,7 @@ namespace PixelTowerDefense
             SpawnBerryBushes(5);
             SpawnLogs(4);
             SpawnStones(4);
+            SpawnTrees(4);
 
             var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
             var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
@@ -345,7 +347,7 @@ namespace PixelTowerDefense
                 _dragging = false;
             }
 
-            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, dt);
+            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             CombatSystem.ResolveCombat(_meeples, _pixels, dt);
 
@@ -393,6 +395,10 @@ namespace PixelTowerDefense
             // --- logs ---
             foreach (var l in _logs)
                 DrawLog(l);
+
+            // --- tree trunks ---
+            foreach (var t in _trees)
+                DrawTreeBottom(t);
 
             // --- buildings ---
             foreach (var b in _buildings)
@@ -532,6 +538,10 @@ namespace PixelTowerDefense
                 }
             }
 
+            // --- tree leaves ---
+            foreach (var t in _trees)
+                DrawTreeTop(t);
+
             _sb.End();
 
             // --- UI ---
@@ -614,6 +624,18 @@ namespace PixelTowerDefense
                 float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
                                        Constants.ARENA_BOTTOM - 5);
                 _stones.Add(new Stone(new Vector2(x, y), _rng));
+            }
+        }
+
+        private void SpawnTrees(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
+                                       Constants.ARENA_RIGHT - 5);
+                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
+                                       Constants.ARENA_BOTTOM - 5);
+                _trees.Add(new Tree(new Vector2(x, y), _rng));
             }
         }
 
@@ -802,6 +824,22 @@ namespace PixelTowerDefense
             int baseY = (int)MathF.Round(l.Pos.Y);
             foreach (var p in l.Shape)
                 _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), l.Color);
+        }
+
+        private void DrawTreeBottom(Tree t)
+        {
+            int baseX = (int)MathF.Round(t.Pos.X);
+            int baseY = (int)MathF.Round(t.Pos.Y);
+            foreach (var p in t.TrunkPixels)
+                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), new Color(100, 70, 40));
+        }
+
+        private void DrawTreeTop(Tree t)
+        {
+            int baseX = (int)MathF.Round(t.Pos.X);
+            int baseY = (int)MathF.Round(t.Pos.Y);
+            foreach (var p in t.LeafPixels)
+                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), new Color(20, 110, 20));
         }
 
         private void DrawShadow(Meeple e)
