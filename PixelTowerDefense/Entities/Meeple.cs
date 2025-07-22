@@ -60,6 +60,7 @@ namespace PixelTowerDefense.Entities
 
         public int CarriedBerries;
         public int CarriedLogs;
+        public int CarriedLogIdx;
 
         public Combatant? Combatant;
         public Worker? Worker;
@@ -87,6 +88,7 @@ namespace PixelTowerDefense.Entities
             Health = health;
             CarriedBerries = 0;
             CarriedLogs = 0;
+            CarriedLogIdx = -1;
             Combatant = null;
             Worker = null;
         }

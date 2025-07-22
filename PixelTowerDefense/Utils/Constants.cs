@@ -114,8 +114,10 @@ using Microsoft.Xna.Framework;
 
         // Carpenter hut
         public const float CARPENTER_CRAFT_TIME = 1f;
+
         // Trees & crafting
         public const int TREE_HEALTH = 3;
+        public const float STUMP_RADIUS = 0.75f;
 
     }
 }
