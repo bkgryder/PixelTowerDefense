@@ -491,7 +491,7 @@ namespace PixelTowerDefense
                 float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
                                        Constants.ARENA_BOTTOM - 5);
                 var shirt = Meeple.FRIENDLY_SHIRTS[_rng.Next(Meeple.FRIENDLY_SHIRTS.Length)];
-                var m = new Meeple(new Vector2(x, y), Faction.Friendly, shirt);
+                var m = Meeple.SpawnMeeple(new Vector2(x, y), Faction.Friendly, shirt, _rng);
                 m.Worker = new Worker();
                 _meeples.Add(m);
             }

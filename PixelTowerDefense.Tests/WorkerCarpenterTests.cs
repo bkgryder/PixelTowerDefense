@@ -14,6 +14,10 @@ public class WorkerCarpenterTests
     {
         var rng = new System.Random(0);
         var worker = new Meeple(Vector2.Zero, Faction.Friendly, Color.White);
+        worker.Strength = 5;
+        worker.Dexterity = 5;
+        worker.Intellect = 5;
+        worker.Grit = 5;
         worker.Worker = new Worker();
         var tree = new Tree(new Vector2(0.5f, 0f), rng);
         tree.Health = 3;
@@ -29,6 +33,10 @@ public class WorkerCarpenterTests
     public void Worker_DepositsLog_AtCarpenterHut()
     {
         var worker = new Meeple(Vector2.Zero, Faction.Friendly, Color.White);
+        worker.Strength = 5;
+        worker.Dexterity = 5;
+        worker.Intellect = 5;
+        worker.Grit = 5;
         worker.Worker = new Worker();
         worker.CarriedLogs = 1;
         var hut = new Building { Pos = Vector2.Zero, Kind = BuildingType.CarpenterHut };
