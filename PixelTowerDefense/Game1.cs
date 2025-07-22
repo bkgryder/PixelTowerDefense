@@ -575,11 +575,11 @@ namespace PixelTowerDefense
 
         private void DrawHint()
         {
-            int berries = _buildings.Where(b => b.Kind == BuildingType.StockpileHut)
-                                   .Sum(b => b.StoredBerries);
+            int berries = _buildings.Sum(b => b.StoredBerries);
             int logs = _buildings.Sum(b => b.StoredLogs);
             int planks = _buildings.Sum(b => b.StoredPlanks);
-            DrawTinyString($"B{berries} L{logs} P{planks}", new Vector2(35, 8), Color.White);
+            string text = $"BERRIES: {berries}   LOGS: {logs}   PLANKS: {planks}";
+            DrawTinyString(text, new Vector2(35, 8), Color.White);
         }
 
         private void DrawMeepleStats(Meeple m, Point mouse)
@@ -976,7 +976,20 @@ namespace PixelTowerDefense
             ['U'] = new[]{"# #","# #","# #","# #","###"},
             ['N'] = new[]{"## ","## ","###","###","# #"},
             ['G'] = new[]{"## ","#  ","# #","# #","## "},
-            ['R'] = new[]{"## ","# #","## ","# #","# #"}
+            ['R'] = new[]{"## ","# #","## ","# #","# #"},
+            ['A'] = new[]{" # ","# #","###","# #","# #"},
+            ['C'] = new[]{" ##","#  ","#  ","#  "," ##"},
+            ['D'] = new[]{"## ","# #","# #","# #","## "},
+            ['E'] = new[]{"###","#  ","###","#  ","###"},
+            ['I'] = new[]{"###"," # "," # "," # ","###"},
+            ['K'] = new[]{"# #","# #","## ","# #","# #"},
+            ['L'] = new[]{"#  ","#  ","#  ","#  ","###"},
+            ['M'] = new[]{"# #","###","###","# #","# #"},
+            ['O'] = new[]{"## ","# #","# #","# #","## "},
+            ['S'] = new[]{" ##","#  ","## ","  #","## "},
+            ['T'] = new[]{"###"," # "," # "," # "," # "},
+            ['Y'] = new[]{"# #","# #"," # "," # "," # "},
+            [':'] = new[]{" ","#"," ","#"," "}
         };
 
         private void DrawTinyString(string text, Vector2 pos, Color col)
