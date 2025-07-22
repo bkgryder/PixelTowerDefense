@@ -593,6 +593,28 @@ namespace PixelTowerDefense.Systems
             }
         }
 
+        public static void UpdateLogs(List<Log> logs, float dt)
+        {
+            for (int i = 0; i < logs.Count; i++)
+            {
+                var l = logs[i];
+
+                l.Vel *= MathF.Max(0f, 1f - Constants.DEBRIS_FRICTION * dt);
+                l.Pos += l.Vel * dt;
+
+                if (l.Pos.X < Constants.ARENA_LEFT)
+                { l.Pos.X = Constants.ARENA_LEFT; l.Vel.X *= -0.5f; }
+                if (l.Pos.X > Constants.ARENA_RIGHT - 1)
+                { l.Pos.X = Constants.ARENA_RIGHT - 1; l.Vel.X *= -0.5f; }
+                if (l.Pos.Y < Constants.ARENA_TOP)
+                { l.Pos.Y = Constants.ARENA_TOP; l.Vel.Y *= -0.5f; }
+                if (l.Pos.Y > Constants.ARENA_BOTTOM - 1)
+                { l.Pos.Y = Constants.ARENA_BOTTOM - 1; l.Vel.Y *= -0.5f; }
+
+                logs[i] = l;
+            }
+        }
+
         private static void ResolveDominoCollisions(List<Meeple> meeples)
         {
             for (int i = 0; i < meeples.Count; i++)
