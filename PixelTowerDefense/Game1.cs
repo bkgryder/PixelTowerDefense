@@ -359,7 +359,7 @@ namespace PixelTowerDefense
 
         protected override void Draw(GameTime gt)
         {
-            GraphicsDevice.Clear(Color.DimGray);
+            GraphicsDevice.Clear(Color.DarkSeaGreen);
             var cam = Matrix.CreateScale(_zoom, _zoom, 1f)
                       * Matrix.CreateTranslation(-_camX * _zoom, -_camY * _zoom, 0);
             _sb.Begin(transformMatrix: cam, samplerState: SamplerState.PointClamp);
