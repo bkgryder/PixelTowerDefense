@@ -15,6 +15,7 @@ namespace PixelTowerDefense
         GraphicsDeviceManager _gfx;
         SpriteBatch _sb;
         Texture2D _px;
+        SpriteFont _font;
 
         List<Meeple> _meeples = new();
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
@@ -85,6 +86,7 @@ namespace PixelTowerDefense
             _sb = new SpriteBatch(GraphicsDevice);
             _px = new Texture2D(GraphicsDevice, 1, 1);
             _px.SetData(new[] { Color.White });
+            _font = Content.Load<SpriteFont>("PixelFont");
 
             SpawnMeeple(10);
             SpawnBerryBushes(5);
@@ -579,7 +581,7 @@ namespace PixelTowerDefense
             int logs = _buildings.Sum(b => b.StoredLogs);
             int planks = _buildings.Sum(b => b.StoredPlanks);
             string text = $"BERRIES: {berries}   LOGS: {logs}   PLANKS: {planks}";
-            DrawTinyString(text, new Vector2(35, 8), Color.White);
+            _sb.DrawString(_font, text, new Vector2(35, 8), Color.White);
         }
 
         private static string JobLabel(JobType job)
@@ -613,14 +615,14 @@ namespace PixelTowerDefense
 
             string[] lines = list.ToArray();
 
-            int width = lines.Max(l => l.Length * 4) + 2;
-            int height = lines.Length * 6 + 2;
+            int width = lines.Max(l => (int)_font.MeasureString(l).X) + 2;
+            int height = lines.Length * _font.LineSpacing + 2;
             int x = mouse.X + 8;
             int y = mouse.Y + 8;
 
             _sb.Draw(_px, new Rectangle(x, y, width, height), new Color(0, 0, 0, 180));
             for (int i = 0; i < lines.Length; i++)
-                DrawTinyString(lines[i], new Vector2(x + 1, y + 1 + i * 6), Color.White);
+                _sb.DrawString(_font, lines[i], new Vector2(x + 1, y + 1 + i * _font.LineSpacing), Color.White);
         }
 
         private void DrawManaRing(Point mouse)
@@ -980,61 +982,6 @@ namespace PixelTowerDefense
                 : Color.Lerp(Constants.DECOMP_PURPLE, Constants.BONE_COLOR, (t - 0.5f) * 2f);
         }
 
-        private static readonly Dictionary<char, string[]> TinyFont = new()
-        {
-            ['0'] = new[]{"###","# #","# #","# #","###"},
-            ['1'] = new[]{" ##","# #","  #","  #","###"},
-            ['2'] = new[]{"###","  #","###","#  ","###"},
-            ['3'] = new[]{"###","  #","###","  #","###"},
-            ['4'] = new[]{"# #","# #","###","  #","  #"},
-            ['5'] = new[]{"###","#  ","###","  #","###"},
-            ['6'] = new[]{"###","#  ","###","# #","###"},
-            ['7'] = new[]{"###","  #","  #","  #","  #"},
-            ['8'] = new[]{"###","# #","###","# #","###"},
-            ['9'] = new[]{"###","# #","###","  #","###"},
-            ['B'] = new[]{"## ","# #","## ","# #","## "},
-            ['H'] = new[]{"# #","###","# #","# #","# #"},
-            ['P'] = new[]{"## ","# #","## ","#  ","#  "},
-            ['U'] = new[]{"# #","# #","# #","# #","###"},
-            ['N'] = new[]{"## ","## ","###","###","# #"},
-            ['G'] = new[]{"## ","#  ","# #","# #","## "},
-            ['R'] = new[]{"## ","# #","## ","# #","# #"},
-            ['A'] = new[]{" # ","# #","###","# #","# #"},
-            ['C'] = new[]{" ##","#  ","#  ","#  "," ##"},
-            ['D'] = new[]{"## ","# #","# #","# #","## "},
-            ['E'] = new[]{"###","#  ","###","#  ","###"},
-            ['I'] = new[]{"###"," # "," # "," # ","###"},
-            ['K'] = new[]{"# #","# #","## ","# #","# #"},
-            ['L'] = new[]{"#  ","#  ","#  ","#  ","###"},
-            ['M'] = new[]{"# #","###","###","# #","# #"},
-            ['O'] = new[]{"## ","# #","# #","# #","## "},
-            ['S'] = new[]{" ##","#  ","## ","  #","## "},
-            ['T'] = new[]{"###"," # "," # "," # "," # "},
-            ['Y'] = new[]{"# #","# #"," # "," # "," # "},
-            ['X'] = new[]{"# #"," # "," # "," # ","# #"},
-            [':'] = new[]{" ","#"," ","#"," "}
-        };
-
-        private void DrawTinyString(string text, Vector2 pos, Color col)
-        {
-            float x = pos.X;
-            foreach (char ch in text)
-            {
-                if (!TinyFont.TryGetValue(ch, out var glyph))
-                {
-                    x += 4;
-                    continue;
-                }
-                for (int y = 0; y < glyph.Length; y++)
-                {
-                    for (int gx = 0; gx < glyph[y].Length; gx++)
-                    {
-                        if (glyph[y][gx] != ' ') _sb.Draw(_px, new Rectangle((int)x + gx, (int)pos.Y + y, 1, 1), col);
-                    }
-                }
-                x += glyph[0].Length + 1;
-            }
-        }
 
         private void DrawFatSegment(Vector2 center, float angle, float width, float length, Color color)
         {
