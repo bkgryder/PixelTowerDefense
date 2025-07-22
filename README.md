@@ -2,6 +2,10 @@
 
 PixelTowerDefense is a small MonoGame project demonstrating a simple tower defense style game made from pixel art.
 
+## Features
+
+- Trees with random trunks and leafy canopies spawn around the arena. Meeples are pushed away when they hit a trunk.
+
 ## Prerequisites
 
 - .NET 8.0 SDK
