@@ -1,5 +1,5 @@
 using Microsoft.Xna.Framework;
-﻿namespace PixelTowerDefense.Utils
+namespace PixelTowerDefense.Utils
 {
     public static class Constants
     {
