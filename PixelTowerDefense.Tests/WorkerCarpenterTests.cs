@@ -13,12 +13,9 @@ public class WorkerCarpenterTests
     public void Worker_ChopsTree_SpawnsLogs()
     {
         var rng = new System.Random(0);
-        var worker = new Meeple(Vector2.Zero, Faction.Friendly, Color.White);
-        worker.Strength = 5;
-        worker.Dexterity = 5;
-        worker.Intellect = 5;
-        worker.Grit = 5;
-        worker.Worker = new Worker();
+        var worker = new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                                5, 5, 5, 5)
+        { Worker = new Worker() };
         var tree = new Tree(new Vector2(0.5f, 0f), rng);
         tree.Health = 3;
         var logs = new List<Log>();
@@ -27,18 +24,19 @@ public class WorkerCarpenterTests
 
         Assert.Equal(2, logs.Count);
         Assert.Equal(2, tree.Health);
+        Assert.Equal(Constants.BASE_CHOP / (1f + 0.1f * worker.Strength),
+                     worker.WanderTimer);
     }
 
     [Fact]
     public void Worker_DepositsLog_AtCarpenterHut()
     {
-        var worker = new Meeple(Vector2.Zero, Faction.Friendly, Color.White);
-        worker.Strength = 5;
-        worker.Dexterity = 5;
-        worker.Intellect = 5;
-        worker.Grit = 5;
-        worker.Worker = new Worker();
-        worker.CarriedLogs = 1;
+        var worker = new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                                5, 5, 5, 5)
+        {
+            Worker = new Worker(),
+            CarriedLogs = 1
+        };
         var hut = new Building { Pos = Vector2.Zero, Kind = BuildingType.CarpenterHut };
 
         PhysicsSystem.WorkerDepositLog(ref worker, ref hut);
@@ -63,17 +61,23 @@ public class WorkerCarpenterTests
     public void StrongWorkers_Have_Shorter_ChopCooldown()
     {
         var rng = new System.Random(0);
-        var weak = new Meeple(Vector2.Zero, Faction.Friendly, Color.White) { Strength = 3, Worker = new Worker() };
-        var strong = new Meeple(Vector2.Zero, Faction.Friendly, Color.White) { Strength = 10, Worker = new Worker() };
+        var weak = new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                               3, 5, 5, 5)
+        { Worker = new Worker() };
+        var strong = new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                                 10, 5, 5, 5)
+        { Worker = new Worker() };
         var tree = new Tree(new Vector2(0.5f, 0f), rng);
         var logs = new List<Log>();
 
         PhysicsSystem.WorkerChopTree(ref weak, ref tree, logs, rng);
         float weakCooldown = weak.WanderTimer;
+        Assert.Equal(Constants.BASE_CHOP / (1f + 0.1f * weak.Strength), weakCooldown);
 
         tree.Health = 3;
         PhysicsSystem.WorkerChopTree(ref strong, ref tree, logs, rng);
         float strongCooldown = strong.WanderTimer;
+        Assert.Equal(Constants.BASE_CHOP / (1f + 0.1f * strong.Strength), strongCooldown);
 
         Assert.True(strongCooldown < weakCooldown);
     }
@@ -84,8 +88,12 @@ public class WorkerCarpenterTests
         var hutA = new Building { Pos = Vector2.Zero, Kind = BuildingType.CarpenterHut };
         var hutB = new Building { Pos = Vector2.Zero, Kind = BuildingType.CarpenterHut };
 
-        var slow = new Meeple(Vector2.Zero, Faction.Friendly, Color.White) { Intellect = 1, Worker = new Worker(), CarriedLogs = 1 };
-        var smart = new Meeple(Vector2.Zero, Faction.Friendly, Color.White) { Intellect = 10, Worker = new Worker(), CarriedLogs = 1 };
+        var slow = new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                               5, 5, 1, 5)
+        { Worker = new Worker(), CarriedLogs = 1 };
+        var smart = new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                                5, 5, 10, 5)
+        { Worker = new Worker(), CarriedLogs = 1 };
 
         PhysicsSystem.WorkerDepositLog(ref slow, ref hutA);
         PhysicsSystem.WorkerDepositLog(ref smart, ref hutB);

@@ -14,21 +14,15 @@ public class ResourceReservationTests
         var rng = new System.Random(0);
         var workers = new List<Meeple>
         {
-            new Meeple(Vector2.Zero, Faction.Friendly, Color.White)
+            new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                       5, 5, 5, 5)
             {
-                Strength = 5,
-                Dexterity = 5,
-                Intellect = 5,
-                Grit = 5,
                 Worker = new Worker(),
                 Hunger = Utils.Constants.HUNGER_THRESHOLD
             },
-            new Meeple(new Vector2(1f, 0f), Faction.Friendly, Color.White)
+            new Meeple(new Vector2(1f, 0f), Faction.Friendly, Color.White,
+                       5, 5, 5, 5)
             {
-                Strength = 5,
-                Dexterity = 5,
-                Intellect = 5,
-                Grit = 5,
                 Worker = new Worker(),
                 Hunger = Utils.Constants.HUNGER_THRESHOLD
             }
