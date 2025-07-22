@@ -203,6 +203,8 @@ namespace PixelTowerDefense.Systems
                                         if (dist < 1f)
                                         {
                                             hut.StoredLogs++;
+                                            if (hut.CraftTimer <= 0f)
+                                                hut.CraftTimer = Constants.BASE_CRAFT / (1f + 0.1f * e.Intellect);
                                             buildings[hidx] = hut;
                                             logs.RemoveAt(e.CarriedLogIdx);
                                             e.CarriedLogIdx = -1;
@@ -271,7 +273,7 @@ namespace PixelTowerDefense.Systems
                                             }
                                             trees[tidx] = tree;
                                         }
-                                        e.WanderTimer = 0.5f;
+                                        e.WanderTimer = Constants.BASE_CHOP / (1f + 0.1f * e.Strength);
                                     }
                                     else
                                     {
@@ -438,12 +440,15 @@ namespace PixelTowerDefense.Systems
                 var b = buildings[i];
                 if (b.Kind == BuildingType.CarpenterHut && b.StoredLogs > 0)
                 {
-                    b.CraftTimer += dt;
-                    if (b.CraftTimer >= Constants.CARPENTER_CRAFT_TIME)
+                    if (b.CraftTimer > 0f)
                     {
-                        b.CraftTimer = 0f;
-                        b.StoredLogs--;
-                        b.StoredPlanks++;
+                        b.CraftTimer -= dt;
+                        if (b.CraftTimer <= 0f)
+                        {
+                            b.StoredLogs--;
+                            b.StoredPlanks++;
+                            b.CraftTimer = b.StoredLogs > 0 ? Constants.BASE_CRAFT : 0f;
+                        }
                     }
                 }
                 buildings[i] = b;
@@ -651,6 +656,7 @@ namespace PixelTowerDefense.Systems
                     tree.IsStump = true;
                     tree.CollisionRadius = Constants.STUMP_RADIUS;
                 }
+                worker.WanderTimer = Constants.BASE_CHOP / (1f + 0.1f * worker.Strength);
             }
         }
 
@@ -663,7 +669,7 @@ namespace PixelTowerDefense.Systems
                 building.StoredLogs += worker.CarriedLogs;
                 worker.CarriedLogs = 0;
                 if (building.CraftTimer <= 0f)
-                    building.CraftTimer = Constants.CARPENTER_CRAFT_TIME;
+                    building.CraftTimer = Constants.BASE_CRAFT / (1f + 0.1f * worker.Intellect);
             }
         }
 
@@ -678,7 +684,7 @@ namespace PixelTowerDefense.Systems
                 {
                     building.StoredLogs--;
                     building.StoredPlanks++;
-                    building.CraftTimer = building.StoredLogs > 0 ? Constants.CARPENTER_CRAFT_TIME : 0f;
+                    building.CraftTimer = building.StoredLogs > 0 ? Constants.BASE_CRAFT : 0f;
                 }
             }
         }

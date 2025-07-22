@@ -113,7 +113,13 @@ namespace PixelTowerDefense.Utils
         public const float PRECIPITATE_DRAIN = 5f;  // per second
 
         // Carpenter hut
-        public const float CARPENTER_CRAFT_TIME = 1f;
+        public const float BASE_CRAFT = 1f;
+
+        // Worker actions
+        public const float BASE_CHOP = 0.5f;
+
+        // Legacy constant kept for backward compatibility
+        public const float CARPENTER_CRAFT_TIME = BASE_CRAFT;
 
         // Trees & crafting
         public const int TREE_HEALTH = 3;
