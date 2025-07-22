@@ -245,6 +245,7 @@ namespace PixelTowerDefense.Systems
                                             if (tree.Health <= 0)
                                             {
                                                 tree.IsStump = true;
+                                                tree.CollisionRadius = Constants.STUMP_RADIUS;
                                                 logs.Add(new Log(tree.Pos, _rng));
                                             }
                                             trees[tidx] = tree;
@@ -385,6 +386,8 @@ namespace PixelTowerDefense.Systems
 
                 foreach (var t in trees)
                 {
+                    if (t.IsStump) continue;
+
                     Vector2 diff = e.Pos - t.Pos;
                     float dist = diff.Length();
                     if (dist < t.CollisionRadius)
@@ -414,10 +417,10 @@ namespace PixelTowerDefense.Systems
                 var b = buildings[i];
                 if (b.Kind == BuildingType.CarpenterHut && b.StoredLogs > 0)
                 {
-                    b.WorkTimer += dt;
-                    if (b.WorkTimer >= Constants.CARPENTER_WORK_TIME)
+                    b.CraftTimer += dt;
+                    if (b.CraftTimer >= Constants.CARPENTER_CRAFT_TIME)
                     {
-                        b.WorkTimer = 0f;
+                        b.CraftTimer = 0f;
                         b.StoredLogs--;
                         b.StoredPlanks++;
                     }
@@ -622,6 +625,11 @@ namespace PixelTowerDefense.Systems
                 tree.Health--;
                 logs.Add(new Log(tree.Pos, rng));
                 logs.Add(new Log(tree.Pos, rng));
+                if (tree.Health <= 0)
+                {
+                    tree.IsStump = true;
+                    tree.CollisionRadius = Constants.STUMP_RADIUS;
+                }
             }
         }
 

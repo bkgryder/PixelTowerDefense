@@ -114,7 +114,7 @@ namespace PixelTowerDefense
                 StoredBerries = 0,
                 StoredLogs = 0,
                 StoredPlanks = 0,
-                WorkTimer = 0f
+                CraftTimer = 0f
             });
             _buildings.Add(new Building
             {
@@ -123,8 +123,7 @@ namespace PixelTowerDefense
                 StoredBerries = 0,
                 StoredLogs = 0,
                 StoredPlanks = 0,
-                WorkTimer = 0f
-
+                CraftTimer = 0f
             });
             _camX = midX - (GraphicsDevice.Viewport.Width * 0.5f) / _zoom;
             _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
@@ -753,12 +752,23 @@ namespace PixelTowerDefense
         {
             int baseX = (int)MathF.Round(t.Pos.X);
             int baseY = (int)MathF.Round(t.Pos.Y);
-            foreach (var p in t.TrunkPixels)
-                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), new Color(100, 70, 40));
+            if (t.IsStump)
+            {
+                for (int y = 0; y > -2; y--)
+                    for (int x = -1; x <= 1; x++)
+                        _sb.Draw(_px, new Rectangle(baseX + x, baseY + y, 1, 1), new Color(100, 70, 40));
+            }
+            else
+            {
+                foreach (var p in t.TrunkPixels)
+                    _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), new Color(100, 70, 40));
+            }
         }
 
         private void DrawTreeTop(Tree t)
         {
+            if (t.IsStump) return;
+
             int baseX = (int)MathF.Round(t.Pos.X);
             int baseY = (int)MathF.Round(t.Pos.Y);
             foreach (var p in t.LeafPixels)
