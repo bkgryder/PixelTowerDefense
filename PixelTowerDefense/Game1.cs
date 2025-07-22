@@ -559,6 +559,27 @@ namespace PixelTowerDefense
                 _ => Color.White
             };
 
+        private Color StatColor(Meeple m)
+        {
+            int max = m.Strength;
+            Color col = Color.OrangeRed; // strength
+            if (m.Dexterity > max)
+            {
+                max = m.Dexterity;
+                col = Color.LimeGreen;
+            }
+            if (m.Intellect > max)
+            {
+                max = m.Intellect;
+                col = Color.CornflowerBlue;
+            }
+            if (m.Grit > max)
+            {
+                col = Color.SaddleBrown;
+            }
+            return col;
+        }
+
         private void DrawAbilityToolbar()
         {
             _sb.Draw(_px, _abilityButtonRect, AbilityColor(_currentAbility));
@@ -861,10 +882,22 @@ namespace PixelTowerDefense
                             Color[] firePal = { Color.OrangeRed, Color.Orange, Color.Yellow, new Color(255, 100, 0) };
                             Color glowCol = firePal[_rng.Next(firePal.Length)];
                             var glow = new Rectangle((int)MathF.Round(x) + _rng.Next(-1, 2), (int)MathF.Round(y) + _rng.Next(-1, 2), 1, 1);
-                            _sb.Draw(_px, glow, new Color(glowCol, 90));
-                        }
+                        _sb.Draw(_px, glow, new Color(glowCol, 90));
                     }
+                }
             }
+
+#if DEBUG
+            {
+                var head = e.GetPartPos(-half);
+                head.Y -= e.z;
+                int hx = (int)MathF.Round(head.X);
+                int hy = (int)MathF.Round(head.Y) - 1;
+                var c = StatColor(e);
+                for (int dx = -1; dx <= 1; dx++)
+                    _sb.Draw(_px, new Rectangle(hx + dx, hy, 1, 1), c);
+            }
+#endif
 
             {
                 var bodyPos = e.GetPartPos(-1);
