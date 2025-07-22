@@ -13,21 +13,15 @@ public class DexterityMovementTests
         var rng = new System.Random(0);
         var workers = new List<Meeple>
         {
-            new Meeple(Vector2.Zero, Faction.Friendly, Color.White)
+            new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                       5, 3, 5, 5)
             {
-                Strength = 5,
-                Dexterity = 3,
-                Intellect = 5,
-                Grit = 5,
                 Worker = new Worker(),
                 CarriedLogIdx = 0
             },
-            new Meeple(Vector2.Zero, Faction.Friendly, Color.White)
+            new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                       5, 8, 5, 5)
             {
-                Strength = 5,
-                Dexterity = 8,
-                Intellect = 5,
-                Grit = 5,
                 Worker = new Worker(),
                 CarriedLogIdx = 1
             }

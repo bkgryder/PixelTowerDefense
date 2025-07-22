@@ -15,14 +15,9 @@ public class JobAffinityTests
         var rng = new System.Random(0);
         var workers = new List<Meeple>
         {
-            new Meeple(Vector2.Zero, Faction.Friendly, Color.White)
-            {
-                Strength = 8,
-                Dexterity = 3,
-                Intellect = 5,
-                Grit = 5,
-                Worker = new Worker()
-            }
+            new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                       8, 3, 5, 5)
+            { Worker = new Worker() }
         };
         var trees = new List<Tree> { new Tree(new Vector2(1f, 0f), rng) };
         var logs = new List<Log> { new Log(new Vector2(0f, 1f), rng) };
@@ -42,14 +37,9 @@ public class JobAffinityTests
         var rng = new System.Random(0);
         var workers = new List<Meeple>
         {
-            new Meeple(Vector2.Zero, Faction.Friendly, Color.White)
-            {
-                Strength = 3,
-                Dexterity = 8,
-                Intellect = 5,
-                Grit = 5,
-                Worker = new Worker()
-            }
+            new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                       3, 8, 5, 5)
+            { Worker = new Worker() }
         };
         var trees = new List<Tree> { new Tree(new Vector2(1f, 0f), rng) };
         var logs = new List<Log> { new Log(new Vector2(0f, 1f), rng) };

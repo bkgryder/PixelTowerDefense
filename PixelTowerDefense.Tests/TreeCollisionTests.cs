@@ -14,13 +14,8 @@ public class TreeCollisionTests
         var trees = new List<Tree> { new Tree(Vector2.Zero, rng) };
         var meeples = new List<Meeple>
         {
-            new Meeple(Vector2.Zero, Faction.Friendly, Color.White)
-            {
-                Strength = 5,
-                Dexterity = 5,
-                Intellect = 5,
-                Grit = 5
-            }
+            new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
+                       5, 5, 5, 5)
         };
         var debris = new List<Pixel>();
         var bushes = new List<BerryBush>();
@@ -45,13 +40,8 @@ public class TreeCollisionTests
         var trees = new List<Tree> { stump };
         var meeples = new List<Meeple>
         {
-            new Meeple(new Vector2(5f, 5f), Faction.Friendly, Color.White)
-            {
-                Strength = 5,
-                Dexterity = 5,
-                Intellect = 5,
-                Grit = 5
-            }
+            new Meeple(new Vector2(5f, 5f), Faction.Friendly, Color.White,
+                       5, 5, 5, 5)
         };
         var debris = new List<Pixel>();
         var bushes = new List<BerryBush>();
