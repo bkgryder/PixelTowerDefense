@@ -582,16 +582,38 @@ namespace PixelTowerDefense
             DrawTinyString(text, new Vector2(35, 8), Color.White);
         }
 
+        private static string JobLabel(JobType job)
+        {
+            return job switch
+            {
+                JobType.None => "IDLE",
+                JobType.HarvestBerries => "BERRY",
+                JobType.ChopTree => "CHOP",
+                JobType.HaulLog => "HAUL",
+                JobType.CarryLogToCarpenter => "CARRY",
+                JobType.DepositResource => "DEPOSIT",
+                _ => job.ToString().ToUpper()
+            };
+        }
+
         private void DrawMeepleStats(Meeple m, Point mouse)
         {
-            string[] lines =
+            var list = new List<string>
             {
                 $"HP{(int)MathF.Ceiling(m.Health)}",
                 $"HU{(int)MathF.Ceiling(m.Hunger)}",
-                $"B{m.CarriedBerries}"
+                $"B{m.CarriedBerries}",
+                $"ST{m.Strength}",
+                $"DX{m.Dexterity}",
+                $"IN{m.Intellect}",
+                $"GR{m.Grit}"
             };
+            if (m.Worker != null)
+                list.Add(JobLabel(m.Worker.Value.CurrentJob));
 
-            int width = 40;
+            string[] lines = list.ToArray();
+
+            int width = lines.Max(l => l.Length * 4) + 2;
             int height = lines.Length * 6 + 2;
             int x = mouse.X + 8;
             int y = mouse.Y + 8;
@@ -989,6 +1011,7 @@ namespace PixelTowerDefense
             ['S'] = new[]{" ##","#  ","## ","  #","## "},
             ['T'] = new[]{"###"," # "," # "," # "," # "},
             ['Y'] = new[]{"# #","# #"," # "," # "," # "},
+            ['X'] = new[]{"# #"," # "," # "," # ","# #"},
             [':'] = new[]{" ","#"," ","#"," "}
         };
 
