@@ -605,7 +605,7 @@ namespace PixelTowerDefense
             }
 
             // Add some darker pixels for depth
-            int darkCount = count / 4;
+            int darkCount = count / 2;
             for (int i = 0; i < darkCount; i++)
             {
                 float ang = MathHelper.ToRadians(_rng.Next(360));

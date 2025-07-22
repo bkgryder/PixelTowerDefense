@@ -16,14 +16,14 @@ namespace PixelTowerDefense.Entities
             Pos = pos;
 
             var trunk = new List<Point>();
-            int height = rng.Next(12, 20);
-            int baseWidth = rng.Next(2, 4); // half-width of the trunk base
+            int height = rng.Next(20, 28);
+            int baseWidth = rng.Next(1, 2); // half-width of the trunk base
             float lean = Utils.RandEx.NextFloat(rng, -0.3f, 0.3f);
 
             for (int i = 0; i < height; i++)
             {
                 float t = i / (float)height;
-                int width = (int)MathF.Max(0, MathF.Round(baseWidth * (1f - t)));
+                int width = (int)MathF.Max(0, MathF.Round(baseWidth * (1.8f - t)));
                 int offset = (int)MathF.Round(lean * i);
                 for (int x = -width; x <= width; x++)
                     trunk.Add(new Point(offset + x, -i));
@@ -31,7 +31,7 @@ namespace PixelTowerDefense.Entities
                 if (i > height / 3 && i < height - 2 && rng.NextDouble() < 0.15)
                 {
                     int dir = rng.NextDouble() < 0.5 ? -1 : 1;
-                    int branchLen = rng.Next(2, 5);
+                    int branchLen = rng.Next(5, 10);
                     for (int j = 1; j <= branchLen; j++)
                         trunk.Add(new Point(offset + dir * (width + j), -i - j / 2));
                 }

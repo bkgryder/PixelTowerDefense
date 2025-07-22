@@ -20,7 +20,7 @@ namespace PixelTowerDefense.Entities
             int length = rng.Next(4, 7);
             for (int x = -length / 2; x < length / 2; x++)
             {
-                int offset = rng.Next(-1, 2);
+                int offset = rng.Next(-1, 0);
                 shape.Add(new Point(x, offset));
                 shape.Add(new Point(x, offset + 1));
             }
