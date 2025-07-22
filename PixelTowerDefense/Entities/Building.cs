@@ -2,7 +2,11 @@ using Microsoft.Xna.Framework;
 
 namespace PixelTowerDefense.Entities
 {
-    public enum BuildingType { StockpileHut }
+    public enum BuildingType
+    {
+        StockpileHut,
+        CarpenterHut
+    }
 
     public struct Building
     {
@@ -11,6 +15,8 @@ namespace PixelTowerDefense.Entities
         public int StoredBerries;
         public int StoredLogs;
         public int StoredPlanks;
+        public float CraftTimer;
+
         public const int CAPACITY = 30;
     }
 }

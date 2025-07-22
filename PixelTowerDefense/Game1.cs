@@ -90,7 +90,20 @@ namespace PixelTowerDefense
             SpawnBerryBushes(5);
             SpawnLogs(4);
             SpawnStones(4);
-            SpawnTrees(4);
+
+            // spawn clustered tree patches
+            for (int i = 0; i < 3; i++)
+            {
+                float cx = _rng.NextFloat(Constants.ARENA_LEFT + 10, Constants.ARENA_RIGHT - 10);
+                float cy = _rng.NextFloat(Constants.ARENA_TOP + 10, Constants.ARENA_BOTTOM - 10);
+                int count = _rng.Next(3, 6);
+                for (int j = 0; j < count; j++)
+                {
+                    float ox = _rng.NextFloat(-3f, 3f);
+                    float oy = _rng.NextFloat(-3f, 3f);
+                    _trees.Add(new Tree(new Vector2(cx + ox, cy + oy), _rng));
+                }
+            }
 
             var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
             var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
@@ -100,7 +113,18 @@ namespace PixelTowerDefense
                 Kind = BuildingType.StockpileHut,
                 StoredBerries = 0,
                 StoredLogs = 0,
-                StoredPlanks = 0
+                StoredPlanks = 0,
+                WorkTimer = 0f
+            });
+            _buildings.Add(new Building
+            {
+                Pos = new Vector2(midX + 6, midY),
+                Kind = BuildingType.CarpenterHut,
+                StoredBerries = 0,
+                StoredLogs = 0,
+                StoredPlanks = 0,
+                WorkTimer = 0f
+
             });
             _camX = midX - (GraphicsDevice.Viewport.Width * 0.5f) / _zoom;
             _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
@@ -349,7 +373,7 @@ namespace PixelTowerDefense
                 _dragging = false;
             }
 
-            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, dt);
+            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             PhysicsSystem.UpdateLogs(_logs, dt);
             CombatSystem.ResolveCombat(_meeples, _pixels, dt);
@@ -690,6 +714,20 @@ namespace PixelTowerDefense
                         int x = (int)pos.X - 1 + col;
                         int y = (int)pos.Y - 3 - level;
                         _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.Red);
+                    }
+                    break;
+                case BuildingType.CarpenterHut:
+                    _sb.Draw(_px, new Rectangle((int)pos.X - 1, (int)pos.Y - 1, 3, 3), Color.Sienna);
+                    _sb.Draw(_px, new Rectangle((int)pos.X, (int)pos.Y - 2, 1, 1), Color.Peru);
+                    for (int i = 0; i < b.StoredLogs; i++)
+                    {
+                        int y = (int)pos.Y - 3 - i;
+                        _sb.Draw(_px, new Rectangle((int)pos.X - 2, y, 1, 1), Color.SaddleBrown);
+                    }
+                    for (int i = 0; i < b.StoredPlanks; i++)
+                    {
+                        int y = (int)pos.Y - 3 - i;
+                        _sb.Draw(_px, new Rectangle((int)pos.X + 2, y, 1, 1), Color.BurlyWood);
                     }
                     break;
             }

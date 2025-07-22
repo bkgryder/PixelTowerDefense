@@ -112,5 +112,10 @@ using Microsoft.Xna.Framework;
         public const float TELEKINESIS_DRAIN = 10f; // per second
         public const float PRECIPITATE_DRAIN = 5f;  // per second
 
+        // Carpenter hut
+        public const float CARPENTER_CRAFT_TIME = 1f;
+        // Trees & crafting
+        public const int TREE_HEALTH = 3;
+
     }
 }
