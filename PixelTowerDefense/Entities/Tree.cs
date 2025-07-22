@@ -11,6 +11,8 @@ namespace PixelTowerDefense.Entities
         public Point[] LeafPixels;
         public float CollisionRadius;
         public int Health;
+        public bool IsStump;
+
 
         public Tree(Vector2 pos, System.Random rng)
         {
@@ -54,7 +56,8 @@ namespace PixelTowerDefense.Entities
             LeafPixels = leaves.ToArray();
 
             CollisionRadius = baseWidth + 0.5f;
-            Health = 3;
+            Health = Utils.Constants.TREE_HEALTH;
+            IsStump = false;
         }
     }
 }

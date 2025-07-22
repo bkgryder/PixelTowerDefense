@@ -16,6 +16,7 @@ namespace PixelTowerDefense.Systems
             List<BerryBush> bushes,
             List<Building> buildings,
             List<Tree> trees,
+            List<Log> logs,
             float dt
         )
         {
@@ -154,6 +155,101 @@ namespace PixelTowerDefense.Systems
                                             e.CarriedBerries = 1;
                                             bushes[bidx] = bush;
                                         }
+                                    }
+                                    else
+                                    {
+                                        if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                        e.Vel = dir * Constants.WANDER_SPEED;
+                                        e.Pos += e.Vel * dt;
+                                    }
+                                    e.Angle = 0f;
+                                    break;
+                                }
+                            }
+
+                            // --- log & tree jobs ---
+                            if (e.CarriedLogIdx >= 0)
+                            {
+                                if (e.CarriedLogIdx < logs.Count)
+                                {
+                                    var log = logs[e.CarriedLogIdx];
+                                    int hidx = FindNearestCarpenter(e.Pos, buildings);
+                                    if (hidx < 0)
+                                        hidx = FindNearestStockpileForLogs(e.Pos, buildings);
+                                    if (hidx >= 0)
+                                    {
+                                        var hut = buildings[hidx];
+                                        Vector2 dir = hut.Pos - e.Pos;
+                                        float dist = dir.Length();
+                                        if (dist < 1f)
+                                        {
+                                            hut.StoredLogs++;
+                                            buildings[hidx] = hut;
+                                            logs.RemoveAt(e.CarriedLogIdx);
+                                            e.CarriedLogIdx = -1;
+                                            e.WanderTimer = 0f;
+                                        }
+                                        else
+                                        {
+                                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                            e.Vel = dir * Constants.WANDER_SPEED;
+                                            e.Pos += e.Vel * dt;
+                                            log.Pos = e.Pos;
+                                            logs[e.CarriedLogIdx] = log;
+                                        }
+                                        e.Angle = 0f;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    e.CarriedLogIdx = -1;
+                                }
+                            }
+                            else
+                            {
+                                int lidx = FindNearestLooseLog(e.Pos, logs);
+                                if (lidx >= 0)
+                                {
+                                    var log = logs[lidx];
+                                    Vector2 dir = log.Pos - e.Pos;
+                                    float dist = dir.Length();
+                                    if (dist < Constants.HARVEST_RANGE)
+                                    {
+                                        log.IsCarried = true;
+                                        logs[lidx] = log;
+                                        e.CarriedLogIdx = lidx;
+                                        e.WanderTimer = 0f;
+                                    }
+                                    else
+                                    {
+                                        if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                        e.Vel = dir * Constants.WANDER_SPEED;
+                                        e.Pos += e.Vel * dt;
+                                    }
+                                    e.Angle = 0f;
+                                    break;
+                                }
+
+                                int tidx = FindNearestTree(e.Pos, trees);
+                                if (tidx >= 0)
+                                {
+                                    var tree = trees[tidx];
+                                    Vector2 dir = tree.Pos - e.Pos;
+                                    float dist = dir.Length();
+                                    if (dist < tree.CollisionRadius + Constants.TOUCH_RANGE)
+                                    {
+                                        if (!tree.IsStump)
+                                        {
+                                            tree.Health--;
+                                            if (tree.Health <= 0)
+                                            {
+                                                tree.IsStump = true;
+                                                logs.Add(new Log(tree.Pos, _rng));
+                                            }
+                                            trees[tidx] = tree;
+                                        }
+                                        e.WanderTimer = 0.5f;
                                     }
                                     else
                                     {
@@ -312,6 +408,22 @@ namespace PixelTowerDefense.Systems
             }
 
             ResolveDominoCollisions(meeples);
+
+            for (int i = 0; i < buildings.Count; i++)
+            {
+                var b = buildings[i];
+                if (b.Kind == BuildingType.CarpenterHut && b.StoredLogs > 0)
+                {
+                    b.WorkTimer += dt;
+                    if (b.WorkTimer >= Constants.CARPENTER_WORK_TIME)
+                    {
+                        b.WorkTimer = 0f;
+                        b.StoredLogs--;
+                        b.StoredPlanks++;
+                    }
+                }
+                buildings[i] = b;
+            }
         }
 
         private static void ExplodeEnemy(Meeple e, List<Pixel> debris)
@@ -622,6 +734,74 @@ namespace PixelTowerDefense.Systems
                 if (huts[i].Kind != BuildingType.StockpileHut) continue;
                 if (huts[i].StoredBerries <= 0) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestCarpenter(Vector2 pos, List<Building> huts)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < huts.Count; i++)
+            {
+                if (huts[i].Kind != BuildingType.CarpenterHut) continue;
+                float d = Vector2.Distance(pos, huts[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestStockpileForLogs(Vector2 pos, List<Building> huts)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < huts.Count; i++)
+            {
+                if (huts[i].Kind != BuildingType.StockpileHut) continue;
+                float d = Vector2.Distance(pos, huts[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestLooseLog(Vector2 pos, List<Log> logs)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < logs.Count; i++)
+            {
+                if (logs[i].IsCarried) continue;
+                float d = Vector2.Distance(pos, logs[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestTree(Vector2 pos, List<Tree> trees)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < trees.Count; i++)
+            {
+                if (trees[i].IsStump) continue;
+                float d = Vector2.Distance(pos, trees[i].Pos);
                 if (d < best)
                 {
                     best = d;
