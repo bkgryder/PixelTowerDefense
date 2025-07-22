@@ -13,7 +13,20 @@ namespace PixelTowerDefense.Entities
         public float AttackCooldown;
     }
 
-    public struct Worker { }
+    public enum JobType
+    {
+        None,
+        HarvestBerries,
+        ChopTree,
+        HaulLog,
+        DepositResource
+    }
+
+    public struct Worker
+    {
+        public JobType CurrentJob;
+        public int? TargetIdx;
+    }
 
     public struct Meeple
     {

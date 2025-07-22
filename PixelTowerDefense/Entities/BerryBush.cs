@@ -10,12 +10,14 @@ namespace PixelTowerDefense.Entities
         public float RegrowTimer;
         public Point[] Shape;
         public Point[] BerryPixels;
+        public int? ReservedBy;
 
         public BerryBush(Vector2 pos, System.Random rng)
         {
             Pos = pos;
             Berries = Utils.Constants.BUSH_BERRIES;
             RegrowTimer = 0f;
+            ReservedBy = null;
 
             var shapeList = new List<Point>();
             for (int y = -3; y < 3; y++)

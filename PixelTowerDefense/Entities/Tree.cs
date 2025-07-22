@@ -12,6 +12,7 @@ namespace PixelTowerDefense.Entities
         public float CollisionRadius;
         public int Health;
         public bool IsStump;
+        public int? ReservedBy;
 
 
         public Tree(Vector2 pos, System.Random rng)
@@ -58,6 +59,7 @@ namespace PixelTowerDefense.Entities
             CollisionRadius = baseWidth + 0.5f;
             Health = Utils.Constants.TREE_HEALTH;
             IsStump = false;
+            ReservedBy = null;
         }
     }
 }

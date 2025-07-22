@@ -16,6 +16,7 @@ namespace PixelTowerDefense.Entities
         public int StoredLogs;
         public int StoredPlanks;
         public float CraftTimer;
+        public int? ReservedBy;
 
         public const int CAPACITY = 30;
     }
