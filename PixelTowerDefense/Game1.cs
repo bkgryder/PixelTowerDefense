@@ -98,7 +98,9 @@ namespace PixelTowerDefense
             {
                 Pos = new Vector2(midX, midY),
                 Kind = BuildingType.StockpileHut,
-                StoredBerries = 0
+                StoredBerries = 0,
+                StoredLogs = 0,
+                StoredPlanks = 0
             });
             _camX = midX - (GraphicsDevice.Viewport.Width * 0.5f) / _zoom;
             _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
@@ -550,9 +552,11 @@ namespace PixelTowerDefense
 
         private void DrawHint()
         {
-            int total = _buildings.Where(b => b.Kind == BuildingType.StockpileHut)
-                                  .Sum(b => b.StoredBerries);
-            DrawTinyString($"B{total}", new Vector2(35, 8), Color.White);
+            int berries = _buildings.Sum(b => b.StoredBerries);
+            int logs = _buildings.Sum(b => b.StoredLogs);
+            int planks = _buildings.Sum(b => b.StoredPlanks);
+            string text = $"BERRIES: {berries}   LOGS: {logs}   PLANKS: {planks}";
+            DrawTinyString(text, new Vector2(35, 8), Color.White);
         }
 
         private void DrawMeepleStats(Meeple m, Point mouse)
@@ -924,7 +928,20 @@ namespace PixelTowerDefense
             ['U'] = new[]{"# #","# #","# #","# #","###"},
             ['N'] = new[]{"## ","## ","###","###","# #"},
             ['G'] = new[]{"## ","#  ","# #","# #","## "},
-            ['R'] = new[]{"## ","# #","## ","# #","# #"}
+            ['R'] = new[]{"## ","# #","## ","# #","# #"},
+            ['A'] = new[]{" # ","# #","###","# #","# #"},
+            ['C'] = new[]{" ##","#  ","#  ","#  "," ##"},
+            ['D'] = new[]{"## ","# #","# #","# #","## "},
+            ['E'] = new[]{"###","#  ","###","#  ","###"},
+            ['I'] = new[]{"###"," # "," # "," # ","###"},
+            ['K'] = new[]{"# #","# #","## ","# #","# #"},
+            ['L'] = new[]{"#  ","#  ","#  ","#  ","###"},
+            ['M'] = new[]{"# #","###","###","# #","# #"},
+            ['O'] = new[]{"## ","# #","# #","# #","## "},
+            ['S'] = new[]{" ##","#  ","## ","  #","## "},
+            ['T'] = new[]{"###"," # "," # "," # "," # "},
+            ['Y'] = new[]{"# #","# #"," # "," # "," # "},
+            [':'] = new[]{" ","#"," ","#"," "}
         };
 
         private void DrawTinyString(string text, Vector2 pos, Color col)

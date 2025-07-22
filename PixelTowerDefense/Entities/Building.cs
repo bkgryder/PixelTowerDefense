@@ -9,6 +9,8 @@ namespace PixelTowerDefense.Entities
         public Vector2 Pos;
         public BuildingType Kind;
         public int StoredBerries;
+        public int StoredLogs;
+        public int StoredPlanks;
         public const int CAPACITY = 30;
     }
 }
