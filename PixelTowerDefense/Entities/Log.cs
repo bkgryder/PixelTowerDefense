@@ -6,12 +6,14 @@ namespace PixelTowerDefense.Entities
     public struct Log
     {
         public Vector2 Pos;
+        public Vector2 Vel;
         public Point[] Shape;
         public Color Color;
 
         public Log(Vector2 pos, System.Random rng)
         {
             Pos = pos;
+            Vel = Vector2.Zero;
             Color = new Color(
                 (byte)rng.Next(90, 130),
                 (byte)rng.Next(60, 90),
