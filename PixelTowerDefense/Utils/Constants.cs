@@ -10,6 +10,14 @@ namespace PixelTowerDefense.Utils
         public const int ARENA_LEFT = 0, ARENA_RIGHT = 200;
         public const int ARENA_TOP = 0, ARENA_BOTTOM = 200;
 
+        // Terrain heightmap for the arena (1D array indexed by X position)
+        // Values are in discrete tile steps which are converted to pixel
+        // offsets via TILE_STEP_PX. All zeros by default for a flat arena.
+        public static readonly int[] Height = new int[ARENA_RIGHT];
+
+        // Pixel height represented by a single tile step in the heightmap
+        public const float TILE_STEP_PX = 1f;
+
         public const float WANDER_SPEED = 10f;
         public const float FRICTION = 3f;
         public const float EXPLODE_VZ_THRESHOLD = 85f;
