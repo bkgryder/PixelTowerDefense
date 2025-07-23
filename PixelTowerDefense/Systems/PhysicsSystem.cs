@@ -69,6 +69,8 @@ namespace PixelTowerDefense.Systems
                     }
                 }
 
+                float baseZ = Constants.Height[(int)MathF.Floor(MathHelper.Clamp(e.Pos.X, Constants.ARENA_LEFT, Constants.ARENA_RIGHT - 1))] * Constants.TILE_STEP_PX;
+
                 switch (e.State)
                 {
                     case MeepleState.Idle:
@@ -321,10 +323,11 @@ namespace PixelTowerDefense.Systems
                         e.vz -= Constants.Z_GRAVITY * dt;
                         e.z += e.vz * dt;
 
-                        if (e.z <= 0f)
+                        baseZ = Constants.Height[(int)MathF.Floor(MathHelper.Clamp(e.Pos.X, Constants.ARENA_LEFT, Constants.ARENA_RIGHT - 1))] * Constants.TILE_STEP_PX;
+                        if (e.z <= baseZ)
                         {
                             float impact = MathF.Abs(e.vz);
-                            e.z = 0f;
+                            e.z = baseZ;
                             e.vz = 0f;
 
                             if (impact > Constants.EXPLODE_VZ_THRESHOLD)
@@ -366,9 +369,10 @@ namespace PixelTowerDefense.Systems
                         e.vz -= Constants.Z_GRAVITY * dt;
                         e.z += e.vz * dt;
 
-                        if (e.z <= 0f)
+                        baseZ = Constants.Height[(int)MathF.Floor(MathHelper.Clamp(e.Pos.X, Constants.ARENA_LEFT, Constants.ARENA_RIGHT - 1))] * Constants.TILE_STEP_PX;
+                        if (e.z <= baseZ)
                         {
-                            e.z = 0f;
+                            e.z = baseZ;
                             e.vz = 0f;
                             e.State = MeepleState.Dead;
                             e.DecompTimer = 0f;
@@ -403,9 +407,17 @@ namespace PixelTowerDefense.Systems
                 e.Pos.X = MathHelper.Clamp(e.Pos.X,
                            Constants.ARENA_LEFT + 2,
                            Constants.ARENA_RIGHT - 2);
-               e.Pos.Y = MathHelper.Clamp(e.Pos.Y,
-                          Constants.ARENA_TOP + 2,
-                          Constants.ARENA_BOTTOM - 2);
+
+                baseZ = Constants.Height[(int)MathF.Floor(e.Pos.X)] * Constants.TILE_STEP_PX;
+                if (e.z < baseZ)
+                {
+                    e.z = baseZ;
+                    e.vz *= -0.2f;
+                }
+
+                e.Pos.Y = MathHelper.Clamp(e.Pos.Y,
+                           Constants.ARENA_TOP + 2,
+                           Constants.ARENA_BOTTOM - 2);
 
                 foreach (var t in trees)
                 {
