@@ -1,2 +1,2 @@
-﻿using var game = new PixelTowerDefense.Game1();
+using var game = new PixelTowerDefense.Game1();
 game.Run();

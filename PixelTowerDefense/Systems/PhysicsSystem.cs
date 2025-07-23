@@ -93,7 +93,7 @@ namespace PixelTowerDefense.Systems
                                     else
                                     {
                                         if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                                        e.Vel = dir * Constants.WANDER_SPEED;
+                                        e.Vel = dir * e.MoveSpeed;
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
@@ -130,7 +130,7 @@ namespace PixelTowerDefense.Systems
                                         else
                                         {
                                             if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                                            e.Vel = dir * Constants.WANDER_SPEED;
+                                            e.Vel = dir * e.MoveSpeed;
                                             e.Pos += e.Vel * dt;
                                         }
                                         e.Angle = 0f;
@@ -141,7 +141,22 @@ namespace PixelTowerDefense.Systems
 
                             if (e.Hunger >= Constants.HUNGER_THRESHOLD && e.CarriedBerries == 0)
                             {
-                                int bidx = FindNearestBush(e.Pos, bushes);
+                                int bidx;
+                                var wdata = e.Worker.Value;
+                                if (wdata.CurrentJob == JobType.HarvestBerries && wdata.TargetIdx != null)
+                                    bidx = wdata.TargetIdx.Value;
+                                else
+                                {
+                                    bidx = FindNearestBush(e.Pos, bushes);
+                                    if (bidx >= 0)
+                                    {
+                                        wdata.CurrentJob = JobType.HarvestBerries;
+                                        wdata.TargetIdx = bidx;
+                                        var rbush = bushes[bidx];
+                                        rbush.ReservedBy = i;
+                                        bushes[bidx] = rbush;
+                                    }
+                                }
                                 if (bidx >= 0)
                                 {
                                     var bush = bushes[bidx];
@@ -153,13 +168,117 @@ namespace PixelTowerDefense.Systems
                                         {
                                             bush.Berries--;
                                             e.CarriedBerries = 1;
+                                            bush.ReservedBy = null;
                                             bushes[bidx] = bush;
+                                            wdata.CurrentJob = JobType.None;
+                                            wdata.TargetIdx = null;
                                         }
                                     }
                                     else
                                     {
                                         if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                                        e.Vel = dir * Constants.WANDER_SPEED;
+                                        e.Vel = dir * e.MoveSpeed;
+                                        e.Pos += e.Vel * dt;
+                                    }
+                                    e.Angle = 0f;
+                                    e.Worker = wdata;
+                                    break;
+                                }
+                            }
+
+                            // --- log & tree jobs ---
+                            if (e.CarriedLogIdx >= 0)
+                            {
+                                if (e.CarriedLogIdx < logs.Count)
+                                {
+                                    var log = logs[e.CarriedLogIdx];
+                                    int hidx = FindNearestCarpenter(e.Pos, buildings);
+                                    if (hidx < 0)
+                                        hidx = FindNearestStockpileForLogs(e.Pos, buildings);
+                                    if (hidx >= 0)
+                                    {
+                                        var hut = buildings[hidx];
+                                        Vector2 dir = hut.Pos - e.Pos;
+                                        float dist = dir.Length();
+                                        if (dist < 1f)
+                                        {
+                                            hut.StoredLogs++;
+                                            if (hut.CraftTimer <= 0f)
+                                                hut.CraftTimer = Constants.BASE_CRAFT / (1f + 0.1f * e.Intellect);
+                                            buildings[hidx] = hut;
+                                            logs.RemoveAt(e.CarriedLogIdx);
+                                            e.CarriedLogIdx = -1;
+                                        }
+                                        else
+                                        {
+                                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                            e.Vel = dir * e.MoveSpeed;
+                                            e.Pos += e.Vel * dt;
+                                            log.Pos = e.Pos;
+                                            logs[e.CarriedLogIdx] = log;
+                                        }
+                                        e.Angle = 0f;
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    e.CarriedLogIdx = -1;
+                                }
+                            }
+                            else
+                            {
+                                int lidx = FindNearestLooseLog(e.Pos, logs);
+                                int tidx = FindNearestTree(e.Pos, trees);
+
+                                float haulScore = lidx >= 0 ? JobAffinity(JobType.HaulLog, e) : -1f;
+                                float chopScore = tidx >= 0 ? JobAffinity(JobType.ChopTree, e) : -1f;
+
+                                if (haulScore >= chopScore && lidx >= 0)
+                                {
+                                    var log = logs[lidx];
+                                    Vector2 dir = log.Pos - e.Pos;
+                                    float dist = dir.Length();
+                                    if (dist < Constants.HARVEST_RANGE)
+                                    {
+                                        log.IsCarried = true;
+                                        logs[lidx] = log;
+                                        e.CarriedLogIdx = lidx;
+                                        e.WanderTimer = 0f;
+                                    }
+                                    else
+                                    {
+                                        if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                        e.Vel = dir * e.MoveSpeed;
+                                        e.Pos += e.Vel * dt;
+                                    }
+                                    e.Angle = 0f;
+                                    break;
+                                }
+                                else if (tidx >= 0)
+                                {
+                                    var tree = trees[tidx];
+                                    Vector2 dir = tree.Pos - e.Pos;
+                                    float dist = dir.Length();
+                                    if (dist < tree.CollisionRadius + Constants.TOUCH_RANGE)
+                                    {
+                                        if (!tree.IsStump)
+                                        {
+                                            tree.Health--;
+                                            if (tree.Health <= 0)
+                                            {
+                                                tree.IsStump = true;
+                                                tree.CollisionRadius = Constants.STUMP_RADIUS;
+                                                logs.Add(new Log(tree.Pos, _rng));
+                                            }
+                                            trees[tidx] = tree;
+                                        }
+                                        e.WanderTimer = Constants.BASE_CHOP / (1f + 0.1f * e.Strength);
+                                    }
+                                    else
+                                    {
+                                        if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                        e.Vel = dir * e.MoveSpeed;
                                         e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
@@ -219,18 +338,18 @@ namespace PixelTowerDefense.Systems
                                                                Constants.BURN_WANDER_TIME_MAX);
                                 float ang = MathHelper.ToRadians(_rng.Next(360));
                                 e.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang))
-                                             * Constants.WANDER_SPEED * Constants.BURNING_SPEED_MULT;
+                                              * e.MoveSpeed * Constants.BURNING_SPEED_MULT;
                             }
                             else
                             {
                                 e.WanderTimer = _rng.NextFloat(1f, 3f);
                                 float ang = MathHelper.ToRadians(_rng.Next(360));
                                 e.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang))
-                                             * Constants.WANDER_SPEED;
+                                              * e.MoveSpeed;
                             }
                         }
                         if (e.IsBurning)
-                            e.Vel = Vector2.Normalize(e.Vel) * Constants.WANDER_SPEED * Constants.BURNING_SPEED_MULT;
+                            e.Vel = Vector2.Normalize(e.Vel) * e.MoveSpeed * Constants.BURNING_SPEED_MULT;
                         e.Pos += e.Vel * dt;
                         e.Angle = 0f;
                         break;
@@ -271,7 +390,7 @@ namespace PixelTowerDefense.Systems
                                 e.WanderTimer = _rng.NextFloat(0.5f, 2.5f);
                                 float landAng = MathHelper.ToRadians(_rng.Next(360));
                                 e.Vel = new Vector2(MathF.Cos(landAng), MathF.Sin(landAng))
-                                                  * Constants.WANDER_SPEED;
+                                                  * e.MoveSpeed;
                                 e.Angle = 0f;
                                 e.AngularVel = 0f;
                             }
@@ -318,7 +437,7 @@ namespace PixelTowerDefense.Systems
                             e.WanderTimer = _rng.NextFloat(0.5f, 2.5f);
                             float upAng = MathHelper.ToRadians(_rng.Next(360));
                             e.Vel = new Vector2(MathF.Cos(upAng), MathF.Sin(upAng))
-                                                 * Constants.WANDER_SPEED;
+                                                 * e.MoveSpeed;
                             e.Angle = 0f;
                         }
                         break;
@@ -333,6 +452,8 @@ namespace PixelTowerDefense.Systems
 
                 foreach (var t in trees)
                 {
+                    if (t.IsStump) continue;
+
                     Vector2 diff = e.Pos - t.Pos;
                     float dist = diff.Length();
                     if (dist < t.CollisionRadius)
@@ -356,6 +477,25 @@ namespace PixelTowerDefense.Systems
             }
 
             ResolveDominoCollisions(meeples);
+
+            for (int i = 0; i < buildings.Count; i++)
+            {
+                var b = buildings[i];
+                if (b.Kind == BuildingType.CarpenterHut && b.StoredLogs > 0)
+                {
+                    if (b.CraftTimer > 0f)
+                    {
+                        b.CraftTimer -= dt;
+                        if (b.CraftTimer <= 0f)
+                        {
+                            b.StoredLogs--;
+                            b.StoredPlanks++;
+                            b.CraftTimer = b.StoredLogs > 0 ? Constants.BASE_CRAFT : 0f;
+                        }
+                    }
+                }
+                buildings[i] = b;
+            }
         }
 
         private static void ExplodeEnemy(Meeple e, List<Pixel> debris)
@@ -525,6 +665,73 @@ namespace PixelTowerDefense.Systems
             }
         }
 
+        public static void UpdateLogs(List<Log> logs, float dt)
+        {
+            for (int i = 0; i < logs.Count; i++)
+            {
+                var l = logs[i];
+
+                l.Vel *= MathF.Max(0f, 1f - Constants.DEBRIS_FRICTION * dt);
+                l.Pos += l.Vel * dt;
+
+                if (l.Pos.X < Constants.ARENA_LEFT)
+                { l.Pos.X = Constants.ARENA_LEFT; l.Vel.X *= -0.5f; }
+                if (l.Pos.X > Constants.ARENA_RIGHT - 1)
+                { l.Pos.X = Constants.ARENA_RIGHT - 1; l.Vel.X *= -0.5f; }
+                if (l.Pos.Y < Constants.ARENA_TOP)
+                { l.Pos.Y = Constants.ARENA_TOP; l.Vel.Y *= -0.5f; }
+                if (l.Pos.Y > Constants.ARENA_BOTTOM - 1)
+                { l.Pos.Y = Constants.ARENA_BOTTOM - 1; l.Vel.Y *= -0.5f; }
+
+                logs[i] = l;
+            }
+        }
+
+        public static void WorkerChopTree(ref Meeple worker, ref Tree tree, List<Log> logs, Random rng)
+        {
+            if (Vector2.Distance(worker.Pos, tree.Pos) <= 1f && tree.Health > 0)
+            {
+                tree.Health--;
+                logs.Add(new Log(tree.Pos, rng));
+                logs.Add(new Log(tree.Pos, rng));
+                if (tree.Health <= 0)
+                {
+                    tree.IsStump = true;
+                    tree.CollisionRadius = Constants.STUMP_RADIUS;
+                }
+                worker.WanderTimer = Constants.BASE_CHOP / (1f + 0.1f * worker.Strength);
+            }
+        }
+
+        public static void WorkerDepositLog(ref Meeple worker, ref Building building)
+        {
+            if (building.Kind == BuildingType.CarpenterHut &&
+                Vector2.Distance(worker.Pos, building.Pos) <= 1f &&
+                worker.CarriedLogs > 0)
+            {
+                building.StoredLogs += worker.CarriedLogs;
+                worker.CarriedLogs = 0;
+                if (building.CraftTimer <= 0f)
+                    building.CraftTimer = Constants.BASE_CRAFT / (1f + 0.1f * worker.Intellect);
+            }
+        }
+
+        public static void UpdateCarpenter(ref Building building, float dt)
+        {
+            if (building.Kind != BuildingType.CarpenterHut) return;
+
+            if (building.StoredLogs > 0)
+            {
+                building.CraftTimer -= dt;
+                if (building.CraftTimer <= 0f)
+                {
+                    building.StoredLogs--;
+                    building.StoredPlanks++;
+                    building.CraftTimer = building.StoredLogs > 0 ? Constants.BASE_CRAFT : 0f;
+                }
+            }
+        }
+
         private static void ResolveDominoCollisions(List<Meeple> meeples)
         {
             for (int i = 0; i < meeples.Count; i++)
@@ -568,6 +775,7 @@ namespace PixelTowerDefense.Systems
             for (int i = 0; i < bushes.Count; i++)
             {
                 if (bushes[i].Berries <= 0) continue;
+                if (bushes[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, bushes[i].Pos);
                 if (d < best)
                 {
@@ -602,6 +810,7 @@ namespace PixelTowerDefense.Systems
             {
                 if (huts[i].Kind != BuildingType.StockpileHut) continue;
                 if (huts[i].StoredBerries >= Building.CAPACITY) continue;
+                if (huts[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
                 if (d < best)
                 {
@@ -620,6 +829,7 @@ namespace PixelTowerDefense.Systems
             {
                 if (huts[i].Kind != BuildingType.StockpileHut) continue;
                 if (huts[i].StoredBerries <= 0) continue;
+                if (huts[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
                 if (d < best)
                 {
@@ -628,6 +838,89 @@ namespace PixelTowerDefense.Systems
                 }
             }
             return idx;
+        }
+
+        private static int FindNearestCarpenter(Vector2 pos, List<Building> huts)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < huts.Count; i++)
+            {
+                if (huts[i].Kind != BuildingType.CarpenterHut) continue;
+                if (huts[i].ReservedBy != null) continue;
+                float d = Vector2.Distance(pos, huts[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestStockpileForLogs(Vector2 pos, List<Building> huts)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < huts.Count; i++)
+            {
+                if (huts[i].Kind != BuildingType.StockpileHut) continue;
+                if (huts[i].ReservedBy != null) continue;
+                float d = Vector2.Distance(pos, huts[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestLooseLog(Vector2 pos, List<Log> logs)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < logs.Count; i++)
+            {
+                if (logs[i].IsCarried) continue;
+                if (logs[i].ReservedBy != null) continue;
+                float d = Vector2.Distance(pos, logs[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestTree(Vector2 pos, List<Tree> trees)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < trees.Count; i++)
+            {
+                if (trees[i].IsStump) continue;
+                if (trees[i].ReservedBy != null) continue;
+                float d = Vector2.Distance(pos, trees[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static float JobAffinity(JobType job, Meeple m)
+        {
+            return job switch
+            {
+                JobType.ChopTree => m.Strength,
+                JobType.HaulLog => m.Dexterity,
+                JobType.CarryLogToCarpenter => 100f,
+                _ => 0f
+            };
         }
     }
 }

@@ -1,5 +1,5 @@
 using Microsoft.Xna.Framework;
-﻿namespace PixelTowerDefense.Utils
+namespace PixelTowerDefense.Utils
 {
     public static class Constants
     {
@@ -113,6 +113,27 @@ using Microsoft.Xna.Framework;
         public const float EXPLOSION_COST = 40f;
         public const float TELEKINESIS_DRAIN = 10f; // per second
         public const float PRECIPITATE_DRAIN = 5f;  // per second
+
+        // Carpenter hut
+        public const float BASE_CRAFT = 1f;
+
+        // Worker actions
+        public const float BASE_CHOP = 0.5f;
+
+        // Legacy constant kept for backward compatibility
+        public const float CARPENTER_CRAFT_TIME = BASE_CRAFT;
+
+        // Trees & crafting
+        public const int TREE_HEALTH = 3;
+        public const float STUMP_RADIUS = 0.75f;
+
+        // Lighting
+        public const float DAY_LENGTH = 60f; // seconds for a full day cycle
+        public const float NIGHT_BRIGHTNESS = 0.3f; // 0 = pitch black, 1 = fully lit
+        public const float FIRE_LIGHT_RADIUS = 15f;
+        public const float FIRE_LIGHT_INTENSITY = 0.8f;
+        public const float EXPLOSION_LIGHT_RADIUS = 30f;
+        public const float EXPLOSION_LIGHT_INTENSITY = 1f;
 
     }
 }
