@@ -625,6 +625,7 @@ namespace PixelTowerDefense
         {
             var list = new List<string>
             {
+                m.Name,
                 $"HP{(int)MathF.Ceiling(m.Health)}",
                 $"HU{(int)MathF.Ceiling(m.Hunger)}",
                 $"B{m.CarriedBerries}",

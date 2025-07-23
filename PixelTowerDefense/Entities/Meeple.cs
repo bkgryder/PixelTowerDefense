@@ -76,6 +76,8 @@ namespace PixelTowerDefense.Entities
         public int CarriedLogs;
         public int CarriedLogIdx;
 
+        public string Name;
+
         // basic attributes
         public int Strength;
         public int Dexterity;
@@ -112,6 +114,7 @@ namespace PixelTowerDefense.Entities
             CarriedBerries = 0;
             CarriedLogs = 0;
             CarriedLogIdx = -1;
+            Name = string.Empty;
             Combatant = null;
             Worker = null;
         }
@@ -144,6 +147,7 @@ namespace PixelTowerDefense.Entities
         public static Meeple SpawnMeeple(Vector2 pos, Faction side, Color shirt, Random rng)
         {
             var m = new Meeple(pos, side, shirt);
+            m.Name = NameGenerator.RandomName(rng);
             m.Strength = rng.Next(3, 11);
             m.Dexterity = rng.Next(3, 11);
             m.Intellect = rng.Next(3, 11);
