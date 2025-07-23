@@ -96,6 +96,8 @@ namespace PixelTowerDefense.Utils
         public const float HARVEST_RANGE = 2f;
         public const int BUSH_BERRIES = 5;
         public const float BUSH_REGROW_INTERVAL = .25f;
+        public const float CHOP_RANGE = 2f;
+        public const float CHOP_TIME = 2f;
 
         // Precipitate ability
         public const float PRECIPITATE_DROP_SPEED = 130f;

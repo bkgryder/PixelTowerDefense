@@ -286,6 +286,49 @@ namespace PixelTowerDefense.Systems
                                 }
                             }
                         }
+
+                        if (e.Worker != null)
+                        {
+                            int tidx = FindNearestTree(e.Pos, trees);
+                            if (tidx >= 0)
+                            {
+                                var tree = trees[tidx];
+                                Vector2 dir = tree.Pos - e.Pos;
+                                float dist = dir.Length();
+                                var worker = e.Worker.Value;
+                                if (dist > Constants.CHOP_RANGE)
+                                {
+                                    if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                    e.Vel = dir * Constants.WANDER_SPEED;
+                                    e.Pos += e.Vel * dt;
+                                    worker.ChopTimer = 0f;
+                                }
+                                else if (dist > tree.CollisionRadius)
+                                {
+                                    if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                    e.Vel = dir * Constants.WANDER_SPEED;
+                                    e.Pos += e.Vel * dt;
+                                    worker.ChopTimer = 0f;
+                                }
+                                else
+                                {
+                                    e.Vel = Vector2.Zero;
+                                    worker.ChopTimer += dt;
+                                    if (worker.ChopTimer >= Constants.CHOP_TIME)
+                                    {
+                                        logs.Add(new Log(tree.Pos + new Vector2(_rng.NextFloat(-1f, 1f), _rng.NextFloat(-1f, 1f)), _rng));
+                                        logs.Add(new Log(tree.Pos + new Vector2(_rng.NextFloat(-1f, 1f), _rng.NextFloat(-1f, 1f)), _rng));
+                                        trees.RemoveAt(tidx);
+                                        worker.ChopTimer = 0f;
+                                    }
+                                }
+                                e.Angle = 0f;
+                                e.Worker = worker;
+                                meeples[i] = e;
+                                continue;
+                            }
+                        }
+
                         e.WanderTimer -= dt;
                         if (e.WanderTimer <= 0f)
                         {
@@ -734,6 +777,22 @@ namespace PixelTowerDefense.Systems
                 if (bushes[i].Berries <= 0) continue;
                 if (bushes[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, bushes[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestTree(Vector2 pos, List<Tree> trees)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < trees.Count; i++)
+            {
+                float d = Vector2.Distance(pos, trees[i].Pos);
                 if (d < best)
                 {
                     best = d;
