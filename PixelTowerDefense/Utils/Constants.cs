@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 namespace PixelTowerDefense.Utils
 {
@@ -132,6 +133,30 @@ namespace PixelTowerDefense.Utils
         public const float FIRE_LIGHT_INTENSITY = 0.8f;
         public const float EXPLOSION_LIGHT_RADIUS = 30f;
         public const float EXPLOSION_LIGHT_INTENSITY = 1f;
+
+        // --- terrain ---
+        public const int TILE_STEP_PX = 4;
+
+        public enum TileType { Flat, SlopeUp, SlopeDown }
+
+        public static readonly byte[] Height =
+            new byte[ARENA_RIGHT - ARENA_LEFT + 1];
+
+        public static readonly TileType[] Tiles =
+            new TileType[ARENA_RIGHT - ARENA_LEFT + 1];
+
+        public static bool IsSlopeUp(int gx) => Tiles[gx] == TileType.SlopeUp;
+        public static bool IsSlopeDown(int gx) => Tiles[gx] == TileType.SlopeDown;
+
+        public static float GroundAt(float x)
+        {
+            int gx = (int)MathF.Floor(x);
+            byte h = Height[gx];
+            float baseY = ARENA_BOTTOM - h * TILE_STEP_PX;
+            if (IsSlopeUp(gx))   return baseY - (x - gx) * TILE_STEP_PX;
+            if (IsSlopeDown(gx)) return baseY - (1 - (x - gx)) * TILE_STEP_PX;
+            return baseY;
+        }
 
     }
 }
