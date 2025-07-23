@@ -56,6 +56,9 @@ namespace PixelTowerDefense
 
         float _mana = Constants.MANA_MAX;
 
+        List<Light> _lights = new();
+        float _timeOfDay;
+
         public Game1()
         {
             _gfx = new GraphicsDeviceManager(this);
@@ -382,6 +385,17 @@ namespace PixelTowerDefense
             // update shadow positions after all movement/physics
             ShadowSystem.UpdateShadows(_meeples, dt);
 
+            LightingSystem.Update(_lights, dt);
+            _timeOfDay = (_timeOfDay + dt / Constants.DAY_LENGTH) % 1f;
+            foreach (var m in _meeples)
+                if (m.IsBurning)
+                    LightingSystem.AddLight(
+                        _lights,
+                        m.GetPartPos(0) - new Vector2(0f, m.z),
+                        Constants.FIRE_LIGHT_RADIUS,
+                        Constants.FIRE_LIGHT_INTENSITY,
+                        dt);
+
             _prevKb = kb;
             _prevMs = ms;
             base.Update(gt);
@@ -451,6 +465,15 @@ namespace PixelTowerDefense
                 DrawMeepleSprite(e);
 
             _sb.End();
+
+            float phase = MathF.Sin(_timeOfDay * MathHelper.TwoPi) * 0.5f + 0.5f;
+            float ambient = MathHelper.Lerp(Constants.NIGHT_BRIGHTNESS, 1f, phase);
+            byte dark = (byte)Math.Clamp(255f * (1f - ambient), 0f, 255f);
+            _sb.Begin();
+            _sb.Draw(_px, new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height), new Color((byte)0, (byte)0, (byte)0, dark));
+            _sb.End();
+
+            LightingSystem.DrawLights(_sb, _px, _lights, cam);
 
             // --- UI ---
             _sb.Begin();
@@ -955,6 +978,13 @@ namespace PixelTowerDefense
                 s.State = MeepleState.Launched;
                 _meeples[i] = s;
             }
+
+            LightingSystem.AddLight(
+                _lights,
+                pos,
+                Constants.EXPLOSION_LIGHT_RADIUS,
+                Constants.EXPLOSION_LIGHT_INTENSITY,
+                0.5f);
 
             // visual particles
             Color[] smokePal = { Color.OrangeRed, Color.Orange, Color.Yellow, Color.Gray };
