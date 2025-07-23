@@ -59,6 +59,9 @@ namespace PixelTowerDefense
         List<Light> _lights = new();
         float _timeOfDay;
 
+        bool _raiseHeld;
+        bool _lowerHeld;
+
         public Game1()
         {
             _gfx = new GraphicsDeviceManager(this);
@@ -81,6 +84,8 @@ namespace PixelTowerDefense
             _cloudPixels.Clear();
             _cloudCenter = Vector2.Zero;
             _hoverIdx = -1;
+            _raiseHeld = false;
+            _lowerHeld = false;
             base.Initialize();
         }
 
@@ -100,18 +105,18 @@ namespace PixelTowerDefense
             for (int i = 0; i < 3; i++)
             {
                 float cx = _rng.NextFloat(Constants.ARENA_LEFT + 10, Constants.ARENA_RIGHT - 10);
-                float cy = _rng.NextFloat(Constants.ARENA_TOP + 10, Constants.ARENA_BOTTOM - 10);
                 int count = _rng.Next(3, 6);
                 for (int j = 0; j < count; j++)
                 {
                     float ox = _rng.NextFloat(-3f, 3f);
-                    float oy = _rng.NextFloat(-3f, 3f);
-                    _trees.Add(new Tree(new Vector2(cx + ox, cy + oy), _rng));
+                    float x = cx + ox;
+                    float y = Constants.GroundAt(x);
+                    _trees.Add(new Tree(new Vector2(x, y), _rng));
                 }
             }
 
             var midX = (Constants.ARENA_LEFT + Constants.ARENA_RIGHT) * 0.5f;
-            var midY = (Constants.ARENA_TOP + Constants.ARENA_BOTTOM) * 0.5f;
+            var midY = Constants.GroundAt(midX);
             _buildings.Add(new Building
             {
                 Pos = new Vector2(midX, midY),
@@ -223,6 +228,21 @@ namespace PixelTowerDefense
                                      _camY + mscr.Y / _zoom);
             var prevWorld = new Vector2(_camX + _prevMs.X / _zoom,
                                         _camY + _prevMs.Y / _zoom);
+
+            _raiseHeld = kb.IsKeyDown(Keys.R);
+            _lowerHeld = kb.IsKeyDown(Keys.F);
+            if (Edge(kb, Keys.R))
+            {
+                int gx = (int)MathF.Floor(mworld.X);
+                if (gx >= 0 && gx < Constants.Height.Length)
+                    Constants.Height[gx] = (byte)Math.Clamp(Constants.Height[gx] + 1, 0, 15);
+            }
+            if (Edge(kb, Keys.F))
+            {
+                int gx = (int)MathF.Floor(mworld.X);
+                if (gx >= 0 && gx < Constants.Height.Length)
+                    Constants.Height[gx] = (byte)Math.Clamp(Constants.Height[gx] - 1, 0, 15);
+            }
 
             // determine hovered meeple
             _hoverIdx = -1;
@@ -408,6 +428,29 @@ namespace PixelTowerDefense
                       * Matrix.CreateTranslation(-_camX * _zoom, -_camY * _zoom, 0);
             _sb.Begin(transformMatrix: cam, samplerState: SamplerState.PointClamp);
 
+            // --- terrain ---
+            var earth = new Color(90, 60, 40);
+            for (int x = Constants.ARENA_LEFT; x < Constants.ARENA_RIGHT; x++)
+            {
+                float top = Constants.GroundAt(x);
+                var rect = new Rectangle(x, (int)top, 1, Constants.ARENA_BOTTOM - (int)top);
+                float mult = 1f - Constants.Height[x] / 16f;
+                _sb.Draw(_px, rect, earth * mult);
+            }
+
+            if (_raiseHeld || _lowerHeld)
+            {
+                var ms = Mouse.GetState();
+                int gx = (int)MathF.Floor(_camX + ms.X / _zoom);
+                if (gx >= Constants.ARENA_LEFT && gx < Constants.ARENA_RIGHT)
+                {
+                    float gy = Constants.GroundAt(gx);
+                    var rect = new Rectangle(gx, (int)gy, 1, Constants.ARENA_BOTTOM - (int)gy);
+                    var col = _raiseHeld ? Color.Green : Color.Red;
+                    _sb.Draw(_px, rect, col * 0.5f);
+                }
+            }
+
             // --- arena border ---
             // Removed dark border bars
 
@@ -500,7 +543,7 @@ namespace PixelTowerDefense
             for (int i = 0; i < count; i++)
             {
                 var x = _rng.NextFloat(x0, x1);
-                var y = _rng.NextFloat(Constants.ARENA_TOP + 2, Constants.ARENA_BOTTOM - 2);
+                var y = Constants.GroundAt(x);
                 var pal = side == Faction.Friendly ? Meeple.FRIENDLY_SHIRTS : Meeple.ENEMY_SHIRTS;
                 var shirt = pal[_rng.Next(pal.Length)];
                 _meeples.Add(new Meeple(new Vector2(x, y), side, shirt){Combatant = withCombat ? new Combatant() : (Combatant?)null});
@@ -513,8 +556,7 @@ namespace PixelTowerDefense
             {
                 float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
                                        Constants.ARENA_RIGHT - 5);
-                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
-                                       Constants.ARENA_BOTTOM - 5);
+                float y = Constants.GroundAt(x);
                 var shirt = Meeple.FRIENDLY_SHIRTS[_rng.Next(Meeple.FRIENDLY_SHIRTS.Length)];
                 var m = Meeple.SpawnMeeple(new Vector2(x, y), Faction.Friendly, shirt, _rng);
                 m.Worker = new Worker();
@@ -528,8 +570,7 @@ namespace PixelTowerDefense
             {
                 float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
                                        Constants.ARENA_RIGHT - 5);
-                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
-                                       Constants.ARENA_BOTTOM - 5);
+                float y = Constants.GroundAt(x);
                 _bushes.Add(new BerryBush(new Vector2(x, y), _rng));
             }
         }
@@ -540,8 +581,7 @@ namespace PixelTowerDefense
             {
                 float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
                                        Constants.ARENA_RIGHT - 5);
-                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
-                                       Constants.ARENA_BOTTOM - 5);
+                float y = Constants.GroundAt(x);
                 _logs.Add(new Log(new Vector2(x, y), _rng));
             }
         }
@@ -552,8 +592,7 @@ namespace PixelTowerDefense
             {
                 float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
                                        Constants.ARENA_RIGHT - 5);
-                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
-                                       Constants.ARENA_BOTTOM - 5);
+                float y = Constants.GroundAt(x);
                 _stones.Add(new Stone(new Vector2(x, y), _rng));
             }
         }
@@ -564,8 +603,7 @@ namespace PixelTowerDefense
             {
                 float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
                                        Constants.ARENA_RIGHT - 5);
-                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
-                                       Constants.ARENA_BOTTOM - 5);
+                float y = Constants.GroundAt(x);
                 _trees.Add(new Tree(new Vector2(x, y), _rng));
             }
         }
