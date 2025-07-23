@@ -400,12 +400,22 @@ namespace PixelTowerDefense.Systems
                         break;
                 }
 
-                e.Pos.X = MathHelper.Clamp(e.Pos.X,
+            e.Pos.X = MathHelper.Clamp(e.Pos.X,
                            Constants.ARENA_LEFT + 2,
                            Constants.ARENA_RIGHT - 2);
-               e.Pos.Y = MathHelper.Clamp(e.Pos.Y,
-                          Constants.ARENA_TOP + 2,
-                          Constants.ARENA_BOTTOM - 2);
+
+            float ground = Constants.GroundAt(e.Pos.X);
+            if (e.z <= 0f)
+                e.Pos.Y = ground;
+            else if (e.Pos.Y > ground)
+            {
+                e.Pos.Y = ground;
+                e.Vel.Y *= -0.2f;
+            }
+
+            e.Pos.Y = MathHelper.Clamp(e.Pos.Y,
+                           Constants.ARENA_TOP + 2,
+                           Constants.ARENA_BOTTOM - 2);
 
                 foreach (var t in trees)
                 {
@@ -615,8 +625,10 @@ namespace PixelTowerDefense.Systems
                 { p.Pos.X = Constants.ARENA_RIGHT - 1; p.Vel.X *= -0.5f; }
                 if (p.Pos.Y < Constants.ARENA_TOP)
                 { p.Pos.Y = Constants.ARENA_TOP; p.Vel.Y *= -0.5f; }
-                if (p.Pos.Y > Constants.ARENA_BOTTOM - 1)
-                { p.Pos.Y = Constants.ARENA_BOTTOM - 1; p.Vel.Y *= -0.5f; }
+
+                float g = Constants.GroundAt(p.Pos.X) - 1;
+                if (p.Pos.Y > g)
+                { p.Pos.Y = g; p.Vel.Y *= -0.2f; }
 
                 debris[i] = p;
             }
@@ -637,8 +649,10 @@ namespace PixelTowerDefense.Systems
                 { l.Pos.X = Constants.ARENA_RIGHT - 1; l.Vel.X *= -0.5f; }
                 if (l.Pos.Y < Constants.ARENA_TOP)
                 { l.Pos.Y = Constants.ARENA_TOP; l.Vel.Y *= -0.5f; }
-                if (l.Pos.Y > Constants.ARENA_BOTTOM - 1)
-                { l.Pos.Y = Constants.ARENA_BOTTOM - 1; l.Vel.Y *= -0.5f; }
+
+                float gl = Constants.GroundAt(l.Pos.X) - 1;
+                if (l.Pos.Y > gl)
+                { l.Pos.Y = gl; l.Vel.Y *= -0.2f; }
 
                 logs[i] = l;
             }
