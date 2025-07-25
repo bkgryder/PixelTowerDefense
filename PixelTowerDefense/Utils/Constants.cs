@@ -131,11 +131,11 @@ namespace PixelTowerDefense.Utils
 
         // Lighting
         public const float DAY_LENGTH = 60f; // seconds for a full day cycle
-        public const float NIGHT_BRIGHTNESS = 0.3f; // 0 = pitch black, 1 = fully lit
+        public const float NIGHT_BRIGHTNESS = 0.5f; // 0 = pitch black, 1 = fully lit
         public const float FIRE_LIGHT_RADIUS = 15f;
-        public const float FIRE_LIGHT_INTENSITY = 0.8f;
-        public const float EXPLOSION_LIGHT_RADIUS = 30f;
-        public const float EXPLOSION_LIGHT_INTENSITY = 1f;
+        public const float FIRE_LIGHT_INTENSITY = 0.1f;
+        public const float EXPLOSION_LIGHT_RADIUS = 5f;
+        public const float EXPLOSION_LIGHT_INTENSITY = .25f;
 
     }
 }

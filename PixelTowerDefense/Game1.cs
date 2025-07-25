@@ -91,21 +91,21 @@ namespace PixelTowerDefense
             _px.SetData(new[] { Color.White });
             _font = Content.Load<SpriteFont>("PixelFont");
 
-            SpawnMeeple(10);
+            SpawnMeeple(0);
             SpawnBerryBushes(5);
             SpawnLogs(4);
             SpawnStones(4);
 
             // spawn clustered tree patches
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 6; i++)
             {
                 float cx = _rng.NextFloat(Constants.ARENA_LEFT + 10, Constants.ARENA_RIGHT - 10);
                 float cy = _rng.NextFloat(Constants.ARENA_TOP + 10, Constants.ARENA_BOTTOM - 10);
-                int count = _rng.Next(3, 6);
+                int count = _rng.Next(1, 15);
                 for (int j = 0; j < count; j++)
                 {
-                    float ox = _rng.NextFloat(-3f, 3f);
-                    float oy = _rng.NextFloat(-3f, 3f);
+                    float ox = _rng.NextFloat(-65f, 65f);
+                    float oy = _rng.NextFloat(-65f, 65f);
                     _trees.Add(new Tree(new Vector2(cx + ox, cy + oy), _rng));
                 }
             }
