@@ -14,16 +14,58 @@ namespace PixelTowerDefense.Entities
         public bool IsStump;
         public int? ReservedBy;
 
+        // growth
+        public float Age;
+        public float GrowthDuration;
+        public float DeathAge;
+        public int Seed;
+
+        // cached final size parameters
+        private int _maxHeight;
+        private int _baseWidth;
+        private int _leafRadius;
+        private float _lean;
+
 
         public Tree(Vector2 pos, System.Random rng)
         {
             Pos = pos;
 
-            var trunk = new List<Point>();
-            int height = rng.Next(20, 28);
-            int baseWidth = rng.Next(1, 2); // half-width of the trunk base
-            float lean = Utils.RandEx.NextFloat(rng, -0.3f, 0.3f);
+            TrunkPixels = Array.Empty<Point>();
+            LeafPixels = Array.Empty<Point>();
 
+            Age = 0f;
+            GrowthDuration = Utils.RandEx.NextFloat(rng, Utils.Constants.TREE_GROW_TIME_MIN,
+                                                   Utils.Constants.TREE_GROW_TIME_MAX);
+            DeathAge = GrowthDuration + Utils.RandEx.NextFloat(rng,
+                                                              Utils.Constants.TREE_LIFESPAN_MIN,
+                                                              Utils.Constants.TREE_LIFESPAN_MAX);
+            Seed = rng.Next();
+
+            _maxHeight = rng.Next(20, 28);
+            _baseWidth = rng.Next(1, 2); // half-width of the trunk base
+            _leafRadius = rng.Next(4, 7);
+            _lean = Utils.RandEx.NextFloat(rng, -0.3f, 0.3f);
+
+            CollisionRadius = _baseWidth + 0.5f;
+            Health = Utils.Constants.TREE_HEALTH;
+            IsStump = false;
+            ReservedBy = null;
+
+            GenerateShape(0f);
+        }
+
+        private void GenerateShape(float factor)
+        {
+            var rng = new Random(Seed);
+            factor = Math.Clamp(factor, 0f, 1f);
+            factor = MathF.Max(0.1f, factor);
+
+            int height = Math.Max(1, (int)MathF.Round(_maxHeight * factor));
+            int baseWidth = Math.Max(1, (int)MathF.Round(_baseWidth * factor));
+            float lean = _lean * factor;
+
+            var trunk = new List<Point>();
             for (int i = 0; i < height; i++)
             {
                 float t = i / (float)height;
@@ -43,23 +85,33 @@ namespace PixelTowerDefense.Entities
             TrunkPixels = trunk.ToArray();
 
             var leaves = new List<Point>();
-            int radius = rng.Next(4, 7);
-            int topOffset = (int)MathF.Round(lean * height);
-            for (int y = -radius; y <= radius; y++)
+            if (factor >= 0.3f)
             {
-                for (int x = -radius; x <= radius; x++)
+                int radius = Math.Max(1, (int)MathF.Round(_leafRadius * factor));
+                int topOffset = (int)MathF.Round(lean * height);
+                for (int y = -radius; y <= radius; y++)
                 {
-                    int r = x * x + (y * 2) * (y * 2);
-                    if (r <= radius * radius * 4 && rng.NextDouble() > 0.2)
-                        leaves.Add(new Point(topOffset + x, -height + y));
+                    for (int x = -radius; x <= radius; x++)
+                    {
+                        int r = x * x + (y * 2) * (y * 2);
+                        if (r <= radius * radius * 4 && rng.NextDouble() > 0.2)
+                            leaves.Add(new Point(topOffset + x, -height + y));
+                    }
                 }
             }
             LeafPixels = leaves.ToArray();
 
             CollisionRadius = baseWidth + 0.5f;
-            Health = Utils.Constants.TREE_HEALTH;
-            IsStump = false;
-            ReservedBy = null;
+        }
+
+        public void Grow(float dt)
+        {
+            Age += dt;
+            float factor = Math.Clamp(Age / GrowthDuration, 0f, 1f);
+            GenerateShape(factor);
+
+            if (Age >= DeathAge)
+                LeafPixels = Array.Empty<Point>();
         }
     }
 }
