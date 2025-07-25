@@ -59,9 +59,6 @@ namespace PixelTowerDefense
         List<Light> _lights = new();
         float _timeOfDay;
 
-        bool _raiseHeld;
-        bool _lowerHeld;
-
         public Game1()
         {
             _gfx = new GraphicsDeviceManager(this);
@@ -84,8 +81,6 @@ namespace PixelTowerDefense
             _cloudPixels.Clear();
             _cloudCenter = Vector2.Zero;
             _hoverIdx = -1;
-            _raiseHeld = false;
-            _lowerHeld = false;
             base.Initialize();
         }
 
@@ -228,21 +223,6 @@ namespace PixelTowerDefense
                                      _camY + mscr.Y / _zoom);
             var prevWorld = new Vector2(_camX + _prevMs.X / _zoom,
                                         _camY + _prevMs.Y / _zoom);
-
-            _raiseHeld = kb.IsKeyDown(Keys.R);
-            _lowerHeld = kb.IsKeyDown(Keys.F);
-            if (Edge(kb, Keys.R))
-            {
-                int gx = (int)MathF.Floor(mworld.X);
-                if (gx >= 0 && gx < Constants.Height.Length)
-                    Constants.Height[gx] = (byte)Math.Clamp(Constants.Height[gx] + 1, 0, 15);
-            }
-            if (Edge(kb, Keys.F))
-            {
-                int gx = (int)MathF.Floor(mworld.X);
-                if (gx >= 0 && gx < Constants.Height.Length)
-                    Constants.Height[gx] = (byte)Math.Clamp(Constants.Height[gx] - 1, 0, 15);
-            }
 
             // determine hovered meeple
             _hoverIdx = -1;
@@ -427,36 +407,6 @@ namespace PixelTowerDefense
             var cam = Matrix.CreateScale(_zoom, _zoom, 1f)
                       * Matrix.CreateTranslation(-_camX * _zoom, -_camY * _zoom, 0);
             _sb.Begin(transformMatrix: cam, samplerState: SamplerState.PointClamp);
-
-            // --- terrain ---
-            var earth = new Color(90, 60, 40);
-            var groundRect = new Rectangle(
-                Constants.ARENA_LEFT,
-                Constants.ARENA_TOP,
-                Constants.ARENA_RIGHT - Constants.ARENA_LEFT,
-                Constants.ARENA_BOTTOM - Constants.ARENA_TOP);
-            _sb.Draw(_px, groundRect, earth);
-
-            for (int x = Constants.ARENA_LEFT; x < Constants.ARENA_RIGHT; x++)
-            {
-                float gy = Constants.GroundAt(x);
-                float shade = Constants.Height[x] / 16f;
-                var rect = new Rectangle(x, (int)MathF.Round(gy), 1, 1);
-                _sb.Draw(_px, rect, Color.Black * shade);
-            }
-
-            if (_raiseHeld || _lowerHeld)
-            {
-                var ms = Mouse.GetState();
-                int gx = (int)MathF.Floor(_camX + ms.X / _zoom);
-                if (gx >= Constants.ARENA_LEFT && gx < Constants.ARENA_RIGHT)
-                {
-                    float gy = Constants.GroundAt(gx);
-                    var rect = new Rectangle(gx, (int)MathF.Round(gy) - 1, 2, 2);
-                    var col = _raiseHeld ? Color.Green : Color.Red;
-                    _sb.Draw(_px, rect, col * 0.5f);
-                }
-            }
 
             // --- arena border ---
             // Removed dark border bars
