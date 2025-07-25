@@ -644,6 +644,16 @@ namespace PixelTowerDefense.Systems
             }
         }
 
+        public static void UpdateTrees(List<Tree> trees, float dt)
+        {
+            for (int i = 0; i < trees.Count; i++)
+            {
+                var t = trees[i];
+                t.Grow(dt);
+                trees[i] = t;
+            }
+        }
+
         public static void WorkerChopTree(ref Meeple worker, ref Tree tree, List<Log> logs, Random rng)
         {
             if (Vector2.Distance(worker.Pos, tree.Pos) <= 1f && tree.Health > 0)

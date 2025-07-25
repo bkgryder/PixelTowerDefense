@@ -380,6 +380,7 @@ namespace PixelTowerDefense
             PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             PhysicsSystem.UpdateLogs(_logs, dt);
+            PhysicsSystem.UpdateTrees(_trees, dt);
             CombatSystem.ResolveCombat(_meeples, _pixels, dt);
 
             // update shadow positions after all movement/physics

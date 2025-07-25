@@ -124,6 +124,10 @@ namespace PixelTowerDefense.Utils
         // Trees & crafting
         public const int TREE_HEALTH = 3;
         public const float STUMP_RADIUS = 0.75f;
+        public const float TREE_GROW_TIME_MIN = 30f;
+        public const float TREE_GROW_TIME_MAX = 60f;
+        public const float TREE_LIFESPAN_MIN = 60f;
+        public const float TREE_LIFESPAN_MAX = 120f;
 
         // Lighting
         public const float DAY_LENGTH = 60f; // seconds for a full day cycle
