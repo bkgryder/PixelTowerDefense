@@ -704,7 +704,8 @@ namespace PixelTowerDefense.Systems
             for (int i = trees.Count - 1; i >= 0; i--)
             {
                 var t = trees[i];
-                t.Grow(dt, _rng);
+                bool grow = !t.IsBurning;
+                t.Grow(dt, _rng, grow);
 
                 if (t.IsBurning)
                 {

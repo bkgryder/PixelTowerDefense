@@ -127,11 +127,11 @@ namespace PixelTowerDefense.Entities
             CollisionRadius = baseWidth + 0.5f;
         }
 
-        public void Grow(float dt, Random rng)
+        public void Grow(float dt, Random rng, bool grow)
         {
             Age += dt;
             float factor = Math.Clamp(Age / GrowthDuration, 0f, 1f);
-            if (!IsDead)
+            if (grow && !IsDead)
                 GenerateShape(factor);
 
             if (!IsDead && Age >= DeathAge)
