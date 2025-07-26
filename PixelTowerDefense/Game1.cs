@@ -495,6 +495,10 @@ namespace PixelTowerDefense
             foreach (var l in _logs)
                 DrawLog(l);
 
+            // --- tree shadows ---
+            foreach (var t in _trees)
+                DrawTreeShadow(t);
+
             // --- tree trunks ---
             foreach (var t in _trees)
                 DrawTreeBottom(t);
@@ -1038,6 +1042,31 @@ namespace PixelTowerDefense
                         col = Color.Lerp(col, Color.SandyBrown, decomp);
                     }
                     _sb.Draw(_px, new Rectangle(dx, dy, 1, 1), col);
+                }
+            }
+        }
+
+        private void DrawTreeShadow(Tree t)
+        {
+            if (t.Fallen) return;
+
+            int baseX = (int)MathF.Round(t.Pos.X);
+            int baseY = (int)MathF.Round(t.Pos.Y);
+
+            int radX = (int)MathF.Round(t.ShadowRadius);
+            int radY = Math.Max(1, radX / 2);
+
+            byte alpha = 80;
+            var col = new Color((byte)0, (byte)0, (byte)0, alpha);
+
+            for (int y = -radY; y <= radY; y++)
+            {
+                for (int x = -radX; x <= radX; x++)
+                {
+                    float nx = x / (float)radX;
+                    float ny = y / (float)radY;
+                    if (nx * nx + ny * ny <= 1f)
+                        _sb.Draw(_px, new Rectangle(baseX + x, baseY + y, 1, 1), col);
                 }
             }
         }
