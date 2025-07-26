@@ -685,8 +685,8 @@ namespace PixelTowerDefense.Systems
                     _rng.NextDouble() < Constants.TREE_SEED_CHANCE * dt)
                 {
                     Vector2 vel = new Vector2(
-                        _rng.NextFloat(-5f, 5f),
-                        _rng.NextFloat(-5f, 5f));
+                        _rng.NextFloat(-55f, 55f),
+                        _rng.NextFloat(-55f, 55f));
                     seeds.Add(new Seed(t.Pos, vel, _rng));
                 }
 
