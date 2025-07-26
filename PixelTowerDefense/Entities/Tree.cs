@@ -32,6 +32,9 @@ namespace PixelTowerDefense.Entities
         public bool IsBurning;
         public float BurnTimer;
 
+        // appearance
+        public float ShadowRadius;
+
         // cached final size parameters
         private int _maxHeight;
         private int _baseWidth;
@@ -125,6 +128,7 @@ namespace PixelTowerDefense.Entities
             LeafPixels = leaves.ToArray();
 
             CollisionRadius = baseWidth + 0.5f;
+            ShadowRadius = MathF.Max(baseWidth + 1, _leafRadius * factor);
         }
 
         public void Grow(float dt, Random rng, bool grow)
