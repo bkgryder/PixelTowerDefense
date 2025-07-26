@@ -62,6 +62,8 @@ namespace PixelTowerDefense
         List<Light> _lights = new();
         float _timeOfDay;
 
+        bool _debugOverlay;
+
         public Game1()
         {
             _gfx = new GraphicsDeviceManager(this);
@@ -180,6 +182,9 @@ namespace PixelTowerDefense
                 _camX = midX - (GraphicsDevice.Viewport.Width * 0.5f) / _zoom;
                 _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
             }
+
+            if (Edge(kb, Keys.F12))
+                _debugOverlay = !_debugOverlay;
 
 
 
@@ -477,6 +482,9 @@ namespace PixelTowerDefense
             foreach (var e in _meeples.Where(m => m.z > 0f).OrderBy(m => m.ShadowY))
                 DrawMeepleSprite(e);
 
+            if (_debugOverlay)
+                DrawChunkBorders();
+
             _sb.End();
 
             float phase = MathF.Sin(_timeOfDay * MathHelper.TwoPi) * 0.5f + 0.5f;
@@ -501,6 +509,8 @@ namespace PixelTowerDefense
             DrawAbilityToolbar();
             DrawHint();
             DrawManaRing(new Point(uiMouse.X, uiMouse.Y));
+            if (_debugOverlay)
+                DrawDebugOverlay();
             _sb.End();
             base.Draw(gt);
         }
@@ -699,6 +709,122 @@ namespace PixelTowerDefense
                 int y = (int)MathF.Round(mouse.Y + MathF.Sin(ang) * radius);
                 _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.SkyBlue);
             }
+        }
+
+        private string ObjectLabelAt(Point p)
+        {
+            for (int i = _pixels.Count - 1; i >= 0; i--)
+                if (_pixels[i].Bounds.Contains(p))
+                    return "Debris";
+
+            for (int i = _meeples.Count - 1; i >= 0; i--)
+            {
+                var m = _meeples[i];
+                int half = Constants.ENEMY_H / 2;
+                for (int part = -half; part < half; part++)
+                {
+                    var segPos = m.GetPartPos(part);
+                    segPos.Y -= m.z;
+                    if ((int)MathF.Round(segPos.X) == p.X &&
+                        (int)MathF.Round(segPos.Y) == p.Y)
+                        return $"Meeple {m.Name}";
+                }
+            }
+
+            foreach (var l in _logs)
+            {
+                int bx = (int)MathF.Round(l.Pos.X);
+                int by = (int)MathF.Round(l.Pos.Y);
+                foreach (var off in l.Shape)
+                    if (bx + off.X == p.X && by + off.Y == p.Y)
+                        return "Log";
+            }
+
+            foreach (var s in _stones)
+            {
+                int bx = (int)MathF.Round(s.Pos.X);
+                int by = (int)MathF.Round(s.Pos.Y);
+                foreach (var off in s.Shape)
+                    if (bx + off.X == p.X && by + off.Y == p.Y)
+                        return "Stone";
+            }
+
+            foreach (var b in _bushes)
+            {
+                int bx = (int)MathF.Round(b.Pos.X);
+                int by = (int)MathF.Round(b.Pos.Y);
+                foreach (var off in b.Shape)
+                    if (bx + off.X == p.X && by + off.Y == p.Y)
+                        return "BerryBush";
+            }
+
+            foreach (var t in _trees)
+            {
+                int bx = (int)MathF.Round(t.Pos.X);
+                int by = (int)MathF.Round(t.Pos.Y);
+                foreach (var off in t.TrunkPixels)
+                    if (bx + off.X == p.X && by + off.Y == p.Y)
+                        return "Tree";
+                foreach (var off in t.LeafPixels)
+                    if (bx + off.X == p.X && by + off.Y == p.Y)
+                        return "Tree";
+            }
+
+            foreach (var seed in _seeds)
+            {
+                int bx = (int)MathF.Round(seed.Pos.X);
+                int by = (int)MathF.Round(seed.Pos.Y - seed.z);
+                if (bx == p.X && by == p.Y)
+                    return "Seed";
+            }
+
+            foreach (var bld in _buildings)
+            {
+                int bx = (int)MathF.Round(bld.Pos.X);
+                int by = (int)MathF.Round(bld.Pos.Y);
+                var rect = new Rectangle(bx - 1, by - 1, 3, 3);
+                if (rect.Contains(p))
+                    return bld.Kind.ToString();
+            }
+
+            int tx = (p.X - Constants.ARENA_LEFT) / Constants.TILE_SIZE;
+            int ty = (p.Y - Constants.ARENA_TOP) / Constants.TILE_SIZE;
+            if (tx >= 0 && tx < Chunk.Size && ty >= 0 && ty < Chunk.Size)
+            {
+                var tile = _world.Chunks[0, 0].Tiles[tx, ty];
+                return tile.Type.ToString();
+            }
+
+            return "None";
+        }
+
+        private void DrawDebugOverlay()
+        {
+            var ms = Mouse.GetState();
+            var world = new Vector2(_camX + ms.X / _zoom, _camY + ms.Y / _zoom);
+            var p = new Point((int)MathF.Round(world.X), (int)MathF.Round(world.Y));
+
+            string obj = ObjectLabelAt(p);
+            int chunks = _world.Chunks.GetLength(0) * _world.Chunks.GetLength(1);
+            string text = $"Mouse {p.X},{p.Y} | {obj} | Chunks {chunks}";
+            var size = _font.MeasureString(text);
+            var rect = new Rectangle(5, GraphicsDevice.Viewport.Height - (int)size.Y - 5,
+                                    (int)size.X + 4, (int)size.Y + 4);
+            _sb.Draw(_px, rect, new Color(0,0,0,180));
+            _sb.DrawString(_font, text, new Vector2(rect.X + 2, rect.Y + 2), Color.Yellow);
+        }
+
+        private void DrawChunkBorders()
+        {
+            int width = _world.Chunks.GetLength(0) * Constants.CHUNK_PIXEL_SIZE;
+            int height = _world.Chunks.GetLength(1) * Constants.CHUNK_PIXEL_SIZE;
+            int left = Constants.ARENA_LEFT;
+            int top = Constants.ARENA_TOP;
+
+            _sb.Draw(_px, new Rectangle(left, top, width, 1), Color.Red);
+            _sb.Draw(_px, new Rectangle(left, top + height - 1, width, 1), Color.Red);
+            _sb.Draw(_px, new Rectangle(left, top, 1, height), Color.Red);
+            _sb.Draw(_px, new Rectangle(left + width - 1, top, 1, height), Color.Red);
         }
 
         private void InitCloud()
