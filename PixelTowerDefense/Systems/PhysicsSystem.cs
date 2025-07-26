@@ -672,7 +672,25 @@ namespace PixelTowerDefense.Systems
                 s.Age += dt;
                 if (s.Age >= s.GrowTime)
                 {
-                    trees.Add(new Tree(s.Pos, _rng));
+                    bool nearTree = false;
+                    foreach (var t in trees)
+                    {
+                        if (Vector2.Distance(t.Pos, s.Pos) < Constants.SEED_MIN_TREE_DIST)
+                        { nearTree = true; break; }
+                    }
+                    bool nearSeed = false;
+                    if (!nearTree)
+                    {
+                        for (int j = 0; j < seeds.Count; j++)
+                        {
+                            if (j == i) continue;
+                            if (Vector2.Distance(seeds[j].Pos, s.Pos) < Constants.SEED_MIN_SEED_DIST)
+                            { nearSeed = true; break; }
+                        }
+                    }
+                    if (!nearTree && !nearSeed)
+                        trees.Add(new Tree(s.Pos, _rng));
+
                     seeds.RemoveAt(i);
                     continue;
                 }
@@ -681,12 +699,30 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void UpdateTrees(List<Tree> trees, List<Seed> seeds, float dt)
+        public static void UpdateTrees(List<Tree> trees, List<Seed> seeds, List<Pixel> debris, float dt)
         {
             for (int i = trees.Count - 1; i >= 0; i--)
             {
                 var t = trees[i];
                 t.Grow(dt, _rng);
+
+                if (t.IsDead && t.LeafPixels.Length > 0 &&
+                    _rng.NextDouble() < Constants.LEAF_FALL_CHANCE * dt)
+                {
+                    int idx = _rng.Next(t.LeafPixels.Length);
+                    var lp = t.LeafPixels[idx];
+                    var pos = t.Pos + new Vector2(lp.X, lp.Y);
+                    var vel = new Vector2(
+                        _rng.NextFloat(-5f, 5f),
+                        _rng.NextFloat(-30f, -10f)
+                    );
+                    debris.Spawn(new Pixel(
+                        pos,
+                        vel,
+                        Color.Goldenrod,
+                        0f,
+                        _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN, Constants.DEBRIS_LIFETIME_MAX)));
+                }
 
                 if (!t.IsStump && !t.IsDead && t.Age >= t.GrowthDuration &&
                     _rng.NextDouble() < Constants.TREE_SEED_CHANCE * dt)

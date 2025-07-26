@@ -147,6 +147,14 @@ namespace PixelTowerDefense.Utils
         public const float TREE_SEED_UPWARD_MIN = 30f;
         public const float TREE_SEED_UPWARD_MAX = 60f;
 
+        // Seed propagation constraints
+        public const float SEED_MIN_TREE_DIST = 4f;
+        public const float SEED_MIN_SEED_DIST = 3f;
+
+        // Leaf decay
+        public const float LEAF_DISINTEGRATE_TIME = 5f;
+        public const float LEAF_FALL_CHANCE = 0.5f; // chance per second
+
         // Lighting
         public const float DAY_LENGTH = 60f; // seconds for a full day cycle
         public const float NIGHT_BRIGHTNESS = 0.5f; // 0 = pitch black, 1 = fully lit

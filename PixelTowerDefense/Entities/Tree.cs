@@ -28,6 +28,7 @@ namespace PixelTowerDefense.Entities
         public bool Fallen;
         public float DecompTimer;
         public int FallDir;
+        public float LeafTimer;
 
         // cached final size parameters
         private int _maxHeight;
@@ -68,6 +69,7 @@ namespace PixelTowerDefense.Entities
             Fallen = false;
             DecompTimer = 0f;
             FallDir = rng.NextDouble() < 0.5 ? -1 : 1;
+            LeafTimer = 0f;
 
             GenerateShape(0f);
         }
@@ -125,13 +127,14 @@ namespace PixelTowerDefense.Entities
         {
             Age += dt;
             float factor = Math.Clamp(Age / GrowthDuration, 0f, 1f);
-            GenerateShape(factor);
+            if (!IsDead)
+                GenerateShape(factor);
 
             if (!IsDead && Age >= DeathAge)
             {
-                LeafPixels = Array.Empty<Point>();
                 IsDead = true;
                 PaleTimer = 0f;
+                LeafTimer = 0f;
                 FallDelay = Utils.RandEx.NextFloat(rng,
                     Utils.Constants.TREE_FALL_DELAY_MIN,
                     Utils.Constants.TREE_FALL_DELAY_MAX);
@@ -140,6 +143,9 @@ namespace PixelTowerDefense.Entities
             if (IsDead)
             {
                 PaleTimer += dt;
+                LeafTimer += dt;
+                if (LeafTimer >= Utils.Constants.LEAF_DISINTEGRATE_TIME)
+                    LeafPixels = Array.Empty<Point>();
                 if (!Fallen)
                 {
                     if (FallDelay > 0f)

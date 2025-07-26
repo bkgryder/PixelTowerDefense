@@ -382,7 +382,7 @@ namespace PixelTowerDefense
             PhysicsSystem.UpdatePixels(_pixels, dt);
             PhysicsSystem.UpdateLogs(_logs, dt);
             PhysicsSystem.UpdateSeeds(_seeds, _trees, dt);
-            PhysicsSystem.UpdateTrees(_trees, _seeds, dt);
+            PhysicsSystem.UpdateTrees(_trees, _seeds, _pixels, dt);
             CombatSystem.ResolveCombat(_meeples, _pixels, dt);
 
             // update shadow positions after all movement/physics
@@ -818,7 +818,7 @@ namespace PixelTowerDefense
             else
             {
                 float pale = t.IsDead ? MathF.Min(1f, t.PaleTimer / Constants.TREE_PALE_TIME) : 0f;
-                Color col = Color.Lerp(new Color(100, 70, 40), Color.SandyBrown, pale);
+                Color col = Color.Lerp(new Color(100, 70, 40), Color.SandyBrown, pale * 0.5f);
                 float angle = 0f;
                 if (t.FallTimer > 0f || t.Fallen)
                     angle = t.FallDir * MathHelper.PiOver2 * MathF.Min(t.FallTimer / Constants.TREE_FALL_TIME, 1f);
@@ -856,11 +856,23 @@ namespace PixelTowerDefense
                 angle = t.FallDir * MathHelper.PiOver2 * MathF.Min(t.FallTimer / Constants.TREE_FALL_TIME, 1f);
             float cos = MathF.Cos(angle);
             float sin = MathF.Sin(angle);
+            float leafDecay = t.IsDead ? MathF.Min(1f, t.LeafTimer / Constants.LEAF_DISINTEGRATE_TIME) : 0f;
             foreach (var p in t.LeafPixels)
             {
                 float x = p.X * cos - p.Y * sin;
                 float y = p.X * sin + p.Y * cos;
-                _sb.Draw(_px, new Rectangle(baseX + (int)MathF.Round(x), baseY + (int)MathF.Round(y), 1, 1), new Color(20, 110, 20));
+                int dx = baseX + (int)MathF.Round(x);
+                int dy = baseY + (int)MathF.Round(y);
+                if (leafDecay > 0f)
+                {
+                    float skipChance = MathF.Min(leafDecay, 0.95f);
+                    int hash = (dx * 73856093) ^ (dy * 19349663);
+                    double r = ((hash & 0x7fffffff) / (double)int.MaxValue);
+                    if (r < skipChance)
+                        continue;
+                }
+                Color col = t.IsDead ? Color.Lerp(new Color(20, 110, 20), Color.Goldenrod, leafDecay) : new Color(20, 110, 20);
+                _sb.Draw(_px, new Rectangle(dx, dy, 1, 1), col);
             }
         }
 
