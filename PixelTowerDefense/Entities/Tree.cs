@@ -29,6 +29,8 @@ namespace PixelTowerDefense.Entities
         public float DecompTimer;
         public int FallDir;
         public float LeafTimer;
+        public bool IsBurning;
+        public float BurnTimer;
 
         // cached final size parameters
         private int _maxHeight;
@@ -70,6 +72,8 @@ namespace PixelTowerDefense.Entities
             DecompTimer = 0f;
             FallDir = rng.NextDouble() < 0.5 ? -1 : 1;
             LeafTimer = 0f;
+            IsBurning = false;
+            BurnTimer = 0f;
 
             GenerateShape(0f);
         }

@@ -706,6 +706,88 @@ namespace PixelTowerDefense.Systems
                 var t = trees[i];
                 t.Grow(dt, _rng);
 
+                if (t.IsBurning)
+                {
+                    t.BurnTimer -= dt;
+
+                    if ((t.TrunkPixels.Length + t.LeafPixels.Length) > 0 &&
+                        _rng.NextDouble() < Constants.TREE_EMBER_RATE * dt)
+                    {
+                        bool useLeaf = t.LeafPixels.Length > 0 && (_rng.NextDouble() < (double)t.LeafPixels.Length / (t.LeafPixels.Length + t.TrunkPixels.Length));
+                        if (useLeaf)
+                        {
+                            int idx = _rng.Next(t.LeafPixels.Length);
+                            var off = t.LeafPixels[idx];
+                            var pos = t.Pos + new Vector2(off.X, off.Y);
+                            var vel = new Vector2(
+                                _rng.NextFloat(-4f, 4f),
+                                _rng.NextFloat(-20f, -10f));
+                            Color[] firePal =
+                            {
+                                Color.OrangeRed,
+                                Color.Orange,
+                                Color.Yellow,
+                                new Color(255, 100, 0)
+                            };
+                            var c = firePal[_rng.Next(firePal.Length)];
+                            debris.Spawn(new Pixel(
+                                pos,
+                                vel,
+                                c,
+                                0f,
+                                _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f, Constants.EMBER_LIFETIME)));
+
+                            if (_rng.NextDouble() < Constants.TREE_FIRE_SPREAD_RATE * dt)
+                            {
+                                var list = new List<Point>(t.LeafPixels);
+                                list.RemoveAt(idx);
+                                t.LeafPixels = list.ToArray();
+                            }
+                        }
+                        else if (t.TrunkPixels.Length > 0)
+                        {
+                            int idx = _rng.Next(t.TrunkPixels.Length);
+                            var off = t.TrunkPixels[idx];
+                            var pos = t.Pos + new Vector2(off.X, off.Y);
+                            var vel = new Vector2(
+                                _rng.NextFloat(-4f, 4f),
+                                _rng.NextFloat(-20f, -10f));
+                            Color[] firePal =
+                            {
+                                Color.OrangeRed,
+                                Color.Orange,
+                                Color.Yellow,
+                                new Color(255, 100, 0)
+                            };
+                            var c = firePal[_rng.Next(firePal.Length)];
+                            debris.Spawn(new Pixel(
+                                pos,
+                                vel,
+                                c,
+                                0f,
+                                _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f, Constants.EMBER_LIFETIME)));
+
+                            if (_rng.NextDouble() < Constants.TREE_FIRE_SPREAD_RATE * dt)
+                            {
+                                var list = new List<Point>(t.TrunkPixels);
+                                list.RemoveAt(idx);
+                                t.TrunkPixels = list.ToArray();
+                                if (t.TrunkPixels.Length == 0)
+                                    t.CollisionRadius = 0f;
+                            }
+                        }
+                    }
+
+                    if (_rng.NextDouble() < Constants.SMOKE_PARTICLE_RATE * dt)
+                        EmitSmoke(t.Pos, 1, debris);
+
+                    if (t.BurnTimer <= 0f && t.TrunkPixels.Length == 0 && t.LeafPixels.Length == 0)
+                    {
+                        trees.RemoveAt(i);
+                        continue;
+                    }
+                }
+
                 if (t.IsDead && t.LeafPixels.Length > 0 &&
                     _rng.NextDouble() < Constants.LEAF_FALL_CHANCE * dt)
                 {

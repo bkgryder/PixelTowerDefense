@@ -255,8 +255,9 @@ namespace PixelTowerDefense
                               _prevMs.LeftButton == ButtonState.Released;
                 if (mPress && _mana >= Constants.FIRE_COST)
                 {
+                    bool affected = false;
                     float minD = Constants.PICKUP_RADIUS;
-                    for (int i = _meeples.Count - 1; i >= 0; i--)
+                    for (int i = _meeples.Count - 1; i >= 0 && !affected; i--)
                     {
                         var e = _meeples[i];
                         for (int p = -2; p <= 2; p++)
@@ -267,11 +268,49 @@ namespace PixelTowerDefense
                                 e.IsBurning = true;
                                 e.BurnTimer = Constants.BURN_DURATION;
                                 _meeples[i] = e;
-                                i = -1; // break outer
+                                affected = true;
                                 break;
                             }
                         }
                     }
+
+                    if (!affected)
+                    {
+                        for (int i = _trees.Count - 1; i >= 0 && !affected; i--)
+                        {
+                            var t = _trees[i];
+                            int bx = (int)MathF.Round(t.Pos.X);
+                            int by = (int)MathF.Round(t.Pos.Y);
+                            foreach (var p in t.TrunkPixels)
+                            {
+                                var pos = new Vector2(bx + p.X, by + p.Y);
+                                if (Vector2.Distance(pos, mworld) < minD)
+                                {
+                                    t.IsBurning = true;
+                                    t.BurnTimer = Constants.TREE_BURN_DURATION;
+                                    _trees[i] = t;
+                                    affected = true;
+                                    break;
+                                }
+                            }
+                            if (!affected)
+                            {
+                                foreach (var p in t.LeafPixels)
+                                {
+                                    var pos = new Vector2(bx + p.X, by + p.Y);
+                                    if (Vector2.Distance(pos, mworld) < minD)
+                                    {
+                                        t.IsBurning = true;
+                                        t.BurnTimer = Constants.TREE_BURN_DURATION;
+                                        _trees[i] = t;
+                                        affected = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     _mana = MathF.Max(0f, _mana - Constants.FIRE_COST);
                 }
             }
