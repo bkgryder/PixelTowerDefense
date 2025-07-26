@@ -129,6 +129,11 @@ namespace PixelTowerDefense.Utils
         public const float TREE_LIFESPAN_MIN = 60f;
         public const float TREE_LIFESPAN_MAX = 120f;
 
+        // Tree seeding
+        public const float TREE_SEED_CHANCE = 0.02f; // chance per second to drop a seed when mature
+        public const float SEED_GROW_TIME_MIN = 30f;
+        public const float SEED_GROW_TIME_MAX = 60f;
+
         // Lighting
         public const float DAY_LENGTH = 60f; // seconds for a full day cycle
         public const float NIGHT_BRIGHTNESS = 0.5f; // 0 = pitch black, 1 = fully lit
