@@ -644,12 +644,52 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void UpdateTrees(List<Tree> trees, float dt)
+        public static void UpdateSeeds(List<Seed> seeds, List<Tree> trees, float dt)
+        {
+            for (int i = seeds.Count - 1; i >= 0; i--)
+            {
+                var s = seeds[i];
+
+                s.Vel *= MathF.Max(0f, 1f - Constants.DEBRIS_FRICTION * dt);
+                s.Pos += s.Vel * dt;
+
+                if (s.Pos.X < Constants.ARENA_LEFT)
+                { s.Pos.X = Constants.ARENA_LEFT; s.Vel.X *= -0.5f; }
+                if (s.Pos.X > Constants.ARENA_RIGHT - 1)
+                { s.Pos.X = Constants.ARENA_RIGHT - 1; s.Vel.X *= -0.5f; }
+                if (s.Pos.Y < Constants.ARENA_TOP)
+                { s.Pos.Y = Constants.ARENA_TOP; s.Vel.Y *= -0.5f; }
+                if (s.Pos.Y > Constants.ARENA_BOTTOM - 1)
+                { s.Pos.Y = Constants.ARENA_BOTTOM - 1; s.Vel.Y *= -0.5f; }
+
+                s.Age += dt;
+                if (s.Age >= s.GrowTime)
+                {
+                    trees.Add(new Tree(s.Pos, _rng));
+                    seeds.RemoveAt(i);
+                    continue;
+                }
+
+                seeds[i] = s;
+            }
+        }
+
+        public static void UpdateTrees(List<Tree> trees, List<Seed> seeds, float dt)
         {
             for (int i = 0; i < trees.Count; i++)
             {
                 var t = trees[i];
                 t.Grow(dt);
+
+                if (!t.IsStump && t.Age >= t.GrowthDuration &&
+                    _rng.NextDouble() < Constants.TREE_SEED_CHANCE * dt)
+                {
+                    Vector2 vel = new Vector2(
+                        _rng.NextFloat(-5f, 5f),
+                        _rng.NextFloat(-5f, 5f));
+                    seeds.Add(new Seed(t.Pos, vel, _rng));
+                }
+
                 trees[i] = t;
             }
         }

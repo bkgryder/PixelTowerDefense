@@ -19,6 +19,7 @@ namespace PixelTowerDefense
 
         List<Meeple> _meeples = new();
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
+        List<Seed> _seeds = new();
         List<BerryBush> _bushes = new();
         List<Log> _logs = new();
         List<Stone> _stones = new();
@@ -380,7 +381,8 @@ namespace PixelTowerDefense
             PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             PhysicsSystem.UpdateLogs(_logs, dt);
-            PhysicsSystem.UpdateTrees(_trees, dt);
+            PhysicsSystem.UpdateSeeds(_seeds, _trees, dt);
+            PhysicsSystem.UpdateTrees(_trees, _seeds, dt);
             CombatSystem.ResolveCombat(_meeples, _pixels, dt);
 
             // update shadow positions after all movement/physics
@@ -415,6 +417,12 @@ namespace PixelTowerDefense
             // --- debris ---
             foreach (var p in _pixels)
                 _sb.Draw(_px, p.Bounds, p.Col);
+
+            foreach (var s in _seeds)
+            {
+                var rect = new Rectangle((int)s.Pos.X, (int)s.Pos.Y, 1, 1);
+                _sb.Draw(_px, rect, Color.SandyBrown);
+            }
 
             if (_rainAlpha > 0f)
                 DrawCloudShadow();
