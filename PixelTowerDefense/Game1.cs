@@ -517,6 +517,11 @@ namespace PixelTowerDefense
             foreach (var t in _trees)
                 DrawTreeTop(t);
 
+            // --- tree flames ---
+            foreach (var t in _trees)
+                if (t.IsBurning)
+                    DrawTreeFlame(t);
+
             // --- airborne soldiers/entities ---
             foreach (var e in _meeples.Where(m => m.z > 0f).OrderBy(m => m.ShadowY))
                 DrawMeepleSprite(e);
@@ -1066,6 +1071,37 @@ namespace PixelTowerDefense
                 Color col = t.IsDead ? Color.Lerp(new Color(20, 110, 20), Color.Goldenrod, leafDecay) : new Color(20, 110, 20);
                 _sb.Draw(_px, new Rectangle(dx, dy, 1, 1), col);
             }
+        }
+
+        private void DrawTreeFlame(Tree t)
+        {
+            int baseX = (int)MathF.Round(t.Pos.X);
+            int baseY = (int)MathF.Round(t.Pos.Y);
+            int top = 0;
+            foreach (var p in t.TrunkPixels)
+                if (p.Y < top) top = p.Y;
+            foreach (var p in t.LeafPixels)
+                if (p.Y < top) top = p.Y;
+            var pos = new Vector2(baseX, baseY + top);
+
+            int size = 3 + _rng.Next(2);
+            int offX = _rng.Next(-1, 2);
+            int offY = _rng.Next(-2, 1);
+            var rect = new Rectangle(
+                (int)pos.X - size / 2 + offX,
+                (int)pos.Y - size + offY,
+                size,
+                size * 2
+            );
+            Color[] firePal =
+            {
+                Color.OrangeRed,
+                Color.Orange,
+                Color.Yellow,
+                new Color(255, 100, 0)
+            };
+            var col = firePal[_rng.Next(firePal.Length)];
+            _sb.Draw(_px, rect, col);
         }
 
         private void DrawShadow(Meeple e)
