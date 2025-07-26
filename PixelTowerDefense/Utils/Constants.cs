@@ -6,8 +6,14 @@ namespace PixelTowerDefense.Utils
         public const int ENEMY_W = 2, ENEMY_H = 10;
         public const float PART_LEN = 1.0f;
 
-        public const int ARENA_LEFT = 0, ARENA_RIGHT = 200;
-        public const int ARENA_TOP = 0, ARENA_BOTTOM = 200;
+        public const int TILE_SIZE = 16;
+        public const int CHUNK_TILES = 128;
+        public const int CHUNK_PIXEL_SIZE = TILE_SIZE * CHUNK_TILES;
+
+        public const int ARENA_LEFT = 0;
+        public const int ARENA_RIGHT = CHUNK_PIXEL_SIZE;
+        public const int ARENA_TOP = 0;
+        public const int ARENA_BOTTOM = CHUNK_PIXEL_SIZE;
 
         public const float WANDER_SPEED = 10f;
         public const float FRICTION = 3f;

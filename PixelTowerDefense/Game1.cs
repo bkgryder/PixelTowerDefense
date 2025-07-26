@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Input;
 using PixelTowerDefense.Entities;
 using PixelTowerDefense.Systems;
 using PixelTowerDefense.Utils;
+using PixelTowerDefense.World;
 
 namespace PixelTowerDefense
 {
@@ -26,6 +27,7 @@ namespace PixelTowerDefense
         List<Tree> _trees = new();
         List<Building> _buildings = new();
         Random _rng = new();
+        World.GameWorld _world = new();
 
         float _camX, _camY, _zoom = 3.5f;
         KeyboardState _prevKb;
@@ -411,6 +413,8 @@ namespace PixelTowerDefense
                       * Matrix.CreateTranslation(-_camX * _zoom, -_camY * _zoom, 0);
             _sb.Begin(transformMatrix: cam, samplerState: SamplerState.PointClamp);
 
+            DrawWorld();
+
             // --- arena border ---
             // Removed dark border bars
 
@@ -614,6 +618,29 @@ namespace PixelTowerDefense
             int planks = _buildings.Sum(b => b.StoredPlanks);
             string text = $"BERRIES: {berries}   LOGS: {logs}   PLANKS: {planks}";
             _sb.DrawString(_font, text, new Vector2(35, 8), Color.White);
+        }
+
+        private void DrawWorld()
+        {
+            var chunk = _world.Chunks[0, 0];
+            for (int y = 0; y < Chunk.Size; y++)
+            {
+                for (int x = 0; x < Chunk.Size; x++)
+                {
+                    var tile = chunk.Tiles[x, y];
+                    Color col = tile.Type switch
+                    {
+                        TileType.Dirt => Color.SandyBrown,
+                        _ => Color.DarkSeaGreen
+                    };
+                    var rect = new Rectangle(
+                        Constants.ARENA_LEFT + x * Constants.TILE_SIZE,
+                        Constants.ARENA_TOP + y * Constants.TILE_SIZE,
+                        Constants.TILE_SIZE,
+                        Constants.TILE_SIZE);
+                    _sb.Draw(_px, rect, col);
+                }
+            }
         }
 
         private static string JobLabel(JobType job)
