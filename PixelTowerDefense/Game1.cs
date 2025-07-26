@@ -420,7 +420,7 @@ namespace PixelTowerDefense
 
             foreach (var s in _seeds)
             {
-                var rect = new Rectangle((int)s.Pos.X, (int)s.Pos.Y, 1, 1);
+                var rect = new Rectangle((int)MathF.Round(s.Pos.X), (int)MathF.Round(s.Pos.Y - s.z), 1, 1);
                 _sb.Draw(_px, rect, Color.SandyBrown);
             }
 
@@ -817,8 +817,31 @@ namespace PixelTowerDefense
             }
             else
             {
+                float pale = t.IsDead ? MathF.Min(1f, t.PaleTimer / Constants.TREE_PALE_TIME) : 0f;
+                Color col = Color.Lerp(new Color(100, 70, 40), Color.SandyBrown, pale);
+                float angle = 0f;
+                if (t.FallTimer > 0f || t.Fallen)
+                    angle = t.FallDir * MathHelper.PiOver2 * MathF.Min(t.FallTimer / Constants.TREE_FALL_TIME, 1f);
+                float cos = MathF.Cos(angle);
+                float sin = MathF.Sin(angle);
+                float decomp = t.Fallen ? MathF.Min(1f, t.DecompTimer / Constants.TREE_DISINTEGRATE_TIME) : 0f;
                 foreach (var p in t.TrunkPixels)
-                    _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), new Color(100, 70, 40));
+                {
+                    float x = p.X * cos - p.Y * sin;
+                    float y = p.X * sin + p.Y * cos;
+                    int dx = baseX + (int)MathF.Round(x);
+                    int dy = baseY + (int)MathF.Round(y);
+                    if (decomp > 0f)
+                    {
+                        float skipChance = MathF.Min(decomp, 0.9f);
+                        int hash = (dx * 73856093) ^ (dy * 19349663);
+                        double r = ((hash & 0x7fffffff) / (double)int.MaxValue);
+                        if (r < skipChance)
+                            continue;
+                        col = Color.Lerp(col, Color.SandyBrown, decomp);
+                    }
+                    _sb.Draw(_px, new Rectangle(dx, dy, 1, 1), col);
+                }
             }
         }
 
@@ -828,8 +851,17 @@ namespace PixelTowerDefense
 
             int baseX = (int)MathF.Round(t.Pos.X);
             int baseY = (int)MathF.Round(t.Pos.Y);
+            float angle = 0f;
+            if (t.FallTimer > 0f || t.Fallen)
+                angle = t.FallDir * MathHelper.PiOver2 * MathF.Min(t.FallTimer / Constants.TREE_FALL_TIME, 1f);
+            float cos = MathF.Cos(angle);
+            float sin = MathF.Sin(angle);
             foreach (var p in t.LeafPixels)
-                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), new Color(20, 110, 20));
+            {
+                float x = p.X * cos - p.Y * sin;
+                float y = p.X * sin + p.Y * cos;
+                _sb.Draw(_px, new Rectangle(baseX + (int)MathF.Round(x), baseY + (int)MathF.Round(y), 1, 1), new Color(20, 110, 20));
+            }
         }
 
         private void DrawShadow(Meeple e)

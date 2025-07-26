@@ -20,6 +20,15 @@ namespace PixelTowerDefense.Entities
         public float DeathAge;
         public int Seed;
 
+        // lifecycle
+        public bool IsDead;
+        public float PaleTimer;
+        public float FallDelay;
+        public float FallTimer;
+        public bool Fallen;
+        public float DecompTimer;
+        public int FallDir;
+
         // cached final size parameters
         private int _maxHeight;
         private int _baseWidth;
@@ -51,6 +60,14 @@ namespace PixelTowerDefense.Entities
             Health = Utils.Constants.TREE_HEALTH;
             IsStump = false;
             ReservedBy = null;
+
+            IsDead = false;
+            PaleTimer = 0f;
+            FallDelay = 0f;
+            FallTimer = 0f;
+            Fallen = false;
+            DecompTimer = 0f;
+            FallDir = rng.NextDouble() < 0.5 ? -1 : 1;
 
             GenerateShape(0f);
         }
@@ -104,14 +121,44 @@ namespace PixelTowerDefense.Entities
             CollisionRadius = baseWidth + 0.5f;
         }
 
-        public void Grow(float dt)
+        public void Grow(float dt, Random rng)
         {
             Age += dt;
             float factor = Math.Clamp(Age / GrowthDuration, 0f, 1f);
             GenerateShape(factor);
 
-            if (Age >= DeathAge)
+            if (!IsDead && Age >= DeathAge)
+            {
                 LeafPixels = Array.Empty<Point>();
+                IsDead = true;
+                PaleTimer = 0f;
+                FallDelay = Utils.RandEx.NextFloat(rng,
+                    Utils.Constants.TREE_FALL_DELAY_MIN,
+                    Utils.Constants.TREE_FALL_DELAY_MAX);
+            }
+
+            if (IsDead)
+            {
+                PaleTimer += dt;
+                if (!Fallen)
+                {
+                    if (FallDelay > 0f)
+                        FallDelay -= dt;
+                    else
+                    {
+                        FallTimer += dt;
+                        if (FallTimer >= Utils.Constants.TREE_FALL_TIME)
+                        {
+                            FallTimer = Utils.Constants.TREE_FALL_TIME;
+                            Fallen = true;
+                        }
+                    }
+                }
+                else
+                {
+                    DecompTimer += dt;
+                }
+            }
         }
     }
 }

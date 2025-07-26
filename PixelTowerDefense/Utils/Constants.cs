@@ -134,6 +134,19 @@ namespace PixelTowerDefense.Utils
         public const float SEED_GROW_TIME_MIN = 30f;
         public const float SEED_GROW_TIME_MAX = 60f;
 
+        // Tree death & decay
+        public const float TREE_PALE_TIME = 10f;
+        public const float TREE_FALL_DELAY_MIN = 5f;
+        public const float TREE_FALL_DELAY_MAX = 15f;
+        public const float TREE_FALL_TIME = 2f;
+        public const float TREE_DISINTEGRATE_TIME = 10f;
+
+        // Tree seed launch
+        public const float TREE_SEED_SPEED_MIN = 30f;
+        public const float TREE_SEED_SPEED_MAX = 60f;
+        public const float TREE_SEED_UPWARD_MIN = 30f;
+        public const float TREE_SEED_UPWARD_MAX = 60f;
+
         // Lighting
         public const float DAY_LENGTH = 60f; // seconds for a full day cycle
         public const float NIGHT_BRIGHTNESS = 0.5f; // 0 = pitch black, 1 = fully lit

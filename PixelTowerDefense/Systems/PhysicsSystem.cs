@@ -652,6 +652,13 @@ namespace PixelTowerDefense.Systems
 
                 s.Vel *= MathF.Max(0f, 1f - Constants.DEBRIS_FRICTION * dt);
                 s.Pos += s.Vel * dt;
+                s.vz -= Constants.Z_GRAVITY * dt;
+                s.z += s.vz * dt;
+                if (s.z <= 0f)
+                {
+                    s.z = 0f;
+                    s.vz = 0f;
+                }
 
                 if (s.Pos.X < Constants.ARENA_LEFT)
                 { s.Pos.X = Constants.ARENA_LEFT; s.Vel.X *= -0.5f; }
@@ -676,18 +683,37 @@ namespace PixelTowerDefense.Systems
 
         public static void UpdateTrees(List<Tree> trees, List<Seed> seeds, float dt)
         {
-            for (int i = 0; i < trees.Count; i++)
+            for (int i = trees.Count - 1; i >= 0; i--)
             {
                 var t = trees[i];
-                t.Grow(dt);
+                t.Grow(dt, _rng);
 
-                if (!t.IsStump && t.Age >= t.GrowthDuration &&
+                if (!t.IsStump && !t.IsDead && t.Age >= t.GrowthDuration &&
                     _rng.NextDouble() < Constants.TREE_SEED_CHANCE * dt)
                 {
-                    Vector2 vel = new Vector2(
-                        _rng.NextFloat(-55f, 55f),
-                        _rng.NextFloat(-55f, 55f));
-                    seeds.Add(new Seed(t.Pos, vel, _rng));
+                    int topY = 0;
+                    int topX = 0;
+                    foreach (var p in t.TrunkPixels)
+                    {
+                        if (p.Y < topY)
+                        {
+                            topY = p.Y;
+                            topX = p.X;
+                        }
+                    }
+                    Vector2 spawn = t.Pos + new Vector2(topX, topY);
+                    Vector2 dir = new Vector2(_rng.NextFloat(-1f, 1f), _rng.NextFloat(-1f, 1f));
+                    if (dir.LengthSquared() > 0f) dir.Normalize();
+                    float speed = _rng.NextFloat(Constants.TREE_SEED_SPEED_MIN, Constants.TREE_SEED_SPEED_MAX);
+                    Vector2 vel = dir * speed;
+                    float vz0 = _rng.NextFloat(Constants.TREE_SEED_UPWARD_MIN, Constants.TREE_SEED_UPWARD_MAX);
+                    seeds.Add(new Seed(spawn, vel, vz0, _rng));
+                }
+
+                if (t.Fallen && t.DecompTimer >= Constants.TREE_DISINTEGRATE_TIME)
+                {
+                    trees.RemoveAt(i);
+                    continue;
                 }
 
                 trees[i] = t;
