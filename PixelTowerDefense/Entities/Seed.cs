@@ -6,13 +6,17 @@ namespace PixelTowerDefense.Entities
     {
         public Vector2 Pos;
         public Vector2 Vel;
+        public float z;
+        public float vz;
         public float Age;
         public float GrowTime;
 
-        public Seed(Vector2 pos, Vector2 vel, System.Random rng)
+        public Seed(Vector2 pos, Vector2 vel, float vz0, System.Random rng)
         {
             Pos = pos;
             Vel = vel;
+            z = 0f;
+            vz = vz0;
             Age = 0f;
             GrowTime = Utils.RandEx.NextFloat(rng,
                 Utils.Constants.SEED_GROW_TIME_MIN,
