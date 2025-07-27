@@ -30,6 +30,9 @@ namespace PixelTowerDefense
         World.GameWorld _world = new();
         WaterMap _water;
 
+        Weather _weather = Weather.Clear;
+        List<RainDrop> _rain = new(Constants.MAX_RAIN_DROPS);
+
         float _camX, _camY, _zoom = 3.5f;
         KeyboardState _prevKb;
         MouseState _prevMs;
@@ -195,6 +198,9 @@ namespace PixelTowerDefense
 
             if (Edge(kb, Keys.F12))
                 _debugOverlay = !_debugOverlay;
+
+            if (Edge(kb, Keys.F6))
+                _weather = _weather == Weather.Clear ? Weather.Rainy : Weather.Clear;
 
 
 
@@ -433,8 +439,9 @@ namespace PixelTowerDefense
             {
                 _dragging = false;
             }
-
             PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
+            if (_weather == Weather.Rainy)
+                UpdateRain(dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             PhysicsSystem.UpdateLogs(_logs, dt);
             PhysicsSystem.UpdateSeeds(_seeds, _trees, dt);
@@ -481,6 +488,12 @@ namespace PixelTowerDefense
             {
                 var rect = new Rectangle((int)MathF.Round(s.Pos.X), (int)MathF.Round(s.Pos.Y - s.z), 1, 1);
                 _sb.Draw(_px, rect, Color.SandyBrown);
+            }
+
+            foreach (var r in _rain)
+            {
+                var rect = new Rectangle((int)MathF.Round(r.Pos.X), (int)MathF.Round(r.Pos.Y - r.z), 1, 1);
+                _sb.Draw(_px, rect, Color.CornflowerBlue);
             }
 
             if (_rainAlpha > 0f)
@@ -548,6 +561,8 @@ namespace PixelTowerDefense
 
             float phase = MathF.Sin(_timeOfDay * MathHelper.TwoPi) * 0.5f + 0.5f;
             float ambient = MathHelper.Lerp(Constants.NIGHT_BRIGHTNESS, 1f, phase);
+            if (_weather == Weather.Rainy)
+                ambient *= Constants.RAIN_AMBIENT_MULT;
             byte dark = (byte)Math.Clamp(255f * (1f - ambient), 0f, 255f);
             _sb.Begin();
             _sb.Draw(_px, new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height), new Color((byte)0, (byte)0, (byte)0, dark));
@@ -1384,6 +1399,33 @@ namespace PixelTowerDefense
             return t < 0.5f
                 ? Color.Lerp(pale, Constants.DECOMP_PURPLE, t * 2f)
                 : Color.Lerp(Constants.DECOMP_PURPLE, Constants.BONE_COLOR, (t - 0.5f) * 2f);
+        }
+
+        private void UpdateRain(float dt)
+        {
+            float viewW = GraphicsDevice.Viewport.Width / _zoom;
+            float viewH = GraphicsDevice.Viewport.Height / _zoom;
+
+            int count = (int)(Constants.RAIN_SPAWN_RATE * dt);
+            for (int i = 0; i < count; i++)
+            {
+                float x = _camX + _rng.NextFloat(0f, viewW);
+                float y = _camY - 5f;
+                float z0 = _rng.NextFloat(10f, 30f);
+                _rain.Spawn(new RainDrop(new Vector2(x, y), z0, Constants.RAIN_SPEED));
+            }
+
+            for (int i = _rain.Count - 1; i >= 0; i--)
+            {
+                var r = _rain[i];
+                r.z -= r.vz * dt;
+                if (r.z <= 0f)
+                {
+                    _rain.RemoveAt(i);
+                    continue;
+                }
+                _rain[i] = r;
+            }
         }
 
 

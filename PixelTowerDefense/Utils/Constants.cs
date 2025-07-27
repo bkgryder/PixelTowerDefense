@@ -190,5 +190,11 @@ namespace PixelTowerDefense.Utils
         public const float EXPLOSION_LIGHT_RADIUS = 5f;
         public const float EXPLOSION_LIGHT_INTENSITY = .25f;
 
+        // Weather
+        public const int MAX_RAIN_DROPS = 300;
+        public const float RAIN_SPEED = 140f;
+        public const float RAIN_SPAWN_RATE = 50f;
+        public const float RAIN_AMBIENT_MULT = 0.7f;
+
     }
 }
