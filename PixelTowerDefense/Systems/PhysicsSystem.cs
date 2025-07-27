@@ -857,6 +857,90 @@ namespace PixelTowerDefense.Systems
             }
         }
 
+        public static void SimulateWolves(List<Wolf> wolves, List<Rabbit> rabbits, List<Meeple> meeples, float dt)
+        {
+            for (int i = wolves.Count - 1; i >= 0; i--)
+            {
+                var w = wolves[i];
+
+                if (w.z > 0f || w.vz != 0f)
+                {
+                    w.vz -= Constants.Z_GRAVITY * dt;
+                    w.z += w.vz * dt;
+                    w.Pos += w.Vel * dt;
+                    if (w.z <= 0f)
+                    {
+                        w.z = 0f;
+                        w.vz = 0f;
+                    }
+                }
+                else
+                {
+                    int midx = FindNearestMeeple(w.Pos, meeples, Constants.WOLF_SEEK_RADIUS);
+                    if (midx >= 0)
+                    {
+                        var m = meeples[midx];
+                        Vector2 dir = m.Pos - w.Pos;
+                        float dist = dir.Length();
+                        if (dist < Constants.WOLF_ATTACK_RANGE)
+                        {
+                            m.Health -= Constants.WOLF_DMG;
+                            meeples[midx] = m;
+                            w.WanderTimer = 0f;
+                        }
+                        else
+                        {
+                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                            w.Vel = dir * Constants.WOLF_SPEED;
+                            w.Pos += w.Vel * dt;
+                        }
+                    }
+                    else
+                    {
+                        int ridx = FindNearestRabbit(w.Pos, rabbits, Constants.WOLF_SEEK_RADIUS);
+                        if (ridx >= 0)
+                        {
+                            Vector2 dir = rabbits[ridx].Pos - w.Pos;
+                            float dist = dir.Length();
+                            if (dist < Constants.WOLF_ATTACK_RANGE)
+                            {
+                                rabbits.RemoveAt(ridx);
+                                w.WanderTimer = 0f;
+                            }
+                            else
+                            {
+                                if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                w.Vel = dir * Constants.WOLF_SPEED;
+                                w.Pos += w.Vel * dt;
+                            }
+                        }
+                        else
+                        {
+                            w.WanderTimer -= dt;
+                            if (w.WanderTimer <= 0f)
+                            {
+                                w.WanderTimer = _rng.NextFloat(Constants.WOLF_WANDER_MIN, Constants.WOLF_WANDER_MAX);
+                                float ang = MathHelper.ToRadians(_rng.Next(360));
+                                w.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * Constants.WOLF_SPEED;
+                            }
+
+                            w.Pos += w.Vel * dt;
+                        }
+                    }
+                }
+
+                w.Pos.X = MathHelper.Clamp(w.Pos.X,
+                                           Constants.ARENA_LEFT + 1,
+                                           Constants.ARENA_RIGHT - 1);
+                w.Pos.Y = MathHelper.Clamp(w.Pos.Y,
+                                           Constants.ARENA_TOP + 1,
+                                           Constants.ARENA_BOTTOM - 1);
+                w.ShadowY = w.Pos.Y;
+
+                wolves[i] = w;
+            }
+        }
+
         public static void UpdateTrees(List<Tree> trees, List<Seed> seeds, List<Pixel> debris, float dt)
         {
             for (int i = trees.Count - 1; i >= 0; i--)
@@ -1268,6 +1352,39 @@ namespace PixelTowerDefense.Systems
                 JobType.CarryLogToCarpenter => 100f,
                 _ => 0f
             };
+        }
+
+        private static int FindNearestRabbit(Vector2 pos, List<Rabbit> rabbits, float radius)
+        {
+            int idx = -1;
+            float best = radius;
+            for (int i = 0; i < rabbits.Count; i++)
+            {
+                float d = Vector2.Distance(pos, rabbits[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindNearestMeeple(Vector2 pos, List<Meeple> meeples, float radius)
+        {
+            int idx = -1;
+            float best = radius;
+            for (int i = 0; i < meeples.Count; i++)
+            {
+                if (!meeples[i].Alive) continue;
+                float d = Vector2.Distance(pos, meeples[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
         }
     }
 }
