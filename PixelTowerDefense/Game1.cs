@@ -1472,7 +1472,7 @@ namespace PixelTowerDefense
             for (int i = 0; i < count; i++)
             {
                 float x = _camX + _rng.NextFloat(0f, viewW);
-                float y = _camY - 5f;
+                float y = _camY + _rng.NextFloat(0f, viewH);
                 float z0 = _rng.NextFloat(10f, 30f);
                 _rain.Spawn(new RainDrop(new Vector2(x, y), z0, Constants.RAIN_SPEED));
             }
