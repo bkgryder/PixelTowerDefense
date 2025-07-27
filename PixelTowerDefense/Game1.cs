@@ -68,6 +68,10 @@ namespace PixelTowerDefense
 
         bool _debugOverlay;
 
+        float _fpsTimer;
+        int _fpsFrames;
+        int _fps;
+
         public Game1()
         {
             _gfx = new GraphicsDeviceManager(this);
@@ -155,6 +159,13 @@ namespace PixelTowerDefense
         protected override void Update(GameTime gt)
         {
             float dt = (float)gt.ElapsedGameTime.TotalSeconds;
+            _fpsTimer += dt;
+            if (_fpsTimer >= 1f)
+            {
+                _fps = _fpsFrames;
+                _fpsFrames = 0;
+                _fpsTimer -= 1f;
+            }
             var kb = Keyboard.GetState();
             var ms = Mouse.GetState();
             _mana = MathF.Min(Constants.MANA_MAX, _mana + Constants.MANA_REGEN * dt);
@@ -469,6 +480,7 @@ namespace PixelTowerDefense
 
         protected override void Draw(GameTime gt)
         {
+            _fpsFrames++;
             GraphicsDevice.Clear(Color.DarkSeaGreen);
             var cam = Matrix.CreateScale(_zoom, _zoom, 1f)
                       * Matrix.CreateTranslation(-_camX * _zoom, -_camY * _zoom, 0);
@@ -901,12 +913,19 @@ namespace PixelTowerDefense
 
             string obj = ObjectLabelAt(p);
             int chunks = _world.Chunks.GetLength(0) * _world.Chunks.GetLength(1);
-            string text = $"Mouse {p.X},{p.Y} | {obj} | Chunks {chunks}";
-            var size = _font.MeasureString(text);
-            var rect = new Rectangle(5, GraphicsDevice.Viewport.Height - (int)size.Y - 5,
-                                    (int)size.X + 4, (int)size.Y + 4);
+            string line1 = $"Mouse {p.X},{p.Y} | {obj} | Chunks {chunks}";
+            string line2 = $"FPS {_fps} | Weather {_weather} | Trees {_trees.Count} | Entities {_meeples.Count}";
+            var size1 = _font.MeasureString(line1);
+            var size2 = _font.MeasureString(line2);
+            float width = MathF.Max(size1.X, size2.X);
+            var rect = new Rectangle(
+                5,
+                GraphicsDevice.Viewport.Height - (int)(size1.Y + size2.Y + 6) - 5,
+                (int)width + 4,
+                (int)(size1.Y + size2.Y + 6));
             _sb.Draw(_px, rect, new Color(0,0,0,180));
-            _sb.DrawString(_font, text, new Vector2(rect.X + 2, rect.Y + 2), Color.Yellow);
+            _sb.DrawString(_font, line1, new Vector2(rect.X + 2, rect.Y + 2), Color.Yellow);
+            _sb.DrawString(_font, line2, new Vector2(rect.X + 2, rect.Y + 4 + size1.Y), Color.Yellow);
         }
 
         private void DrawChunkBorders()
