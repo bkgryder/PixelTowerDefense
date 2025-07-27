@@ -359,7 +359,7 @@ namespace PixelTowerDefense
                             var b = _bushes[i];
                             int bx = (int)MathF.Round(b.Pos.X);
                             int by = (int)MathF.Round(b.Pos.Y);
-                            foreach (var p in b.Shape)
+                            foreach (var p in b.TrunkPixels)
                             {
                                 var pos = new Vector2(bx + p.X, by + p.Y);
                                 if (Vector2.Distance(pos, mworld) < minD)
@@ -369,6 +369,21 @@ namespace PixelTowerDefense
                                     _bushes[i] = b;
                                     affected = true;
                                     break;
+                                }
+                            }
+                            if (!affected)
+                            {
+                                foreach (var p in b.LeafPixels)
+                                {
+                                    var pos = new Vector2(bx + p.X, by + p.Y);
+                                    if (Vector2.Distance(pos, mworld) < minD)
+                                    {
+                                        b.IsBurning = true;
+                                        b.BurnTimer = Constants.BUSH_BURN_DURATION;
+                                        _bushes[i] = b;
+                                        affected = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -558,7 +573,7 @@ namespace PixelTowerDefense
 
             // --- berry bushes ---
             foreach (var b in _bushes)
-                DrawBush(b);
+                DrawBushBottom(b);
 
             // --- stones ---
             foreach (var s in _stones)
@@ -601,6 +616,9 @@ namespace PixelTowerDefense
             // --- tree leaves ---
             foreach (var t in _trees)
                 DrawTreeTop(t);
+            // --- bush leaves ---
+            foreach (var b in _bushes)
+                DrawBushTop(b);
 
             // --- tree flames ---
             foreach (var t in _trees)
@@ -1004,7 +1022,10 @@ namespace PixelTowerDefense
             {
                 int bx = (int)MathF.Round(b.Pos.X);
                 int by = (int)MathF.Round(b.Pos.Y);
-                foreach (var off in b.Shape)
+                foreach (var off in b.TrunkPixels)
+                    if (bx + off.X == p.X && by + off.Y == p.Y)
+                        return "BerryBush";
+                foreach (var off in b.LeafPixels)
                     if (bx + off.X == p.X && by + off.Y == p.Y)
                         return "BerryBush";
             }
@@ -1152,12 +1173,20 @@ namespace PixelTowerDefense
             _sb.Draw(_px, rect, col);
         }
 
-        private void DrawBush(BerryBush b)
+        private void DrawBushBottom(BerryBush b)
         {
             int baseX = (int)MathF.Round(b.Pos.X);
             int baseY = (int)MathF.Round(b.Pos.Y);
-            foreach (var p in b.Shape)
-                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), new Color(0, 120, 0));
+            foreach (var p in b.TrunkPixels)
+                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), new Color(100, 70, 40));
+        }
+
+        private void DrawBushTop(BerryBush b)
+        {
+            int baseX = (int)MathF.Round(b.Pos.X);
+            int baseY = (int)MathF.Round(b.Pos.Y);
+            foreach (var p in b.LeafPixels)
+                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), new Color(20, 110, 20));
             for (int i = 0; i < b.Berries && i < b.BerryPixels.Length; i++)
             {
                 var off = b.BerryPixels[i];
@@ -1172,7 +1201,7 @@ namespace PixelTowerDefense
 
             int minX = int.MaxValue, maxX = int.MinValue;
             int minY = 0, maxY = 0;
-            foreach (var p in b.Shape)
+            foreach (var p in b.TrunkPixels)
             {
                 if (minX == int.MaxValue)
                 {
@@ -1186,6 +1215,13 @@ namespace PixelTowerDefense
                     if (p.Y < minY) minY = p.Y;
                     if (p.Y > maxY) maxY = p.Y;
                 }
+            }
+            foreach (var p in b.LeafPixels)
+            {
+                if (p.X < minX) minX = p.X;
+                if (p.X > maxX) maxX = p.X;
+                if (p.Y < minY) minY = p.Y;
+                if (p.Y > maxY) maxY = p.Y;
             }
 
             var rect = new Rectangle(baseX + minX - 1, baseY + minY - 1, (maxX - minX + 3), (maxY - minY + 3));
