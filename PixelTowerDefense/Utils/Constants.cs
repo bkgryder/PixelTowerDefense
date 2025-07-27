@@ -178,9 +178,9 @@ namespace PixelTowerDefense.Utils
         /// <summary>Thirst quenched per second in water</summary>
         public const float WATER_QUENCH_RATE = 2.0f;
         /// <summary>Number of rivers generated</summary>
-        public const int   RIVER_COUNT = 3;
+        public const int   RIVER_COUNT = 1;
         /// <summary>Number of lakes generated</summary>
-        public const int   LAKE_COUNT = 4;
+        public const int   LAKE_COUNT = 1;
 
         // Lighting
         public const float DAY_LENGTH = 60f; // seconds for a full day cycle
