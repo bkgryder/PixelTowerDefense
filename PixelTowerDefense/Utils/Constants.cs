@@ -105,7 +105,14 @@ namespace PixelTowerDefense.Utils
         public const float HUNGER_THRESHOLD = 5f;
         public const float HARVEST_RANGE = 2f;
         public const int BUSH_BERRIES = 5;
-        public const float BUSH_REGROW_INTERVAL = .25f;
+        public const float BUSH_REGROW_INTERVAL = .25f; // when raining
+        public const float BUSH_REGROW_CLEAR_MULT = 4f;
+        public const float BUSH_GROW_TIME_MIN = 20f;
+        public const float BUSH_GROW_TIME_MAX = 40f;
+        public const float BUSH_LIFESPAN_MIN = 40f;
+        public const float BUSH_LIFESPAN_MAX = 80f;
+        public const float BUSH_SEED_CHANCE = 0.05f;
+        public const float BUSH_BURN_DURATION = 1f;
 
         // Precipitate ability
         public const float PRECIPITATE_DROP_SPEED = 130f;
