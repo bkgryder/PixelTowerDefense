@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Entities;
 using PixelTowerDefense.Systems;
+using PixelTowerDefense.World;
 
 namespace PixelTowerDefense.Tests;
 
@@ -38,8 +39,9 @@ public class DexterityMovementTests
         var debris = new List<Pixel>();
         var bushes = new List<BerryBush>();
         var trees = new List<Tree>();
+        var water = new WaterMap(1, 1);
 
-        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, 1f);
+        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 1f);
 
         Assert.True(workers[1].Pos.X > workers[0].Pos.X);
     }
