@@ -19,6 +19,7 @@ namespace PixelTowerDefense
         SpriteFont _font;
 
         List<Meeple> _meeples = new();
+        List<Rabbit> _rabbits = new();
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
         List<Seed> _seeds = new();
         List<BerryBush> _bushes = new();
@@ -51,6 +52,11 @@ namespace PixelTowerDefense
         int _dragIdx, _dragPart;
         Vector2 _dragStartWorld;
         float _dragStartTime;
+
+        bool _rabbitDragging;
+        int _rabbitDragIdx;
+        Vector2 _rabbitDragStartWorld;
+        float _rabbitDragStartTime;
 
         // hovered meeple index
         int _hoverIdx;
@@ -115,6 +121,7 @@ namespace PixelTowerDefense
                 _rng);
 
             SpawnMeeple(0);
+            SpawnRabbits(3);
             SpawnBerryBushes(5);
             SpawnLogs(4);
             SpawnStones(4);
@@ -353,12 +360,22 @@ namespace PixelTowerDefense
                         mworld, prevWorld,
                         _meeples, _pixels
                     );
+                    InputSystem.HandleRabbitDrag(
+                        gt, ms, _prevMs,
+                        ref _rabbitDragging, ref _rabbitDragIdx,
+                        ref _rabbitDragStartWorld, ref _rabbitDragStartTime,
+                        mworld,
+                        _rabbits
+                    );
                     if (_dragging)
+                        _mana = MathF.Max(0f, _mana - Constants.TELEKINESIS_DRAIN * dt);
+                    if (_rabbitDragging && !_dragging)
                         _mana = MathF.Max(0f, _mana - Constants.TELEKINESIS_DRAIN * dt);
                 }
                 else
                 {
                     _dragging = false;
+                    _rabbitDragging = false;
                 }
             }
             else if (_currentAbility == Ability.Explosion)
@@ -453,11 +470,12 @@ namespace PixelTowerDefense
             }
             
             PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
+            PhysicsSystem.SimulateRabbits(_rabbits, _bushes, _seeds, dt);
             if (_weather == Weather.Rainy)
                 UpdateRain(dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             PhysicsSystem.UpdateLogs(_logs, dt);
-            PhysicsSystem.UpdateSeeds(_seeds, _trees, dt);
+            PhysicsSystem.UpdateSeeds(_seeds, _trees, _bushes, dt);
             PhysicsSystem.UpdateTrees(_trees, _seeds, _pixels, dt);
             CombatSystem.ResolveCombat(_meeples, _pixels, dt);
 
@@ -537,6 +555,10 @@ namespace PixelTowerDefense
             // --- logs ---
             foreach (var l in _logs)
                 DrawLog(l);
+
+            // --- rabbits ---
+            foreach (var r in _rabbits)
+                DrawRabbit(r);
 
             // --- tree shadows ---
             foreach (var t in _trees)
@@ -635,6 +657,18 @@ namespace PixelTowerDefense
                 var m = Meeple.SpawnMeeple(new Vector2(x, y), Faction.Friendly, shirt, _rng);
                 m.Worker = new Worker();
                 _meeples.Add(m);
+            }
+        }
+
+        private void SpawnRabbits(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
+                                       Constants.ARENA_RIGHT - 5);
+                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
+                                       Constants.ARENA_BOTTOM - 5);
+                _rabbits.Add(new Rabbit { Pos = new Vector2(x, y) });
             }
         }
 
@@ -890,6 +924,14 @@ namespace PixelTowerDefense
                         return "Log";
             }
 
+            foreach (var r in _rabbits)
+            {
+                int bx = (int)MathF.Round(r.Pos.X);
+                int by = (int)MathF.Round(r.Pos.Y - r.z);
+                if (bx == p.X && by == p.Y)
+                    return "Rabbit";
+            }
+
             foreach (var s in _stones)
             {
                 int bx = (int)MathF.Round(s.Pos.X);
@@ -1113,6 +1155,13 @@ namespace PixelTowerDefense
             int baseY = (int)MathF.Round(l.Pos.Y);
             foreach (var p in l.Shape)
                 _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), l.Color);
+        }
+
+        private void DrawRabbit(Rabbit r)
+        {
+            int x = (int)MathF.Round(r.Pos.X);
+            int y = (int)MathF.Round(r.Pos.Y - r.z);
+            _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.White);
         }
 
         private void DrawTreeBottom(Tree t)

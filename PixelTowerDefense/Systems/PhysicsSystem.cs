@@ -699,7 +699,7 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void UpdateSeeds(List<Seed> seeds, List<Tree> trees, float dt)
+        public static void UpdateSeeds(List<Seed> seeds, List<Tree> trees, List<BerryBush> bushes, float dt)
         {
             for (int i = seeds.Count - 1; i >= 0; i--)
             {
@@ -727,30 +727,127 @@ namespace PixelTowerDefense.Systems
                 s.Age += dt;
                 if (s.Age >= s.GrowTime)
                 {
-                    bool nearTree = false;
-                    foreach (var t in trees)
+                    if (s.Type == SeedType.Tree)
                     {
-                        if (Vector2.Distance(t.Pos, s.Pos) < Constants.SEED_MIN_TREE_DIST)
-                        { nearTree = true; break; }
-                    }
-                    bool nearSeed = false;
-                    if (!nearTree)
-                    {
-                        for (int j = 0; j < seeds.Count; j++)
+                        bool nearTree = false;
+                        foreach (var t in trees)
                         {
-                            if (j == i) continue;
-                            if (Vector2.Distance(seeds[j].Pos, s.Pos) < Constants.SEED_MIN_SEED_DIST)
-                            { nearSeed = true; break; }
+                            if (Vector2.Distance(t.Pos, s.Pos) < Constants.SEED_MIN_TREE_DIST)
+                            { nearTree = true; break; }
                         }
+                        bool nearSeed = false;
+                        if (!nearTree)
+                        {
+                            for (int j = 0; j < seeds.Count; j++)
+                            {
+                                if (j == i) continue;
+                                if (Vector2.Distance(seeds[j].Pos, s.Pos) < Constants.SEED_MIN_SEED_DIST)
+                                { nearSeed = true; break; }
+                            }
+                        }
+                        if (!nearTree && !nearSeed)
+                            trees.Add(new Tree(s.Pos, _rng));
                     }
-                    if (!nearTree && !nearSeed)
-                        trees.Add(new Tree(s.Pos, _rng));
+                    else
+                    {
+                        bool nearBush = false;
+                        foreach (var b in bushes)
+                        {
+                            if (Vector2.Distance(b.Pos, s.Pos) < Constants.SEED_MIN_TREE_DIST)
+                            { nearBush = true; break; }
+                        }
+                        bool nearSeed = false;
+                        if (!nearBush)
+                        {
+                            for (int j = 0; j < seeds.Count; j++)
+                            {
+                                if (j == i) continue;
+                                if (Vector2.Distance(seeds[j].Pos, s.Pos) < Constants.SEED_MIN_SEED_DIST)
+                                { nearSeed = true; break; }
+                            }
+                        }
+                        if (!nearBush && !nearSeed)
+                            bushes.Add(new BerryBush(s.Pos, _rng));
+                    }
 
                     seeds.RemoveAt(i);
                     continue;
                 }
 
                 seeds[i] = s;
+            }
+        }
+
+        public static void SimulateRabbits(List<Rabbit> rabbits, List<BerryBush> bushes, List<Seed> seeds, float dt)
+        {
+            for (int i = 0; i < rabbits.Count; i++)
+            {
+                var r = rabbits[i];
+
+                if (r.z > 0f || r.vz != 0f)
+                {
+                    r.vz -= Constants.Z_GRAVITY * dt;
+                    r.z += r.vz * dt;
+                    r.Pos += r.Vel * dt;
+                    if (r.z <= 0f)
+                    {
+                        r.z = 0f;
+                        r.vz = 0f;
+                    }
+                }
+                else
+                {
+                    r.WanderTimer -= dt;
+                    if (r.WanderTimer <= 0f)
+                    {
+                        r.WanderTimer = _rng.NextFloat(Constants.RABBIT_WANDER_MIN, Constants.RABBIT_WANDER_MAX);
+                        float ang = MathHelper.ToRadians(_rng.Next(360));
+                        r.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * Constants.RABBIT_SPEED;
+                    }
+
+                    int bidx = FindNearestBush(r.Pos, bushes);
+                    if (bidx >= 0)
+                    {
+                        var bush = bushes[bidx];
+                        Vector2 dir = bush.Pos - r.Pos;
+                        float dist = dir.Length();
+                        if (dist < 1f)
+                        {
+                            if (bush.Berries > 0)
+                            {
+                                bush.Berries--;
+                                if (_rng.NextDouble() < Constants.RABBIT_SEED_CHANCE)
+                                {
+                                    Vector2 vel = new Vector2(_rng.NextFloat(-10f,10f), _rng.NextFloat(-10f,10f));
+                                    float vz0 = _rng.NextFloat(20f,40f);
+                                    seeds.Add(new Seed(r.Pos, vel, vz0, _rng, SeedType.BerryBush));
+                                }
+                            }
+                            r.WanderTimer = 0f;
+                        }
+                        else
+                        {
+                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                            r.Vel = dir * Constants.RABBIT_SPEED;
+                            r.Pos += r.Vel * dt;
+                        }
+                        bushes[bidx] = bush;
+                    }
+                    else
+                    {
+                        r.Pos += r.Vel * dt;
+                    }
+                }
+
+                r.Pos.X = MathHelper.Clamp(r.Pos.X,
+                                           Constants.ARENA_LEFT + 1,
+                                           Constants.ARENA_RIGHT - 1);
+                r.Pos.Y = MathHelper.Clamp(r.Pos.Y,
+                                           Constants.ARENA_TOP + 1,
+                                           Constants.ARENA_BOTTOM - 1);
+                r.ShadowY = r.Pos.Y;
+
+                rabbits[i] = r;
             }
         }
 

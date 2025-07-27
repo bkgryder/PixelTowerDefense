@@ -107,6 +107,12 @@ namespace PixelTowerDefense.Utils
         public const int BUSH_BERRIES = 5;
         public const float BUSH_REGROW_INTERVAL = .25f;
 
+        // Rabbits
+        public const float RABBIT_SPEED = 12f;
+        public const float RABBIT_WANDER_MIN = 0.5f;
+        public const float RABBIT_WANDER_MAX = 2f;
+        public const float RABBIT_SEED_CHANCE = 0.1f; // chance when eating berry to drop a seed
+
         // Precipitate ability
         public const float PRECIPITATE_DROP_SPEED = 130f;
         public const float PRECIPITATE_FADE_SPEED = .1f;
