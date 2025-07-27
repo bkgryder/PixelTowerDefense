@@ -31,6 +31,7 @@ namespace PixelTowerDefense.Entities
         public float LeafTimer;
         public bool IsBurning;
         public float BurnTimer;
+        public float BurnProgress;
 
         // appearance
         public float ShadowRadius;
@@ -77,6 +78,7 @@ namespace PixelTowerDefense.Entities
             LeafTimer = 0f;
             IsBurning = false;
             BurnTimer = 0f;
+            BurnProgress = 0f;
 
             GenerateShape(0f);
         }
