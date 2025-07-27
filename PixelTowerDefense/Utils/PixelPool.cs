@@ -10,13 +10,17 @@ namespace PixelTowerDefense.Utils
         {
             if (pixels.Count >= Constants.MAX_DEBRIS && pixels.Count > 0)
             {
+#if DEBUG
                 System.Diagnostics.Debug.WriteLine($"Pixel pool reached limit {Constants.MAX_DEBRIS}. Removing oldest pixel.");
+#endif
                 pixels.RemoveAt(0);
             }
 
             pixels.Add(pixel);
 
+#if DEBUG
             System.Diagnostics.Debug.WriteLine($"Pixel pool size after spawn: {pixels.Count}");
+#endif
         }
     }
 }
