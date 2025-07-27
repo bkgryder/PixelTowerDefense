@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Entities;
 using PixelTowerDefense.Systems;
+using PixelTowerDefense.Utils;
 using PixelTowerDefense.World;
 
 namespace PixelTowerDefense.Tests;
@@ -37,7 +38,7 @@ public class ResourceReservationTests
         var trees = new List<Tree>();
         var logs = new List<Log>();
         var debris = new List<Pixel>();
-        var water = new WaterMap(1, 1);
+        var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
         PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 0.1f);
 

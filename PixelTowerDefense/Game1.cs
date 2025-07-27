@@ -28,8 +28,7 @@ namespace PixelTowerDefense
         List<Building> _buildings = new();
         Random _rng = new();
         World.GameWorld _world = new();
-        WaterMap _water;
-
+        WaterMap _water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
         Weather _weather = Weather.Clear;
         List<RainDrop> _rain = new(Constants.MAX_RAIN_DROPS);
 
@@ -450,6 +449,7 @@ namespace PixelTowerDefense
             {
                 _dragging = false;
             }
+            
             PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
             if (_weather == Weather.Rainy)
                 UpdateRain(dt);

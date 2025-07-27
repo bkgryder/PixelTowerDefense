@@ -63,6 +63,7 @@ namespace PixelTowerDefense.Entities
         public Faction Side;
         public bool IsBurning;
         public float BurnTimer;
+        public float InWaterTime;
 
         // time spent decomposing once dead
         public float DecompTimer;
@@ -108,6 +109,7 @@ namespace PixelTowerDefense.Entities
             Side = side;
             IsBurning = false;
             BurnTimer = 0f;
+            InWaterTime = 0f;
             DecompTimer = 0f;
             Hunger = 0f;
             Health = health;
