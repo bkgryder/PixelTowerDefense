@@ -727,28 +727,26 @@ namespace PixelTowerDefense.Systems
                 s.Age += dt;
                 if (s.Age >= s.GrowTime)
                 {
-                    if (s.Type == SeedType.Tree)
+                    bool nearPlant = false;
+                    if (s.Kind == SeedKind.Tree)
                     {
-                        bool nearTree = false;
                         foreach (var t in trees)
                         {
                             if (Vector2.Distance(t.Pos, s.Pos) < Constants.SEED_MIN_TREE_DIST)
-                            { nearTree = true; break; }
+                            { nearPlant = true; break; }
                         }
-                        bool nearSeed = false;
-                        if (!nearTree)
-                        {
-                            for (int j = 0; j < seeds.Count; j++)
-                            {
-                                if (j == i) continue;
-                                if (Vector2.Distance(seeds[j].Pos, s.Pos) < Constants.SEED_MIN_SEED_DIST)
-                                { nearSeed = true; break; }
-                            }
-                        }
-                        if (!nearTree && !nearSeed)
-                            trees.Add(new Tree(s.Pos, _rng));
                     }
                     else
+                    {
+                        foreach (var b in bushes)
+                        {
+                            if (Vector2.Distance(b.Pos, s.Pos) < Constants.SEED_MIN_TREE_DIST)
+                            { nearPlant = true; break; }
+                        }
+                    }
+
+                    bool nearSeed = false;
+                    if (!nearPlant)
                     {
                         bool nearBush = false;
                         foreach (var b in bushes)
@@ -768,6 +766,14 @@ namespace PixelTowerDefense.Systems
                         }
                         if (!nearBush && !nearSeed)
                             bushes.Add(new BerryBush(s.Pos, _rng));
+                    }
+
+                    if (!nearPlant && !nearSeed)
+                    {
+                        if (s.Kind == SeedKind.Tree)
+                            trees.Add(new Tree(s.Pos, _rng));
+                        else
+                            bushes.Add(new BerryBush(s.Pos, _rng, false));
                     }
 
                     seeds.RemoveAt(i);
@@ -1012,6 +1018,35 @@ namespace PixelTowerDefense.Systems
                 }
 
                 trees[i] = t;
+            }
+        }
+
+        public static void UpdateBushes(List<BerryBush> bushes, List<Seed> seeds, List<Pixel> debris, float dt, bool raining)
+        {
+            for (int i = bushes.Count - 1; i >= 0; i--)
+            {
+                var b = bushes[i];
+                b.Grow(dt, raining);
+
+                if (b.IsBurning)
+                {
+                    if (b.BurnTimer <= 0f)
+                    {
+                        bushes.RemoveAt(i);
+                        continue;
+                    }
+                }
+                else if (!b.IsDead && b.Age >= b.GrowthDuration && _rng.NextDouble() < Constants.BUSH_SEED_CHANCE * dt)
+                {
+                    Vector2 dir = new Vector2(_rng.NextFloat(-1f, 1f), _rng.NextFloat(-1f, 1f));
+                    if (dir.LengthSquared() > 0f) dir.Normalize();
+                    float speed = _rng.NextFloat(Constants.TREE_SEED_SPEED_MIN, Constants.TREE_SEED_SPEED_MAX);
+                    Vector2 vel = dir * speed;
+                    float vz0 = _rng.NextFloat(Constants.TREE_SEED_UPWARD_MIN, Constants.TREE_SEED_UPWARD_MAX);
+                    seeds.Add(new Seed(b.Pos, vel, vz0, _rng, SeedKind.Bush));
+                }
+
+                bushes[i] = b;
             }
         }
 
