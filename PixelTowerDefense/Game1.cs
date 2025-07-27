@@ -667,7 +667,18 @@ namespace PixelTowerDefense
                                        Constants.ARENA_RIGHT - 5);
                 float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
                                        Constants.ARENA_BOTTOM - 5);
-                _rabbits.Add(new Rabbit { Pos = new Vector2(x, y) });
+                _rabbits.Add(new Rabbit
+                {
+                    Pos = new Vector2(x, y),
+                    Vel = Vector2.Zero,
+                    z = 0f,
+                    vz = 0f,
+                    WanderTimer = 0f,
+                    GrowthDuration = Constants.RABBIT_GROW_TIME,
+                    Age = Constants.RABBIT_GROW_TIME,
+                    Hunger = 0f,
+                    FullTimer = 0f
+                });
             }
         }
 
@@ -1200,8 +1211,15 @@ namespace PixelTowerDefense
         static readonly Color Nose = Color.Brown;
         static readonly Color Shadow = new Color(0, 0, 0, 90);
 
-        // 6x6 glyph ('.' = empty)
-        // Designed facing RIGHT; we mirror when facing left.
+        // Baby 3x3 sprite
+        static readonly string[] Rabbit3 =
+        {
+            ".p.",
+            "W.W",
+            "sss",
+        };
+
+        // 6x6 glyph ('.' = empty). Designed facing RIGHT; mirrored when facing left.
         static readonly string[] Rabbit6 =
         {
             "..p...",
@@ -1214,19 +1232,21 @@ namespace PixelTowerDefense
 
 
         /// <summary>
-        /// Draw a 6x6 pixel rabbit at r.Pos, lifted by r.z. Mirrors based on Vel.X.
+        /// Draw a rabbit at r.Pos, lifted by r.z. Babies use a smaller 3x3 sprite.
         /// </summary>
         private void DrawRabbit(Rabbit r)
         {
-            // Base (top‑left) so the 6x6 sprite is centered on Pos
-            int baseX = (int)MathF.Round(r.Pos.X - 3);
-            int baseY = (int)MathF.Round(r.Pos.Y - 3 - r.z);
+            bool baby = r.Age < r.GrowthDuration;
+            int size = baby ? 3 : 6;
+            // Base (top‑left) so the sprite is centered on Pos
+            int baseX = (int)MathF.Round(r.Pos.X - size / 2f);
+            int baseY = (int)MathF.Round(r.Pos.Y - size / 2f - r.z);
 
             bool faceRight = r.Vel.X >= 0f;
 
             // Soft round shadow that grows slightly with z
-            int shW = 4 + (int)MathF.Min(2f, r.z * 0.25f);
-            int shH = 2 + (int)MathF.Min(2f, r.z * 0.15f);
+            int shW = (baby ? 2 : 4) + (int)MathF.Min(2f, r.z * 0.25f);
+            int shH = (baby ? 1 : 2) + (int)MathF.Min(2f, r.z * 0.15f);
             var shRect = new Rectangle(
                 (int)MathF.Round(r.Pos.X - shW * 0.5f),
                 (int)MathF.Round(r.Pos.Y + 1), // on ground
@@ -1234,13 +1254,14 @@ namespace PixelTowerDefense
             );
             _sb.Draw(_px, shRect, Shadow);
 
-            for (int gy = 0; gy < 6; gy++)
+            var sprite = baby ? Rabbit3 : Rabbit6;
+            for (int gy = 0; gy < size; gy++)
             {
-                string row = Rabbit6[gy];
-                for (int gx = 0; gx < 6; gx++)
+                string row = sprite[gy];
+                for (int gx = 0; gx < size; gx++)
                 {
                     // Mirror horizontally if needed
-                    int ix = faceRight ? gx : (5 - gx);
+                    int ix = faceRight ? gx : (size - 1 - gx);
                     char ch = row[ix];
                     if (ch == '.') continue;
 

@@ -786,9 +786,16 @@ namespace PixelTowerDefense.Systems
 
         public static void SimulateRabbits(List<Rabbit> rabbits, List<BerryBush> bushes, List<Seed> seeds, float dt)
         {
-            for (int i = 0; i < rabbits.Count; i++)
+            int count = rabbits.Count;
+            for (int i = 0; i < count; i++)
             {
                 var r = rabbits[i];
+
+                r.Age += dt;
+                r.Hunger = MathF.Min(Constants.RABBIT_HUNGER_MAX,
+                                    r.Hunger + Constants.RABBIT_HUNGER_RATE * dt);
+                if (r.FullTimer > 0f)
+                    r.FullTimer -= dt;
 
                 if (r.z > 0f || r.vz != 0f)
                 {
@@ -811,37 +818,78 @@ namespace PixelTowerDefense.Systems
                         r.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * Constants.RABBIT_SPEED;
                     }
 
-                    int bidx = FindNearestBush(r.Pos, bushes);
-                    if (bidx >= 0)
+                    if (r.Hunger >= Constants.RABBIT_HUNGER_THRESHOLD)
                     {
-                        var bush = bushes[bidx];
-                        Vector2 dir = bush.Pos - r.Pos;
-                        float dist = dir.Length();
-                        if (dist < 1f)
+                        int bidx = FindNearestBush(r.Pos, bushes);
+                        if (bidx >= 0)
                         {
-                            if (bush.Berries > 0)
+                            var bush = bushes[bidx];
+                            Vector2 dir = bush.Pos - r.Pos;
+                            float dist = dir.Length();
+                            if (dist < 1f)
                             {
-                                bush.Berries--;
-                                if (_rng.NextDouble() < Constants.RABBIT_SEED_CHANCE)
+                                if (bush.Berries > 0)
                                 {
-                                    Vector2 vel = new Vector2(_rng.NextFloat(-10f,10f), _rng.NextFloat(-10f,10f));
-                                    float vz0 = _rng.NextFloat(20f,40f);
-                                    seeds.Add(new Seed(r.Pos, vel, vz0, _rng, SeedKind.Bush));
+                                    bush.Berries--;
+                                    r.Hunger = 0f;
+                                    r.FullTimer = Constants.RABBIT_MATE_WINDOW;
+                                    if (_rng.NextDouble() < Constants.RABBIT_SEED_CHANCE)
+                                    {
+                                        Vector2 vel = new Vector2(_rng.NextFloat(-10f,10f), _rng.NextFloat(-10f,10f));
+                                        float vz0 = _rng.NextFloat(20f,40f);
+                                        seeds.Add(new Seed(r.Pos, vel, vz0, _rng, SeedKind.Bush));
+                                    }
                                 }
+                                r.WanderTimer = 0f;
                             }
-                            r.WanderTimer = 0f;
+                            else
+                            {
+                                if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                r.Vel = dir * Constants.RABBIT_SPEED;
+                                r.Pos += r.Vel * dt;
+                            }
+                            bushes[bidx] = bush;
                         }
                         else
                         {
-                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                            r.Vel = dir * Constants.RABBIT_SPEED;
                             r.Pos += r.Vel * dt;
                         }
-                        bushes[bidx] = bush;
                     }
                     else
                     {
                         r.Pos += r.Vel * dt;
+                    }
+                }
+
+                if (r.FullTimer > 0f && r.Age >= r.GrowthDuration)
+                {
+                    for (int j = 0; j < count; j++)
+                    {
+                        if (j == i) continue;
+                        var mate = rabbits[j];
+                        if (mate.FullTimer > 0f && mate.Age >= mate.GrowthDuration &&
+                            Vector2.Distance(mate.Pos, r.Pos) < 2f)
+                        {
+                            if (_rng.NextDouble() < Constants.RABBIT_BABY_CHANCE)
+                            {
+                                rabbits.Add(new Rabbit
+                                {
+                                    Pos = (r.Pos + mate.Pos) / 2f,
+                                    Vel = Vector2.Zero,
+                                    z = 0f,
+                                    vz = 0f,
+                                    WanderTimer = 0f,
+                                    GrowthDuration = Constants.RABBIT_GROW_TIME,
+                                    Age = 0f,
+                                    Hunger = 0f,
+                                    FullTimer = 0f
+                                });
+                            }
+                            r.FullTimer = 0f;
+                            mate.FullTimer = 0f;
+                            rabbits[j] = mate;
+                            break;
+                        }
                     }
                 }
 
