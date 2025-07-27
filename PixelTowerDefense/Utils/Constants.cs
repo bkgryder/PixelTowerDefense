@@ -119,6 +119,12 @@ namespace PixelTowerDefense.Utils
         public const float RABBIT_WANDER_MIN = 2f;
         public const float RABBIT_WANDER_MAX = 20f;
         public const float RABBIT_SEED_CHANCE = 0.01f; // chance when eating berry to drop a seed
+        public const float RABBIT_GROW_TIME = 20f;
+        public const float RABBIT_HUNGER_MAX = 5f;
+        public const float RABBIT_HUNGER_RATE = 1f;
+        public const float RABBIT_HUNGER_THRESHOLD = 2f;
+        public const float RABBIT_MATE_WINDOW = 5f;
+        public const float RABBIT_BABY_CHANCE = 0.3f;
 
         // Wolves
         public const float WOLF_SPEED = 14f;
