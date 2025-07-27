@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using PixelTowerDefense.Entities;
 using PixelTowerDefense.Systems;
 using PixelTowerDefense.Utils;
+using PixelTowerDefense.World;
 
 namespace PixelTowerDefense.Tests;
 
@@ -21,8 +22,9 @@ public class TreeCollisionTests
         var bushes = new List<BerryBush>();
         var buildings = new List<Building>();
         var logs = new List<Log>();
+        var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
-        PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, trees, logs, 0.1f);
+        PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, trees, logs, water, 0.1f);
 
         float dist = Vector2.Distance(meeples[0].Pos, trees[0].Pos);
         Assert.True(dist >= trees[0].CollisionRadius - 0.001f);
@@ -47,8 +49,9 @@ public class TreeCollisionTests
         var bushes = new List<BerryBush>();
         var buildings = new List<Building>();
         var logs = new List<Log>();
+        var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
-        PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, trees, logs, 0.1f);
+        PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, trees, logs, water, 0.1f);
 
         Assert.True(Vector2.Distance(new Vector2(5f, 5f), meeples[0].Pos) < 0.001f);
     }

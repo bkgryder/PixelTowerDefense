@@ -28,6 +28,7 @@ namespace PixelTowerDefense
         List<Building> _buildings = new();
         Random _rng = new();
         World.GameWorld _world = new();
+        WaterMap _water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
         float _camX, _camY, _zoom = 3.5f;
         KeyboardState _prevKb;
@@ -424,7 +425,7 @@ namespace PixelTowerDefense
                 _dragging = false;
             }
 
-            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, dt);
+            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             PhysicsSystem.UpdateLogs(_logs, dt);
             PhysicsSystem.UpdateSeeds(_seeds, _trees, dt);

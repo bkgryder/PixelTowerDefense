@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Entities;
 using PixelTowerDefense.Utils;
+using PixelTowerDefense.World;
 
 namespace PixelTowerDefense.Systems
 {
@@ -17,6 +18,7 @@ namespace PixelTowerDefense.Systems
             List<Building> buildings,
             List<Tree> trees,
             List<Log> logs,
+            WaterMap water,
             float dt
         )
         {
@@ -400,6 +402,39 @@ namespace PixelTowerDefense.Systems
                         break;
                 }
 
+                int wx = Math.Clamp((int)e.Pos.X, 0, water.Width - 1);
+                int wy = Math.Clamp((int)e.Pos.Y, 0, water.Height - 1);
+                byte depth = water.Depth[wx, wy];
+                if (depth > 0)
+                {
+                    Vector2 push = new Vector2(water.FlowX[wx, wy], water.FlowY[wx, wy])
+                                     * Constants.WATER_PUSH;
+                    e.Vel += push * dt;
+                    e.Vel *= (1f - Constants.WATER_DRAG * dt);
+                    e.InWaterTime += dt;
+
+                    if (e.IsBurning)
+                    {
+                        e.BurnTimer -= Constants.WATER_QUENCH_RATE * dt;
+                        if (_rng.NextDouble() < dt)
+                            EmitSteam(e.Pos - new Vector2(0, e.z), debris);
+                        if (e.BurnTimer <= 0f)
+                            e.IsBurning = false;
+                    }
+
+                    float flowMag = MathF.Sqrt(water.FlowX[wx, wy] * water.FlowX[wx, wy] +
+                                               water.FlowY[wx, wy] * water.FlowY[wx, wy]);
+                    if (flowMag >= 2f && _rng.NextDouble() < dt * 10f)
+                        EmitSparkle(e.Pos - new Vector2(0, e.z), debris);
+
+                    if (depth >= Constants.DROWN_DEPTH && e.InWaterTime >= Constants.DROWN_TIME)
+                        e.Health = 0f;
+                }
+                else
+                {
+                    e.InWaterTime = 0f;
+                }
+
                 e.Pos.X = MathHelper.Clamp(e.Pos.X,
                            Constants.ARENA_LEFT + 2,
                            Constants.ARENA_RIGHT - 2);
@@ -588,6 +623,26 @@ namespace PixelTowerDefense.Systems
                 );
                 debris.Spawn(new Pixel(pos, v, c, 0f, Constants.SMOKE_LIFETIME));
             }
+        }
+
+        private static void EmitSteam(Vector2 pos, List<Pixel> debris)
+        {
+            var c = Color.LightGray;
+            var v = new Vector2(
+                _rng.NextFloat(-0.5f, 0.5f),
+                -_rng.NextFloat(10f, 20f)
+            );
+            debris.Spawn(new Pixel(pos, v, c, 0f, 0.5f));
+        }
+
+        private static void EmitSparkle(Vector2 pos, List<Pixel> debris)
+        {
+            var c = Color.LightBlue;
+            var v = new Vector2(
+                _rng.NextFloat(-1f, 1f),
+                _rng.NextFloat(-1f, 1f)
+            );
+            debris.Spawn(new Pixel(pos, v, c, 0f, 0.3f));
         }
 
         public static void UpdatePixels(List<Pixel> debris, float dt)
