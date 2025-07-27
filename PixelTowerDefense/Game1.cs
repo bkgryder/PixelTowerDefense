@@ -28,6 +28,7 @@ namespace PixelTowerDefense
         List<Building> _buildings = new();
         Random _rng = new();
         World.GameWorld _world = new();
+        WaterMap _water;
 
         float _camX, _camY, _zoom = 3.5f;
         KeyboardState _prevKb;
@@ -95,6 +96,15 @@ namespace PixelTowerDefense
             _px = new Texture2D(GraphicsDevice, 1, 1);
             _px.SetData(new[] { Color.White });
             _font = Content.Load<SpriteFont>("PixelFont");
+
+            int arenaW = Constants.ARENA_RIGHT - Constants.ARENA_LEFT;
+            int arenaH = Constants.ARENA_BOTTOM - Constants.ARENA_TOP;
+            _water = WaterGenerator.Generate(
+                arenaW,
+                arenaH,
+                Constants.RIVER_COUNT,
+                Constants.LAKE_COUNT,
+                _rng);
 
             SpawnMeeple(0);
             SpawnBerryBushes(5);
@@ -424,7 +434,7 @@ namespace PixelTowerDefense
                 _dragging = false;
             }
 
-            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, dt);
+            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             PhysicsSystem.UpdateLogs(_logs, dt);
             PhysicsSystem.UpdateSeeds(_seeds, _trees, dt);
@@ -458,6 +468,7 @@ namespace PixelTowerDefense
             _sb.Begin(transformMatrix: cam, samplerState: SamplerState.PointClamp);
 
             DrawWorld();
+            DrawWater(_sb, _water, _px, _zoom, (float)gt.TotalGameTime.TotalSeconds);
 
             // --- arena border ---
             // Removed dark border bars
@@ -697,6 +708,27 @@ namespace PixelTowerDefense
                         Constants.TILE_SIZE,
                         Constants.TILE_SIZE);
                     _sb.Draw(_px, rect, col);
+                }
+            }
+        }
+
+        private static void DrawWater(SpriteBatch sb, WaterMap water, Texture2D px, float zoom, float time)
+        {
+            Color shallow = new Color(80, 150, 200);
+            Color deep = new Color(10, 40, 80);
+            float shimmerScale = 0.2f / MathF.Max(1f, zoom);
+
+            for (int y = 0; y < water.Height; y++)
+            {
+                for (int x = 0; x < water.Width; x++)
+                {
+                    byte d = water.Depth[x, y];
+                    if (d == 0) continue;
+                    float t = d / 255f;
+                    Color baseCol = Color.Lerp(shallow, deep, t);
+                    float wave = (MathF.Sin(time * 4f + (x + y) * 0.25f) + 1f) * 0.5f;
+                    Color col = Color.Lerp(baseCol, Color.White, wave * shimmerScale);
+                    sb.Draw(px, new Rectangle(Constants.ARENA_LEFT + x, Constants.ARENA_TOP + y, 1, 1), col);
                 }
             }
         }

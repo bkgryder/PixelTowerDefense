@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using PixelTowerDefense.Entities;
 using PixelTowerDefense.Systems;
 using PixelTowerDefense.Utils;
+using PixelTowerDefense.World;
 using Xunit;
 
 namespace PixelTowerDefense.Tests;
@@ -24,8 +25,9 @@ public class JobAffinityTests
         var buildings = new List<Building>();
         var bushes = new List<BerryBush>();
         var debris = new List<Pixel>();
+        var water = new WaterMap(1, 1);
 
-        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, 0.1f);
+        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 0.1f);
 
         Assert.Equal(Constants.TREE_HEALTH - 1, trees[0].Health);
         Assert.Equal(-1, workers[0].CarriedLogIdx);
@@ -46,8 +48,9 @@ public class JobAffinityTests
         var buildings = new List<Building>();
         var bushes = new List<BerryBush>();
         var debris = new List<Pixel>();
+        var water = new WaterMap(1, 1);
 
-        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, 0.1f);
+        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 0.1f);
 
         Assert.True(workers[0].CarriedLogIdx >= 0);
         Assert.Equal(Constants.TREE_HEALTH, trees[0].Health);
