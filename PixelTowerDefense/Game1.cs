@@ -28,6 +28,7 @@ namespace PixelTowerDefense
         List<Building> _buildings = new();
         Random _rng = new();
         World.GameWorld _world = new();
+        GroundMap _ground;
         WaterMap _water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
         Weather _weather = Weather.Clear;
         List<RainDrop> _rain = new(Constants.MAX_RAIN_DROPS);
@@ -105,6 +106,7 @@ namespace PixelTowerDefense
 
             int arenaW = Constants.ARENA_RIGHT - Constants.ARENA_LEFT;
             int arenaH = Constants.ARENA_BOTTOM - Constants.ARENA_TOP;
+            _ground = GroundGenerator.Generate(arenaW, arenaH);
             _water = WaterGenerator.Generate(
                 arenaW,
                 arenaH,
@@ -486,7 +488,12 @@ namespace PixelTowerDefense
                       * Matrix.CreateTranslation(-_camX * _zoom, -_camY * _zoom, 0);
             _sb.Begin(transformMatrix: cam, samplerState: SamplerState.PointClamp);
 
-            DrawWorld();
+            var visible = new Rectangle(
+                (int)MathF.Floor(_camX),
+                (int)MathF.Floor(_camY),
+                (int)MathF.Ceiling(GraphicsDevice.Viewport.Width / _zoom),
+                (int)MathF.Ceiling(GraphicsDevice.Viewport.Height / _zoom));
+            DrawGround(_sb, _ground, _px, _zoom, visible);
             DrawWater(_sb, _water, _px, _zoom, (float)gt.TotalGameTime.TotalSeconds);
 
             // --- arena border ---
@@ -716,25 +723,61 @@ namespace PixelTowerDefense
             _sb.DrawString(_font, text, new Vector2(35, 8), Color.White);
         }
 
-        private void DrawWorld()
+        private static void DrawGround(SpriteBatch sb, GroundMap map, Texture2D px, float zoom, Rectangle visible)
         {
-            var chunk = _world.Chunks[0, 0];
-            for (int y = 0; y < Chunk.Size; y++)
+            int cellSize = Constants.CELL_PIXELS;
+            int x0 = Math.Clamp(visible.Left / cellSize, 0, map.W - 1);
+            int y0 = Math.Clamp(visible.Top / cellSize, 0, map.H - 1);
+            int x1 = Math.Clamp((visible.Right + cellSize - 1) / cellSize, 0, map.W);
+            int y1 = Math.Clamp((visible.Bottom + cellSize - 1) / cellSize, 0, map.H);
+
+            float shade = 0f;
+            if (zoom >= 4f) shade = 0f;
+            else if (zoom >= 3f) shade = Constants.GROUND_SHADE_ALPHA_MID;
+            else if (zoom >= 2f) shade = Constants.GROUND_SHADE_ALPHA_NEAR;
+
+            for (int y = y0; y < y1; y++)
             {
-                for (int x = 0; x < Chunk.Size; x++)
+                for (int x = x0; x < x1; x++)
                 {
-                    var tile = chunk.Tiles[x, y];
-                    Color col = tile.Type switch
+                    var cell = map.Cells[x, y];
+                    var style = BiomeStyles.Get(cell.Biome);
+                    int pxX = Constants.ARENA_LEFT + x * cellSize;
+                    int pxY = Constants.ARENA_TOP + y * cellSize;
+                    sb.Draw(px, new Rectangle(pxX, pxY, cellSize, cellSize), style.Base);
+
+                    // shade pattern
+                    if (shade > 0f)
                     {
-                        TileType.Dirt => Color.SandyBrown,
-                        _ => Color.DarkSeaGreen
-                    };
-                    var rect = new Rectangle(
-                        Constants.ARENA_LEFT + x * Constants.TILE_SIZE,
-                        Constants.ARENA_TOP + y * Constants.TILE_SIZE,
-                        Constants.TILE_SIZE,
-                        Constants.TILE_SIZE);
-                    _sb.Draw(_px, rect, col);
+                        for (int iy = 0; iy < cellSize; iy++)
+                            for (int ix = 0; ix < cellSize; ix++)
+                                if (PatternAtlas.IsSet(style.PatternId, ix + cell.Variant, iy + cell.Variant))
+                                {
+                                    var r = new Rectangle(pxX + ix, pxY + iy, 1, 1);
+                                    var col = style.Shade * shade;
+                                    sb.Draw(px, r, col);
+                                }
+                    }
+
+                    // borders
+                    if (x + 1 < map.W && map.Cells[x + 1, y].Biome != cell.Biome)
+                        sb.Draw(px, new Rectangle(pxX + cellSize - 1, pxY, 1, cellSize),
+                            style.Base * Constants.GROUND_BORDER_ALPHA);
+                    if (y + 1 < map.H && map.Cells[x, y + 1].Biome != cell.Biome)
+                        sb.Draw(px, new Rectangle(pxX, pxY + cellSize - 1, cellSize, 1),
+                            style.Base * Constants.GROUND_BORDER_ALPHA);
+
+                    // sparse decal
+                    if (zoom >= 3f)
+                    {
+                        int hash = (x * 73856093) ^ (y * 19349663);
+                        if ((hash & 7) == 0)
+                        {
+                            int dx = hash % cellSize;
+                            int dy = (hash >> 3) % cellSize;
+                            sb.Draw(px, new Rectangle(pxX + dx, pxY + dy, 1, 1), style.Detail);
+                        }
+                    }
                 }
             }
         }
@@ -1445,6 +1488,15 @@ namespace PixelTowerDefense
                 }
                 _rain[i] = r;
             }
+        }
+
+        public GroundCell? GetCellAtWorld(int x, int y)
+        {
+            int cx = (x - Constants.ARENA_LEFT) / Constants.CELL_PIXELS;
+            int cy = (y - Constants.ARENA_TOP) / Constants.CELL_PIXELS;
+            if (cx < 0 || cy < 0 || cx >= _ground.W || cy >= _ground.H)
+                return null;
+            return _ground.Cells[cx, cy];
         }
 
 
