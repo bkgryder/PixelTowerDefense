@@ -9,6 +9,10 @@ namespace PixelTowerDefense.Utils
         public const int TILE_SIZE = 16;
         public const int CHUNK_TILES = 32;
         public const int CHUNK_PIXEL_SIZE = TILE_SIZE * CHUNK_TILES;
+        public const int CELL_PIXELS = 4;
+        public const float GROUND_SHADE_ALPHA_NEAR = 0.18f;
+        public const float GROUND_SHADE_ALPHA_MID = 0.10f;
+        public const float GROUND_BORDER_ALPHA = 0.15f;
 
         public const int ARENA_LEFT = 0;
         public const int ARENA_RIGHT = CHUNK_PIXEL_SIZE;
