@@ -16,5 +16,8 @@ namespace PixelTowerDefense.Entities
         public float FullTimer;
         public float Age;
         public float GrowthDuration;
+
+        // home reference (-1 = none)
+        public int HomeId;
     }
 }
