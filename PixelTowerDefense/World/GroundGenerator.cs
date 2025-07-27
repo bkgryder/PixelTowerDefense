@@ -56,8 +56,8 @@ namespace PixelTowerDefense.World
                     float nx = x / (float)w;
                     float ny = y / (float)h;
 
-                    float temp = FractalNoise(nx * 4f, ny * 4f, 1);
-                    float moist = FractalNoise(nx * 4f + 100f, ny * 4f + 100f, 2);
+                    float temp = FractalNoise(nx * 2f, ny * 2f, 1);
+                    float moist = FractalNoise(nx * 2f + 100f, ny * 2f + 100f, 2);
 
                     Biome biome;
                     if (temp < 0.3f)
