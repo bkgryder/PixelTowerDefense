@@ -155,5 +155,81 @@ namespace PixelTowerDefense.Systems
                 dragIdx = -1;
             }
         }
+
+        public static void HandleRabbitDrag(
+            GameTime gt,
+            MouseState ms, MouseState prevMs,
+            ref bool dragging,
+            ref int dragIdx,
+            ref Vector2 dragStartWorld,
+            ref float dragStartTime,
+            Vector2 mouseWorld,
+            List<Rabbit> rabbits
+        )
+        {
+            bool mPress = ms.LeftButton == ButtonState.Pressed &&
+                          prevMs.LeftButton == ButtonState.Released;
+            bool mRel = ms.LeftButton == ButtonState.Released &&
+                          prevMs.LeftButton == ButtonState.Pressed;
+
+            if (!dragging && mPress)
+            {
+                float minD = Constants.PICKUP_RADIUS;
+                for (int i = rabbits.Count - 1; i >= 0; i--)
+                {
+                    var r = rabbits[i];
+                    float d = Vector2.Distance(r.Pos - new Vector2(0, r.z), mouseWorld);
+                    if (d < minD)
+                    {
+                        minD = d;
+                        dragging = true;
+                        dragIdx = i;
+                        dragStartWorld = mouseWorld;
+                        dragStartTime = (float)gt.TotalGameTime.TotalSeconds;
+                        r.z = Constants.GRAB_Z;
+                        r.vz = 0f;
+                        rabbits[i] = r;
+                    }
+                }
+            }
+
+            if (dragging && dragIdx >= 0)
+            {
+                if (dragIdx >= rabbits.Count)
+                {
+                    dragging = false;
+                    dragIdx = -1;
+                    return;
+                }
+
+                var r = rabbits[dragIdx];
+                r.Pos = mouseWorld;
+                r.z = Constants.GRAB_Z;
+                r.vz = 0f;
+                rabbits[dragIdx] = r;
+            }
+
+            if (dragging && mRel && dragIdx >= 0)
+            {
+                if (dragIdx >= rabbits.Count)
+                {
+                    dragging = false;
+                    dragIdx = -1;
+                    return;
+                }
+
+                var r = rabbits[dragIdx];
+                float t2 = (float)gt.TotalGameTime.TotalSeconds;
+                float dt = MathF.Max(0.01f, t2 - dragStartTime);
+                var delta = mouseWorld - dragStartWorld;
+                var avgV = delta / dt;
+                r.Vel = avgV * Constants.THROW_SENSITIVITY;
+                r.vz = avgV.Length() * Constants.THROW_VZ_SCALE + Constants.INITIAL_Z;
+                rabbits[dragIdx] = r;
+
+                dragging = false;
+                dragIdx = -1;
+            }
+        }
     }
 }
