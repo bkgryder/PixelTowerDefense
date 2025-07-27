@@ -166,6 +166,22 @@ namespace PixelTowerDefense.Utils
         public const float LEAF_DISINTEGRATE_TIME = 5f;
         public const float LEAF_FALL_CHANCE = 0.5f; // chance per second
 
+        // Water
+        /// <summary>Push strength of flowing water</summary>
+        public const float WATER_PUSH = 12f;
+        /// <summary>Movement drag inside water</summary>
+        public const float WATER_DRAG = 4f;
+        /// <summary>Depth at which characters drown</summary>
+        public const int   DROWN_DEPTH = 140;
+        /// <summary>Time underwater before drowning</summary>
+        public const float DROWN_TIME = 3.0f;
+        /// <summary>Thirst quenched per second in water</summary>
+        public const float WATER_QUENCH_RATE = 2.0f;
+        /// <summary>Number of rivers generated</summary>
+        public const int   RIVER_COUNT = 3;
+        /// <summary>Number of lakes generated</summary>
+        public const int   LAKE_COUNT = 4;
+
         // Lighting
         public const float DAY_LENGTH = 60f; // seconds for a full day cycle
         public const float NIGHT_BRIGHTNESS = 0.5f; // 0 = pitch black, 1 = fully lit
