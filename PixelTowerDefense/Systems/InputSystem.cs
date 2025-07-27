@@ -231,5 +231,81 @@ namespace PixelTowerDefense.Systems
                 dragIdx = -1;
             }
         }
+
+        public static void HandleWolfDrag(
+            GameTime gt,
+            MouseState ms, MouseState prevMs,
+            ref bool dragging,
+            ref int dragIdx,
+            ref Vector2 dragStartWorld,
+            ref float dragStartTime,
+            Vector2 mouseWorld,
+            List<Wolf> wolves
+        )
+        {
+            bool mPress = ms.LeftButton == ButtonState.Pressed &&
+                          prevMs.LeftButton == ButtonState.Released;
+            bool mRel = ms.LeftButton == ButtonState.Released &&
+                          prevMs.LeftButton == ButtonState.Pressed;
+
+            if (!dragging && mPress)
+            {
+                float minD = Constants.PICKUP_RADIUS;
+                for (int i = wolves.Count - 1; i >= 0; i--)
+                {
+                    var w = wolves[i];
+                    float d = Vector2.Distance(w.Pos - new Vector2(0, w.z), mouseWorld);
+                    if (d < minD)
+                    {
+                        minD = d;
+                        dragging = true;
+                        dragIdx = i;
+                        dragStartWorld = mouseWorld;
+                        dragStartTime = (float)gt.TotalGameTime.TotalSeconds;
+                        w.z = Constants.GRAB_Z;
+                        w.vz = 0f;
+                        wolves[i] = w;
+                    }
+                }
+            }
+
+            if (dragging && dragIdx >= 0)
+            {
+                if (dragIdx >= wolves.Count)
+                {
+                    dragging = false;
+                    dragIdx = -1;
+                    return;
+                }
+
+                var w = wolves[dragIdx];
+                w.Pos = mouseWorld;
+                w.z = Constants.GRAB_Z;
+                w.vz = 0f;
+                wolves[dragIdx] = w;
+            }
+
+            if (dragging && mRel && dragIdx >= 0)
+            {
+                if (dragIdx >= wolves.Count)
+                {
+                    dragging = false;
+                    dragIdx = -1;
+                    return;
+                }
+
+                var w = wolves[dragIdx];
+                float t2 = (float)gt.TotalGameTime.TotalSeconds;
+                float dt = MathF.Max(0.01f, t2 - dragStartTime);
+                var delta = mouseWorld - dragStartWorld;
+                var avgV = delta / dt;
+                w.Vel = avgV * Constants.THROW_SENSITIVITY;
+                w.vz = avgV.Length() * Constants.THROW_VZ_SCALE + Constants.INITIAL_Z;
+                wolves[dragIdx] = w;
+
+                dragging = false;
+                dragIdx = -1;
+            }
+        }
     }
 }

@@ -20,6 +20,7 @@ namespace PixelTowerDefense
 
         List<Meeple> _meeples = new();
         List<Rabbit> _rabbits = new();
+        List<Wolf> _wolves = new();
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
         List<Seed> _seeds = new();
         List<BerryBush> _bushes = new();
@@ -57,6 +58,11 @@ namespace PixelTowerDefense
         int _rabbitDragIdx;
         Vector2 _rabbitDragStartWorld;
         float _rabbitDragStartTime;
+
+        bool _wolfDragging;
+        int _wolfDragIdx;
+        Vector2 _wolfDragStartWorld;
+        float _wolfDragStartTime;
 
         // hovered meeple index
         int _hoverIdx;
@@ -121,6 +127,7 @@ namespace PixelTowerDefense
 
             SpawnMeeple(0);
             SpawnRabbits(3);
+            SpawnWolves(2);
             SpawnBerryBushes(5);
             SpawnLogs(4);
             SpawnStones(4);
@@ -388,15 +395,25 @@ namespace PixelTowerDefense
                         mworld,
                         _rabbits
                     );
+                    InputSystem.HandleWolfDrag(
+                        gt, ms, _prevMs,
+                        ref _wolfDragging, ref _wolfDragIdx,
+                        ref _wolfDragStartWorld, ref _wolfDragStartTime,
+                        mworld,
+                        _wolves
+                    );
                     if (_dragging)
                         _mana = MathF.Max(0f, _mana - Constants.TELEKINESIS_DRAIN * dt);
                     if (_rabbitDragging && !_dragging)
+                        _mana = MathF.Max(0f, _mana - Constants.TELEKINESIS_DRAIN * dt);
+                    if (_wolfDragging && !_dragging && !_rabbitDragging)
                         _mana = MathF.Max(0f, _mana - Constants.TELEKINESIS_DRAIN * dt);
                 }
                 else
                 {
                     _dragging = false;
                     _rabbitDragging = false;
+                    _wolfDragging = false;
                 }
             }
             else if (_currentAbility == Ability.Explosion)
@@ -464,6 +481,7 @@ namespace PixelTowerDefense
             
             PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
             PhysicsSystem.SimulateRabbits(_rabbits, _bushes, _seeds, dt);
+            PhysicsSystem.SimulateWolves(_wolves, _rabbits, _meeples, dt);
             if (_weather == Weather.Rainy)
                 UpdateRain(dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
@@ -553,6 +571,10 @@ namespace PixelTowerDefense
             // --- rabbits ---
             foreach (var r in _rabbits)
                 DrawRabbit(r);
+
+            // --- wolves ---
+            foreach (var w in _wolves)
+                DrawWolf(w);
 
             // --- tree shadows ---
             foreach (var t in _trees)
@@ -668,6 +690,18 @@ namespace PixelTowerDefense
                 float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
                                        Constants.ARENA_BOTTOM - 5);
                 _rabbits.Add(new Rabbit { Pos = new Vector2(x, y) });
+            }
+        }
+
+        private void SpawnWolves(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
+                                       Constants.ARENA_RIGHT - 5);
+                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
+                                       Constants.ARENA_BOTTOM - 5);
+                _wolves.Add(new Wolf { Pos = new Vector2(x, y) });
             }
         }
 
@@ -936,6 +970,14 @@ namespace PixelTowerDefense
                 int by = (int)MathF.Round(r.Pos.Y - r.z);
                 if (bx == p.X && by == p.Y)
                     return "Rabbit";
+            }
+
+            foreach (var w in _wolves)
+            {
+                int bx = (int)MathF.Round(w.Pos.X);
+                int by = (int)MathF.Round(w.Pos.Y - w.z);
+                if (bx == p.X && by == p.Y)
+                    return "Wolf";
             }
 
             foreach (var s in _stones)
@@ -1212,6 +1254,21 @@ namespace PixelTowerDefense
             "ssssss", // s = shadow hint directly under body (optional)
         };
 
+        static readonly Color WolfFur = new Color(160, 160, 160);
+        static readonly Color WolfFurShade = new Color(130, 130, 130);
+        static readonly Color WolfEar = new Color(200, 200, 200);
+        static readonly Color WolfEye = new Color(40, 40, 40);
+        static readonly Color WolfNose = Color.Black;
+        static readonly string[] Wolf6 =
+        {
+            "..e...",
+            "..eWW.",
+            ".WWoW.",
+            "WWWWb.",
+            "WWWW..",
+            "ssssss",
+        };
+
 
         /// <summary>
         /// Draw a 6x6 pixel rabbit at r.Pos, lifted by r.z. Mirrors based on Vel.X.
@@ -1257,6 +1314,48 @@ namespace PixelTowerDefense
                     // Slight fur dither: alternate a few pixels to break flatness
                     if (ch == 'W' && ((gx + gy) & 1) == 1)
                         c = FurShade;
+
+                    _sb.Draw(_px, new Rectangle(baseX + gx, baseY + gy, 1, 1), c);
+                }
+            }
+        }
+
+        private void DrawWolf(Wolf w)
+        {
+            int baseX = (int)MathF.Round(w.Pos.X - 3);
+            int baseY = (int)MathF.Round(w.Pos.Y - 3 - w.z);
+
+            bool faceRight = w.Vel.X >= 0f;
+
+            int shW = 4 + (int)MathF.Min(2f, w.z * 0.25f);
+            int shH = 2 + (int)MathF.Min(2f, w.z * 0.15f);
+            var shRect = new Rectangle(
+                (int)MathF.Round(w.Pos.X - shW * 0.5f),
+                (int)MathF.Round(w.Pos.Y + 1),
+                shW, shH);
+            _sb.Draw(_px, shRect, Shadow);
+
+            for (int gy = 0; gy < 6; gy++)
+            {
+                string row = Wolf6[gy];
+                for (int gx = 0; gx < 6; gx++)
+                {
+                    int ix = faceRight ? gx : (5 - gx);
+                    char ch = row[ix];
+                    if (ch == '.') continue;
+
+                    Color c = ch switch
+                    {
+                        'W' => WolfFur,
+                        'e' => WolfEar,
+                        'o' => WolfEye,
+                        'b' => WolfNose,
+                        's' => Shadow,
+                        _ => WolfFurShade
+                    };
+
+                    if (ch == 'W' && ((gx + gy) & 1) == 1)
+                        c = WolfFurShade;
 
                     _sb.Draw(_px, new Rectangle(baseX + gx, baseY + gy, 1, 1), c);
                 }
