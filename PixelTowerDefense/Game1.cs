@@ -338,6 +338,28 @@ namespace PixelTowerDefense
                         }
                     }
 
+                    if (!affected)
+                    {
+                        for (int i = _bushes.Count - 1; i >= 0 && !affected; i--)
+                        {
+                            var b = _bushes[i];
+                            int bx = (int)MathF.Round(b.Pos.X);
+                            int by = (int)MathF.Round(b.Pos.Y);
+                            foreach (var p in b.Shape)
+                            {
+                                var pos = new Vector2(bx + p.X, by + p.Y);
+                                if (Vector2.Distance(pos, mworld) < minD)
+                                {
+                                    b.IsBurning = true;
+                                    b.BurnTimer = Constants.BUSH_BURN_DURATION;
+                                    _bushes[i] = b;
+                                    affected = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     _mana = MathF.Max(0f, _mana - Constants.FIRE_COST);
                 }
             }
@@ -416,34 +438,6 @@ namespace PixelTowerDefense
                         _cloudPixels[i] = cp;
                     }
 
-                    var ground = _cloudCenter - new Vector2(0f, Constants.PRECIPITATE_CLOUD_OFFSET_Y);
-                    for (int b = 0; b < _bushes.Count; b++)
-                    {
-                        var bush = _bushes[b];
-                        if (bush.Berries >= Constants.BUSH_BERRIES)
-                        {
-                            bush.RegrowTimer = 0f;
-                            _bushes[b] = bush;
-                            continue;
-                        }
-
-                        var diff = bush.Pos - ground;
-                        float ellipse = (diff.X / 2f) * (diff.X / 2f) + diff.Y * diff.Y;
-                        if (ellipse <= 1f)
-                        {
-                            bush.RegrowTimer += dt;
-                            if (bush.RegrowTimer >= Constants.BUSH_REGROW_INTERVAL)
-                            {
-                                bush.RegrowTimer = 0f;
-                                bush.Berries++;
-                            }
-                        }
-                        else
-                        {
-                            bush.RegrowTimer = 0f;
-                        }
-                        _bushes[b] = bush;
-                    }
                 }
             }
             else
@@ -456,7 +450,8 @@ namespace PixelTowerDefense
                 UpdateRain(dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             PhysicsSystem.UpdateLogs(_logs, dt);
-            PhysicsSystem.UpdateSeeds(_seeds, _trees, dt);
+            PhysicsSystem.UpdateSeeds(_seeds, _trees, _bushes, dt);
+            PhysicsSystem.UpdateBushes(_bushes, _seeds, _pixels, dt, _weather == Weather.Rainy);
             PhysicsSystem.UpdateTrees(_trees, _seeds, _pixels, dt);
             CombatSystem.ResolveCombat(_meeples, _pixels, dt);
 
@@ -567,6 +562,11 @@ namespace PixelTowerDefense
             foreach (var t in _trees)
                 if (t.IsBurning)
                     DrawTreeFlame(t);
+
+            // --- bush flames ---
+            foreach (var b in _bushes)
+                if (b.IsBurning)
+                    DrawBushFlame(b);
 
             // --- airborne soldiers/entities ---
             foreach (var e in _meeples.Where(m => m.z > 0f).OrderBy(m => m.ShadowY))
@@ -1068,6 +1068,35 @@ namespace PixelTowerDefense
                 var off = b.BerryPixels[i];
                 _sb.Draw(_px, new Rectangle(baseX + off.X, baseY + off.Y, 1, 1), Color.Red);
             }
+        }
+
+        private void DrawBushFlame(BerryBush b)
+        {
+            int baseX = (int)MathF.Round(b.Pos.X);
+            int baseY = (int)MathF.Round(b.Pos.Y);
+
+            int minX = int.MaxValue, maxX = int.MinValue;
+            int minY = 0, maxY = 0;
+            foreach (var p in b.Shape)
+            {
+                if (minX == int.MaxValue)
+                {
+                    minX = maxX = p.X;
+                    minY = maxY = p.Y;
+                }
+                else
+                {
+                    if (p.X < minX) minX = p.X;
+                    if (p.X > maxX) maxX = p.X;
+                    if (p.Y < minY) minY = p.Y;
+                    if (p.Y > maxY) maxY = p.Y;
+                }
+            }
+
+            var rect = new Rectangle(baseX + minX - 1, baseY + minY - 1, (maxX - minX + 3), (maxY - minY + 3));
+            Color[] firePal = { Color.OrangeRed, Color.Orange, Color.Yellow, new Color(255, 100, 0) };
+            var col = firePal[_rng.Next(firePal.Length)];
+            _sb.Draw(_px, rect, col);
         }
 
         private void DrawBuilding(Building b)
