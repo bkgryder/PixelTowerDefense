@@ -108,8 +108,7 @@ namespace PixelTowerDefense
             int arenaH = Constants.ARENA_BOTTOM - Constants.ARENA_TOP;
             _ground = GroundGenerator.Generate(arenaW, arenaH);
             _water = WaterGenerator.Generate(
-                arenaW,
-                arenaH,
+                _ground,
                 Constants.RIVER_COUNT,
                 Constants.LAKE_COUNT,
                 _rng);
@@ -786,19 +785,26 @@ namespace PixelTowerDefense
         {
             Color shallow = new Color(80, 150, 200);
             Color deep = new Color(10, 40, 80);
-            float shimmerScale = 0.2f / MathF.Max(1f, zoom);
+            int pxSize = 2;
 
-            for (int y = 0; y < water.Height; y++)
+            for (int y = 0; y < water.Height; y += pxSize)
             {
-                for (int x = 0; x < water.Width; x++)
+                for (int x = 0; x < water.Width; x += pxSize)
                 {
                     byte d = water.Depth[x, y];
                     if (d == 0) continue;
                     float t = d / 255f;
                     Color baseCol = Color.Lerp(shallow, deep, t);
-                    float wave = (MathF.Sin(time * 4f + (x + y) * 0.25f) + 1f) * 0.5f;
-                    Color col = Color.Lerp(baseCol, Color.White, wave * shimmerScale);
-                    sb.Draw(px, new Rectangle(Constants.ARENA_LEFT + x, Constants.ARENA_TOP + y, 1, 1), col);
+
+                    sbyte fx = water.FlowX[x, y];
+                    sbyte fy = water.FlowY[x, y];
+                    float phase = time * 2f + (x * fx + y * fy) * 0.1f;
+                    float wave = (MathF.Sin(phase) + 1f) * 0.5f;
+                    Color col = Color.Lerp(baseCol, shallow, wave * 0.3f);
+
+                    sb.Draw(px,
+                        new Rectangle(Constants.ARENA_LEFT + x, Constants.ARENA_TOP + y, pxSize, pxSize),
+                        col);
                 }
             }
         }

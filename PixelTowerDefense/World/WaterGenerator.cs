@@ -1,12 +1,17 @@
 using System;
 using System.Collections.Generic;
+using PixelTowerDefense.Utils;
 
 namespace PixelTowerDefense.World
 {
     public static class WaterGenerator
     {
-        public static WaterMap Generate(int width, int height, int riverCount, int lakeCount, Random rng)
+        public static WaterMap Generate(GroundMap ground, int riverCount, int lakeCount, Random rng)
         {
+            int cellSize = Utils.Constants.CELL_PIXELS;
+            int width = ground.W * cellSize;
+            int height = ground.H * cellSize;
+
             var map = new WaterMap(width, height);
             if (width <= 0 || height <= 0)
                 return map;
@@ -22,6 +27,14 @@ namespace PixelTowerDefense.World
                     map.FlowX[x, y] = fx;
                     map.FlowY[x, y] = fy;
                 }
+            }
+
+            bool WetBiome(int px, int py)
+            {
+                int gx = Math.Clamp(px / cellSize, 0, ground.W - 1);
+                int gy = Math.Clamp(py / cellSize, 0, ground.H - 1);
+                var cell = ground.Cells[gx, gy];
+                return cell.Biome == Biome.Marsh || cell.Moisture > 180;
             }
 
             // ----- Rivers -----
@@ -90,6 +103,13 @@ namespace PixelTowerDefense.World
                     int w = 1 + (int)((step / (float)steps) * maxWidth);
                     float centerDepth = 1f;
 
+                    // adjust depth by biome
+                    var gCell = ground.Cells[x / cellSize, y / cellSize];
+                    if (gCell.Biome == Biome.Marsh)
+                        centerDepth = 1.2f;
+                    else if (gCell.Biome == Biome.Sand)
+                        centerDepth = 0.7f;
+
                     int dx = x - prevX;
                     int dy = y - prevY;
                     prevX = x;
@@ -108,6 +128,8 @@ namespace PixelTowerDefense.World
                             if (dist > w)
                                 continue;
                             float t = 1f - dist / (w + 1f);
+                            if (!WetBiome(cx, cy))
+                                continue;
                             byte depth = (byte)Math.Clamp((int)(255 * t * t * centerDepth), 0, 255);
                             SetCell(cx, cy, depth, fx, fy);
                         }
@@ -123,6 +145,12 @@ namespace PixelTowerDefense.World
             {
                 int cx = rng.Next(width);
                 int cy = rng.Next(height);
+                int tries = 10;
+                while (!WetBiome(cx, cy) && tries-- > 0)
+                {
+                    cx = rng.Next(width);
+                    cy = rng.Next(height);
+                }
                 int rx = rng.Next(6, 16);
                 int ry = rng.Next(6, 16);
 
@@ -133,7 +161,7 @@ namespace PixelTowerDefense.World
                         float nx = (x0 - cx) / (float)rx;
                         float ny = (y0 - cy) / (float)ry;
                         float distSq = nx * nx + ny * ny;
-                        if (distSq <= 1f)
+                        if (distSq <= 1f && WetBiome(x0, y0))
                         {
                             float t = 1f - MathF.Sqrt(distSq);
                             byte depth = (byte)Math.Clamp((int)(255 * t * t), 0, 255);
