@@ -178,9 +178,9 @@ namespace PixelTowerDefense.Utils
         /// <summary>Thirst quenched per second in water</summary>
         public const float WATER_QUENCH_RATE = 2.0f;
         /// <summary>Number of rivers generated</summary>
-        public const int   RIVER_COUNT = 3;
+        public const int   RIVER_COUNT = 1;
         /// <summary>Number of lakes generated</summary>
-        public const int   LAKE_COUNT = 4;
+        public const int   LAKE_COUNT = 1;
 
         // Lighting
         public const float DAY_LENGTH = 60f; // seconds for a full day cycle
@@ -189,6 +189,12 @@ namespace PixelTowerDefense.Utils
         public const float FIRE_LIGHT_INTENSITY = 0.1f;
         public const float EXPLOSION_LIGHT_RADIUS = 5f;
         public const float EXPLOSION_LIGHT_INTENSITY = .25f;
+
+        // Weather
+        public const int MAX_RAIN_DROPS = 300;
+        public const float RAIN_SPEED = 140f;
+        public const float RAIN_SPAWN_RATE = 50f;
+        public const float RAIN_AMBIENT_MULT = 0.7f;
 
     }
 }

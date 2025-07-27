@@ -29,6 +29,8 @@ namespace PixelTowerDefense
         Random _rng = new();
         World.GameWorld _world = new();
         WaterMap _water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
+        Weather _weather = Weather.Clear;
+        List<RainDrop> _rain = new(Constants.MAX_RAIN_DROPS);
 
         float _camX, _camY, _zoom = 3.5f;
         KeyboardState _prevKb;
@@ -65,6 +67,10 @@ namespace PixelTowerDefense
 
         bool _debugOverlay;
 
+        float _fpsTimer;
+        int _fpsFrames;
+        int _fps;
+
         public Game1()
         {
             _gfx = new GraphicsDeviceManager(this);
@@ -96,6 +102,15 @@ namespace PixelTowerDefense
             _px = new Texture2D(GraphicsDevice, 1, 1);
             _px.SetData(new[] { Color.White });
             _font = Content.Load<SpriteFont>("PixelFont");
+
+            int arenaW = Constants.ARENA_RIGHT - Constants.ARENA_LEFT;
+            int arenaH = Constants.ARENA_BOTTOM - Constants.ARENA_TOP;
+            _water = WaterGenerator.Generate(
+                arenaW,
+                arenaH,
+                Constants.RIVER_COUNT,
+                Constants.LAKE_COUNT,
+                _rng);
 
             SpawnMeeple(0);
             SpawnBerryBushes(5);
@@ -143,6 +158,13 @@ namespace PixelTowerDefense
         protected override void Update(GameTime gt)
         {
             float dt = (float)gt.ElapsedGameTime.TotalSeconds;
+            _fpsTimer += dt;
+            if (_fpsTimer >= 1f)
+            {
+                _fps = _fpsFrames;
+                _fpsFrames = 0;
+                _fpsTimer -= 1f;
+            }
             var kb = Keyboard.GetState();
             var ms = Mouse.GetState();
             _mana = MathF.Min(Constants.MANA_MAX, _mana + Constants.MANA_REGEN * dt);
@@ -186,6 +208,9 @@ namespace PixelTowerDefense
 
             if (Edge(kb, Keys.F12))
                 _debugOverlay = !_debugOverlay;
+
+            if (Edge(kb, Keys.F6))
+                _weather = _weather == Weather.Clear ? Weather.Rainy : Weather.Clear;
 
 
 
@@ -424,8 +449,10 @@ namespace PixelTowerDefense
             {
                 _dragging = false;
             }
-
+            
             PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
+            if (_weather == Weather.Rainy)
+                UpdateRain(dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
             PhysicsSystem.UpdateLogs(_logs, dt);
             PhysicsSystem.UpdateSeeds(_seeds, _trees, dt);
@@ -453,12 +480,14 @@ namespace PixelTowerDefense
 
         protected override void Draw(GameTime gt)
         {
+            _fpsFrames++;
             GraphicsDevice.Clear(Color.DarkSeaGreen);
             var cam = Matrix.CreateScale(_zoom, _zoom, 1f)
                       * Matrix.CreateTranslation(-_camX * _zoom, -_camY * _zoom, 0);
             _sb.Begin(transformMatrix: cam, samplerState: SamplerState.PointClamp);
 
             DrawWorld();
+            DrawWater(_sb, _water, _px, _zoom, (float)gt.TotalGameTime.TotalSeconds);
 
             // --- arena border ---
             // Removed dark border bars
@@ -471,6 +500,12 @@ namespace PixelTowerDefense
             {
                 var rect = new Rectangle((int)MathF.Round(s.Pos.X), (int)MathF.Round(s.Pos.Y - s.z), 1, 1);
                 _sb.Draw(_px, rect, Color.SandyBrown);
+            }
+
+            foreach (var r in _rain)
+            {
+                var rect = new Rectangle((int)MathF.Round(r.Pos.X), (int)MathF.Round(r.Pos.Y - r.z), 1, 1);
+                _sb.Draw(_px, rect, Color.CornflowerBlue);
             }
 
             if (_rainAlpha > 0f)
@@ -538,6 +573,8 @@ namespace PixelTowerDefense
 
             float phase = MathF.Sin(_timeOfDay * MathHelper.TwoPi) * 0.5f + 0.5f;
             float ambient = MathHelper.Lerp(Constants.NIGHT_BRIGHTNESS, 1f, phase);
+            if (_weather == Weather.Rainy)
+                ambient *= Constants.RAIN_AMBIENT_MULT;
             byte dark = (byte)Math.Clamp(255f * (1f - ambient), 0f, 255f);
             _sb.Begin();
             _sb.Draw(_px, new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height), new Color((byte)0, (byte)0, (byte)0, dark));
@@ -702,6 +739,27 @@ namespace PixelTowerDefense
             }
         }
 
+        private static void DrawWater(SpriteBatch sb, WaterMap water, Texture2D px, float zoom, float time)
+        {
+            Color shallow = new Color(80, 150, 200);
+            Color deep = new Color(10, 40, 80);
+            float shimmerScale = 0.2f / MathF.Max(1f, zoom);
+
+            for (int y = 0; y < water.Height; y++)
+            {
+                for (int x = 0; x < water.Width; x++)
+                {
+                    byte d = water.Depth[x, y];
+                    if (d == 0) continue;
+                    float t = d / 255f;
+                    Color baseCol = Color.Lerp(shallow, deep, t);
+                    float wave = (MathF.Sin(time * 4f + (x + y) * 0.25f) + 1f) * 0.5f;
+                    Color col = Color.Lerp(baseCol, Color.White, wave * shimmerScale);
+                    sb.Draw(px, new Rectangle(Constants.ARENA_LEFT + x, Constants.ARENA_TOP + y, 1, 1), col);
+                }
+            }
+        }
+
         private static string JobLabel(JobType job)
         {
             return job switch
@@ -855,12 +913,19 @@ namespace PixelTowerDefense
 
             string obj = ObjectLabelAt(p);
             int chunks = _world.Chunks.GetLength(0) * _world.Chunks.GetLength(1);
-            string text = $"Mouse {p.X},{p.Y} | {obj} | Chunks {chunks}";
-            var size = _font.MeasureString(text);
-            var rect = new Rectangle(5, GraphicsDevice.Viewport.Height - (int)size.Y - 5,
-                                    (int)size.X + 4, (int)size.Y + 4);
+            string line1 = $"Mouse {p.X},{p.Y} | {obj} | Chunks {chunks}";
+            string line2 = $"FPS {_fps} | Weather {_weather} | Trees {_trees.Count} | Entities {_meeples.Count}";
+            var size1 = _font.MeasureString(line1);
+            var size2 = _font.MeasureString(line2);
+            float width = MathF.Max(size1.X, size2.X);
+            var rect = new Rectangle(
+                5,
+                GraphicsDevice.Viewport.Height - (int)(size1.Y + size2.Y + 6) - 5,
+                (int)width + 4,
+                (int)(size1.Y + size2.Y + 6));
             _sb.Draw(_px, rect, new Color(0,0,0,180));
-            _sb.DrawString(_font, text, new Vector2(rect.X + 2, rect.Y + 2), Color.Yellow);
+            _sb.DrawString(_font, line1, new Vector2(rect.X + 2, rect.Y + 2), Color.Yellow);
+            _sb.DrawString(_font, line2, new Vector2(rect.X + 2, rect.Y + 4 + size1.Y), Color.Yellow);
         }
 
         private void DrawChunkBorders()
@@ -1353,6 +1418,33 @@ namespace PixelTowerDefense
             return t < 0.5f
                 ? Color.Lerp(pale, Constants.DECOMP_PURPLE, t * 2f)
                 : Color.Lerp(Constants.DECOMP_PURPLE, Constants.BONE_COLOR, (t - 0.5f) * 2f);
+        }
+
+        private void UpdateRain(float dt)
+        {
+            float viewW = GraphicsDevice.Viewport.Width / _zoom;
+            float viewH = GraphicsDevice.Viewport.Height / _zoom;
+
+            int count = (int)(Constants.RAIN_SPAWN_RATE * dt);
+            for (int i = 0; i < count; i++)
+            {
+                float x = _camX + _rng.NextFloat(0f, viewW);
+                float y = _camY - 5f;
+                float z0 = _rng.NextFloat(10f, 30f);
+                _rain.Spawn(new RainDrop(new Vector2(x, y), z0, Constants.RAIN_SPEED));
+            }
+
+            for (int i = _rain.Count - 1; i >= 0; i--)
+            {
+                var r = _rain[i];
+                r.z -= r.vz * dt;
+                if (r.z <= 0f)
+                {
+                    _rain.RemoveAt(i);
+                    continue;
+                }
+                _rain[i] = r;
+            }
         }
 
 

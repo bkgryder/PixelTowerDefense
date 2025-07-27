@@ -64,7 +64,7 @@ namespace PixelTowerDefense.World
                 }
 
                 int steps = horizontal ? Math.Abs(target - x) : Math.Abs(target - y);
-                int maxWidth = rng.Next(2, 5);
+                int maxWidth = rng.Next(5, 10);
                 int prevX = x;
                 int prevY = y;
 
@@ -123,8 +123,8 @@ namespace PixelTowerDefense.World
             {
                 int cx = rng.Next(width);
                 int cy = rng.Next(height);
-                int rx = rng.Next(3, 8);
-                int ry = rng.Next(3, 8);
+                int rx = rng.Next(6, 16);
+                int ry = rng.Next(6, 16);
 
                 for (int y0 = cy - ry; y0 <= cy + ry; y0++)
                 {
