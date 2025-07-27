@@ -26,21 +26,6 @@ namespace PixelTowerDefense.Systems
             {
                 var e = meeples[i];
 
-                int wx = (int)MathF.Round(e.Pos.X);
-                int wy = (int)MathF.Round(e.Pos.Y);
-                if (wx >= 0 && wx < water.Width && wy >= 0 && wy < water.Height)
-                {
-                    byte depth = water.Depth[wx, wy];
-                    if (depth > 0)
-                    {
-                        float t = depth / 255f;
-                        e.Vel *= MathF.Max(0f, 1f - Constants.WATER_DRAG * t * dt);
-                        var flow = new Vector2(water.FlowX[wx, wy], water.FlowY[wx, wy]);
-                        if (flow != Vector2.Zero)
-                            e.Vel += flow * Constants.WATER_PUSH * t * dt;
-                    }
-                }
-
                 if (e.IsBurning)
                 {
                     e.BurnTimer -= dt;
