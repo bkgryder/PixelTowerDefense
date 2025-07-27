@@ -754,7 +754,7 @@ namespace PixelTowerDefense.Systems
                             if (Vector2.Distance(b.Pos, s.Pos) < Constants.SEED_MIN_TREE_DIST)
                             { nearBush = true; break; }
                         }
-                        bool nearSeed = false;
+                        nearSeed = false;
                         if (!nearBush)
                         {
                             for (int j = 0; j < seeds.Count; j++)
@@ -826,7 +826,7 @@ namespace PixelTowerDefense.Systems
                                 {
                                     Vector2 vel = new Vector2(_rng.NextFloat(-10f,10f), _rng.NextFloat(-10f,10f));
                                     float vz0 = _rng.NextFloat(20f,40f);
-                                    seeds.Add(new Seed(r.Pos, vel, vz0, _rng, SeedType.BerryBush));
+                                    seeds.Add(new Seed(r.Pos, vel, vz0, _rng, SeedKind.Bush));
                                 }
                             }
                             r.WanderTimer = 0f;

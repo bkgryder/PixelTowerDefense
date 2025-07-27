@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
@@ -1192,12 +1192,77 @@ namespace PixelTowerDefense
                 _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), l.Color);
         }
 
+        // Palette
+        static readonly Color Fur = new Color(235, 235, 235); // off‑white
+        static readonly Color FurShade = new Color(210, 210, 210);
+        static readonly Color EarPink = new Color(255, 180, 190);
+        static readonly Color Eye = new Color(40, 40, 40);
+        static readonly Color Nose = Color.Brown;
+        static readonly Color Shadow = new Color(0, 0, 0, 90);
+
+        // 6x6 glyph ('.' = empty)
+        // Designed facing RIGHT; we mirror when facing left.
+        static readonly string[] Rabbit6 =
+        {
+            "..p...",
+            "..pWW.",
+            ".WWoW.",
+            "WWWWp.",
+            "WWWW..",
+            "ssssss", // s = shadow hint directly under body (optional)
+        };
+
+
+        /// <summary>
+        /// Draw a 6x6 pixel rabbit at r.Pos, lifted by r.z. Mirrors based on Vel.X.
+        /// </summary>
         private void DrawRabbit(Rabbit r)
         {
-            int x = (int)MathF.Round(r.Pos.X);
-            int y = (int)MathF.Round(r.Pos.Y - r.z);
-            _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.White);
+            // Base (top‑left) so the 6x6 sprite is centered on Pos
+            int baseX = (int)MathF.Round(r.Pos.X - 3);
+            int baseY = (int)MathF.Round(r.Pos.Y - 3 - r.z);
+
+            bool faceRight = r.Vel.X >= 0f;
+
+            // Soft round shadow that grows slightly with z
+            int shW = 4 + (int)MathF.Min(2f, r.z * 0.25f);
+            int shH = 2 + (int)MathF.Min(2f, r.z * 0.15f);
+            var shRect = new Rectangle(
+                (int)MathF.Round(r.Pos.X - shW * 0.5f),
+                (int)MathF.Round(r.Pos.Y + 1), // on ground
+                shW, shH
+            );
+            _sb.Draw(_px, shRect, Shadow);
+
+            for (int gy = 0; gy < 6; gy++)
+            {
+                string row = Rabbit6[gy];
+                for (int gx = 0; gx < 6; gx++)
+                {
+                    // Mirror horizontally if needed
+                    int ix = faceRight ? gx : (5 - gx);
+                    char ch = row[ix];
+                    if (ch == '.') continue;
+
+                    Color c = ch switch
+                    {
+                        'W' => Fur,
+                        'p' => EarPink,
+                        'o' => Eye,
+                        'b' => Nose,
+                        's' => Shadow,      // small body shadow hints
+                        _ => FurShade
+                    };
+
+                    // Slight fur dither: alternate a few pixels to break flatness
+                    if (ch == 'W' && ((gx + gy) & 1) == 1)
+                        c = FurShade;
+
+                    _sb.Draw(_px, new Rectangle(baseX + gx, baseY + gy, 1, 1), c);
+                }
+            }
         }
+
 
         private void DrawTreeBottom(Tree t)
         {

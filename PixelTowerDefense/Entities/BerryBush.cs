@@ -55,11 +55,11 @@ namespace PixelTowerDefense.Entities
             factor = System.MathF.Max(0.1f, factor);
 
             var shapeList = new List<Point>();
-            for (int y = -3; y < 3; y++)
-                for (int x = -3; x < 3; x++)
+            for (int y = -6; y < 6; y++)
+                for (int x = -6; x < 6; x++)
                 {
                     float r2 = x * x + y * y;
-                    if (r2 <= 8 * factor && rng.NextDouble() > 0.1)
+                    if (r2 <= 32 * factor && rng.NextDouble() > 0.1)
                         shapeList.Add(new Point(x, y));
                 }
             Shape = shapeList.ToArray();
