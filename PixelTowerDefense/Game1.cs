@@ -1106,22 +1106,53 @@ namespace PixelTowerDefense
         {
             int baseX = (int)MathF.Round(t.Pos.X);
             int baseY = (int)MathF.Round(t.Pos.Y);
-            int top = 0;
-            foreach (var p in t.TrunkPixels)
-                if (p.Y < top) top = p.Y;
-            foreach (var p in t.LeafPixels)
-                if (p.Y < top) top = p.Y;
-            var pos = new Vector2(baseX, baseY + top);
 
-            int size = 3 + _rng.Next(2);
-            int offX = _rng.Next(-1, 2);
-            int offY = _rng.Next(-2, 1);
+            int minX = int.MaxValue, maxX = int.MinValue;
+            int minY = 0, maxY = 0;
+            bool haveLeaf = false;
+            foreach (var p in t.LeafPixels)
+            {
+                if (!haveLeaf)
+                {
+                    minX = maxX = p.X;
+                    minY = maxY = p.Y;
+                    haveLeaf = true;
+                }
+                else
+                {
+                    if (p.X < minX) minX = p.X;
+                    if (p.X > maxX) maxX = p.X;
+                    if (p.Y < minY) minY = p.Y;
+                    if (p.Y > maxY) maxY = p.Y;
+                }
+            }
+
+            if (!haveLeaf)
+            {
+                foreach (var p in t.TrunkPixels)
+                {
+                    if (minX == int.MaxValue)
+                    {
+                        minX = maxX = p.X;
+                        minY = maxY = p.Y;
+                    }
+                    else
+                    {
+                        if (p.X < minX) minX = p.X;
+                        if (p.X > maxX) maxX = p.X;
+                        if (p.Y < minY) minY = p.Y;
+                        if (p.Y > maxY) maxY = p.Y;
+                    }
+                }
+            }
+
+            int width = maxX - minX + 1;
+            int height = maxY - minY + 1;
             var rect = new Rectangle(
-                (int)pos.X - size / 2 + offX,
-                (int)pos.Y - size + offY,
-                size,
-                size * 2
-            );
+                baseX + minX - 1,
+                baseY + minY - 1,
+                width + 2,
+                height + 2);
             Color[] firePal =
             {
                 Color.OrangeRed,

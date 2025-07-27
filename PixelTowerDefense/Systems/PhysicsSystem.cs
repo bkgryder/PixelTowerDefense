@@ -710,73 +710,94 @@ namespace PixelTowerDefense.Systems
                 if (t.IsBurning)
                 {
                     t.BurnTimer -= dt;
+                    t.BurnProgress = MathF.Min(1f, t.BurnProgress + dt / Constants.TREE_BURN_DURATION);
 
-                    if ((t.TrunkPixels.Length + t.LeafPixels.Length) > 0 &&
-                        _rng.NextDouble() < Constants.TREE_EMBER_RATE * dt)
+                    float leafTop = 0f;
+                    if (t.LeafPixels.Length > 0)
+                        foreach (var p in t.LeafPixels)
+                            if (p.Y < leafTop) leafTop = p.Y;
+                    float trunkTop = 0f;
+                    if (t.TrunkPixels.Length > 0)
+                        foreach (var p in t.TrunkPixels)
+                            if (p.Y < trunkTop) trunkTop = p.Y;
+
+                    float leafThresh = MathHelper.Lerp(leafTop, 0f, MathF.Min(1f, t.BurnProgress * 2f));
+                    float trunkThresh = MathHelper.Lerp(trunkTop, 0f, t.BurnProgress);
+
+                    if (t.LeafPixels.Length > 0)
                     {
-                        bool useLeaf = t.LeafPixels.Length > 0 && (_rng.NextDouble() < (double)t.LeafPixels.Length / (t.LeafPixels.Length + t.TrunkPixels.Length));
-                        if (useLeaf)
+                        var list = new List<Point>();
+                        foreach (var p in t.LeafPixels)
                         {
-                            int idx = _rng.Next(t.LeafPixels.Length);
-                            var off = t.LeafPixels[idx];
-                            var pos = t.Pos + new Vector2(off.X, off.Y);
-                            var vel = new Vector2(
-                                _rng.NextFloat(-4f, 4f),
-                                _rng.NextFloat(-20f, -10f));
-                            Color[] firePal =
+                            if (p.Y <= leafThresh)
                             {
-                                Color.OrangeRed,
-                                Color.Orange,
-                                Color.Yellow,
-                                new Color(255, 100, 0)
-                            };
-                            var c = firePal[_rng.Next(firePal.Length)];
-                            debris.Spawn(new Pixel(
-                                pos,
-                                vel,
-                                c,
-                                0f,
-                                _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f, Constants.EMBER_LIFETIME)));
-
-                            if (_rng.NextDouble() < Constants.TREE_FIRE_SPREAD_RATE * dt)
+                                if (_rng.NextDouble() < Constants.TREE_EMBER_RATE * dt)
+                                {
+                                    var pos = t.Pos + new Vector2(p.X, p.Y);
+                                    var vel = new Vector2(
+                                        _rng.NextFloat(-4f, 4f),
+                                        _rng.NextFloat(-20f, -10f));
+                                    Color[] firePal =
+                                    {
+                                        Color.OrangeRed,
+                                        Color.Orange,
+                                        Color.Yellow,
+                                        new Color(255, 100, 0)
+                                    };
+                                    var c = firePal[_rng.Next(firePal.Length)];
+                                    debris.Spawn(new Pixel(
+                                        pos,
+                                        vel,
+                                        c,
+                                        0f,
+                                        _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f, Constants.EMBER_LIFETIME)));
+                                }
+                            }
+                            else
                             {
-                                var list = new List<Point>(t.LeafPixels);
-                                list.RemoveAt(idx);
-                                t.LeafPixels = list.ToArray();
+                                list.Add(p);
                             }
                         }
-                        else if (t.TrunkPixels.Length > 0)
-                        {
-                            int idx = _rng.Next(t.TrunkPixels.Length);
-                            var off = t.TrunkPixels[idx];
-                            var pos = t.Pos + new Vector2(off.X, off.Y);
-                            var vel = new Vector2(
-                                _rng.NextFloat(-4f, 4f),
-                                _rng.NextFloat(-20f, -10f));
-                            Color[] firePal =
-                            {
-                                Color.OrangeRed,
-                                Color.Orange,
-                                Color.Yellow,
-                                new Color(255, 100, 0)
-                            };
-                            var c = firePal[_rng.Next(firePal.Length)];
-                            debris.Spawn(new Pixel(
-                                pos,
-                                vel,
-                                c,
-                                0f,
-                                _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f, Constants.EMBER_LIFETIME)));
+                        t.LeafPixels = list.ToArray();
+                    }
 
-                            if (_rng.NextDouble() < Constants.TREE_FIRE_SPREAD_RATE * dt)
+                    if (t.TrunkPixels.Length > 0)
+                    {
+                        var list = new List<Point>();
+                        foreach (var p in t.TrunkPixels)
+                        {
+                            if (p.Y <= trunkThresh && (t.LeafPixels.Length == 0 || t.BurnProgress >= 0.5f))
                             {
-                                var list = new List<Point>(t.TrunkPixels);
-                                list.RemoveAt(idx);
-                                t.TrunkPixels = list.ToArray();
-                                if (t.TrunkPixels.Length == 0)
-                                    t.CollisionRadius = 0f;
+                                if (_rng.NextDouble() < Constants.TREE_EMBER_RATE * dt)
+                                {
+                                    var pos = t.Pos + new Vector2(p.X, p.Y);
+                                    var vel = new Vector2(
+                                        _rng.NextFloat(-4f, 4f),
+                                        _rng.NextFloat(-20f, -10f));
+                                    Color[] firePal =
+                                    {
+                                        Color.OrangeRed,
+                                        Color.Orange,
+                                        Color.Yellow,
+                                        new Color(255, 100, 0)
+                                    };
+                                    var c = firePal[_rng.Next(firePal.Length)];
+                                    debris.Spawn(new Pixel(
+                                        pos,
+                                        vel,
+                                        c,
+                                        0f,
+                                        _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f, Constants.EMBER_LIFETIME)));
+                                }
+                            }
+                            else
+                            {
+                                list.Add(p);
                             }
                         }
+                        t.TrunkPixels = list.ToArray();
+                        if (t.TrunkPixels.Length == 0)
+                            t.CollisionRadius = 0f;
                     }
 
                     if (_rng.NextDouble() < Constants.SMOKE_PARTICLE_RATE * dt)
@@ -787,6 +808,9 @@ namespace PixelTowerDefense.Systems
                         trees.RemoveAt(i);
                         continue;
                     }
+
+                    trees[i] = t;
+                    continue;
                 }
 
                 if (t.IsDead && t.LeafPixels.Length > 0 &&
