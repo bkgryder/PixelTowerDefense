@@ -20,6 +20,7 @@ namespace PixelTowerDefense
 
         List<Meeple> _meeples = new();
         List<Rabbit> _rabbits = new();
+        List<RabbitHole> _rabbitHomes = new();
         List<Wolf> _wolves = new();
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
         List<Seed> _seeds = new();
@@ -480,7 +481,7 @@ namespace PixelTowerDefense
             }
             
             PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
-            PhysicsSystem.SimulateRabbits(_rabbits, _bushes, _seeds, dt);
+            PhysicsSystem.SimulateRabbits(_rabbits, _bushes, _seeds, _rabbitHomes, dt);
             PhysicsSystem.SimulateWolves(_wolves, _rabbits, _meeples, dt);
             if (_weather == Weather.Rainy)
                 UpdateRain(dt);
@@ -567,6 +568,10 @@ namespace PixelTowerDefense
             // --- logs ---
             foreach (var l in _logs)
                 DrawLog(l);
+
+            // --- rabbit homes ---
+            foreach (var h in _rabbitHomes)
+                DrawRabbitHome(h);
 
             // --- rabbits ---
             foreach (var r in _rabbits)
@@ -699,7 +704,8 @@ namespace PixelTowerDefense
                     GrowthDuration = Constants.RABBIT_GROW_TIME,
                     Age = Constants.RABBIT_GROW_TIME,
                     Hunger = 0f,
-                    FullTimer = 0f
+                    FullTimer = 0f,
+                    HomeId = -1
                 });
             }
         }
@@ -1243,6 +1249,13 @@ namespace PixelTowerDefense
             int baseY = (int)MathF.Round(l.Pos.Y);
             foreach (var p in l.Shape)
                 _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), l.Color);
+        }
+
+        private void DrawRabbitHome(RabbitHole h)
+        {
+            int x = (int)MathF.Round(h.Pos.X);
+            int y = (int)MathF.Round(h.Pos.Y);
+            _sb.Draw(_px, new Rectangle(x - 1, y, 3, 1), Color.Black);
         }
 
         // Palette

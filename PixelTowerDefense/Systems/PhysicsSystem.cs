@@ -784,18 +784,28 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void SimulateRabbits(List<Rabbit> rabbits, List<BerryBush> bushes, List<Seed> seeds, float dt)
+        public static void SimulateRabbits(List<Rabbit> rabbits, List<BerryBush> bushes, List<Seed> seeds, List<RabbitHole> homes, float dt)
         {
             int count = rabbits.Count;
             for (int i = 0; i < count; i++)
             {
                 var r = rabbits[i];
 
+                float prevAge = r.Age;
                 r.Age += dt;
                 r.Hunger = MathF.Min(Constants.RABBIT_HUNGER_MAX,
                                     r.Hunger + Constants.RABBIT_HUNGER_RATE * dt);
                 if (r.FullTimer > 0f)
                     r.FullTimer -= dt;
+
+                if (prevAge < r.GrowthDuration && r.Age >= r.GrowthDuration && r.HomeId >= 0)
+                    r.HomeId = -1;
+
+                if (r.Age >= r.GrowthDuration && r.HomeId < 0)
+                {
+                    homes.Add(new RabbitHole { Pos = r.Pos });
+                    r.HomeId = homes.Count - 1;
+                }
 
                 if (r.z > 0f || r.vz != 0f)
                 {
@@ -861,13 +871,13 @@ namespace PixelTowerDefense.Systems
                     }
                 }
 
-                if (r.FullTimer > 0f && r.Age >= r.GrowthDuration)
+                if (r.FullTimer > 0f && r.Age >= r.GrowthDuration && r.HomeId >= 0)
                 {
                     for (int j = 0; j < count; j++)
                     {
                         if (j == i) continue;
                         var mate = rabbits[j];
-                        if (mate.FullTimer > 0f && mate.Age >= mate.GrowthDuration &&
+                        if (mate.FullTimer > 0f && mate.Age >= mate.GrowthDuration && mate.HomeId == r.HomeId &&
                             Vector2.Distance(mate.Pos, r.Pos) < 2f)
                         {
                             if (_rng.NextDouble() < Constants.RABBIT_BABY_CHANCE)
@@ -882,7 +892,8 @@ namespace PixelTowerDefense.Systems
                                     GrowthDuration = Constants.RABBIT_GROW_TIME,
                                     Age = 0f,
                                     Hunger = 0f,
-                                    FullTimer = 0f
+                                    FullTimer = 0f,
+                                    HomeId = r.HomeId
                                 });
                             }
                             r.FullTimer = 0f;
