@@ -1256,8 +1256,8 @@ namespace PixelTowerDefense
         // Baby 3x3 sprite
         static readonly string[] Rabbit3 =
         {
-            ".p.",
-            "W.W",
+            "..p",
+            "WWW",
             "sss",
         };
 
@@ -1267,7 +1267,7 @@ namespace PixelTowerDefense
             "..p...",
             "..pWW.",
             ".WWoW.",
-            "WWWWp.",
+            "WWWWW.",
             "WWWW..",
             "ssssss", // s = shadow hint directly under body (optional)
         };
@@ -1279,11 +1279,11 @@ namespace PixelTowerDefense
         static readonly Color WolfNose = Color.Black;
         static readonly string[] Wolf6 =
         {
-            "..e...",
+            ".e....",
             "..eWW.",
-            ".WWoW.",
-            "WWWWb.",
-            "WWWW..",
+            ".WWoWb",
+            "WWWWW.",
+            ".W..W.",
             "ssssss",
         };
 
