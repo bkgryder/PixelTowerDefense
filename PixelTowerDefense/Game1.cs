@@ -891,7 +891,7 @@ namespace PixelTowerDefense
                             style.Base * Constants.GROUND_BORDER_ALPHA);
 
                     // sparse decal
-                    if (zoom >= 3f)
+                    if (zoom >= 4f)
                     {
                         int hash = (x * 73856093) ^ (y * 19349663);
                         if ((hash & 7) == 0)
