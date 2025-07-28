@@ -1528,26 +1528,51 @@ namespace PixelTowerDefense
 
         private void DrawTreeShadow(Tree t)
         {
-            if (t.Fallen) return;
+            if (t.Fallen)
+                return;
 
             int baseX = (int)MathF.Round(t.Pos.X);
             int baseY = (int)MathF.Round(t.Pos.Y);
 
-            int radX = (int)MathF.Round(t.ShadowRadius);
-            int radY = Math.Max(1, radX / 2);
-
             byte alpha = 80;
             var col = new Color((byte)0, (byte)0, (byte)0, alpha);
 
-            for (int y = -radY; y <= radY; y++)
+            if (t.FallTimer <= 0f)
             {
-                for (int x = -radX; x <= radX; x++)
+                int radX = (int)MathF.Round(t.ShadowRadius);
+                int radY = Math.Max(1, radX / 2);
+
+                for (int y = -radY; y <= radY; y++)
                 {
-                    float nx = x / (float)radX;
-                    float ny = y / (float)radY;
-                    if (nx * nx + ny * ny <= 1f)
-                        _sb.Draw(_px, new Rectangle(baseX + x, baseY + y, 1, 1), col);
+                    for (int x = -radX; x <= radX; x++)
+                    {
+                        float nx = x / (float)radX;
+                        float ny = y / (float)radY;
+                        if (nx * nx + ny * ny <= 1f)
+                            _sb.Draw(_px, new Rectangle(baseX + x, baseY + y, 1, 1), col);
+                    }
                 }
+                return;
+            }
+
+            float angle = t.FallDir * MathHelper.PiOver2 * MathF.Min(t.FallTimer / Constants.TREE_FALL_TIME, 1f);
+            float cos = MathF.Cos(angle);
+            float sin = MathF.Sin(angle);
+            foreach (var p in t.TrunkPixels)
+            {
+                float x = p.X * cos - p.Y * sin;
+                float y = p.X * sin + p.Y * cos;
+                int dx = baseX + (int)MathF.Round(x);
+                int dy = baseY + (int)MathF.Round(y);
+                _sb.Draw(_px, new Rectangle(dx, dy, 1, 1), col);
+            }
+            foreach (var p in t.LeafPixels)
+            {
+                float x = p.X * cos - p.Y * sin;
+                float y = p.X * sin + p.Y * cos;
+                int dx = baseX + (int)MathF.Round(x);
+                int dy = baseY + (int)MathF.Round(y);
+                _sb.Draw(_px, new Rectangle(dx, dy, 1, 1), col);
             }
         }
 
@@ -1799,6 +1824,24 @@ namespace PixelTowerDefense
                 s.vz += Constants.EXPLOSION_UPWARD;
                 s.State = MeepleState.Launched;
                 _meeples[i] = s;
+            }
+
+            // affect nearby trees
+            for (int i = 0; i < _trees.Count; i++)
+            {
+                var t = _trees[i];
+                float dist = Vector2.Distance(t.Pos, pos);
+                if (dist <= Constants.EXPLOSION_RADIUS && !t.IsDead)
+                {
+                    t.IsDead = true;
+                    t.PaleTimer = 0f;
+                    t.FallDelay = 0f;
+                    t.FallTimer = 0f;
+                    t.Fallen = false;
+                    t.DecompTimer = 0f;
+                    t.RemoveWhenFallen = true;
+                    _trees[i] = t;
+                }
             }
 
             LightingSystem.AddLight(
