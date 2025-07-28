@@ -127,11 +127,11 @@ namespace PixelTowerDefense
                 _rng);
 
             SpawnMeeple(0);
-            SpawnRabbits(3);
+            SpawnRabbits(8);
             SpawnWolves(2);
             SpawnBerryBushes(5);
-            SpawnLogs(4);
-            SpawnStones(4);
+            //SpawnLogs(4);
+            //SpawnStones(4);
 
             // spawn clustered tree patches
             for (int i = 0; i < 6; i++)
@@ -1326,14 +1326,16 @@ namespace PixelTowerDefense
         static readonly Color WolfEar = new Color(200, 200, 200);
         static readonly Color WolfEye = new Color(40, 40, 40);
         static readonly Color WolfNose = Color.Black;
-        static readonly string[] Wolf6 =
+        static readonly string[] Wolf8 =
         {
-            ".e....",
-            "..eWW.",
-            ".WWoWb",
-            "WWWWW.",
-            ".W..W.",
-            "ssssss",
+            "....e...",
+            "W...eWW.",
+            ".W..WoWb",
+            "..WWWWW.",
+            "..WWWWW.",
+            "..W...W.",
+            "..W...W.",
+            "..sssss.",
         };
 
 
@@ -1405,12 +1407,12 @@ namespace PixelTowerDefense
                 shW, shH);
             _sb.Draw(_px, shRect, Shadow);
 
-            for (int gy = 0; gy < 6; gy++)
+            for (int gy = 0; gy < 8; gy++)
             {
-                string row = Wolf6[gy];
-                for (int gx = 0; gx < 6; gx++)
+                string row = Wolf8[gy];
+                for (int gx = 0; gx < 8; gx++)
                 {
-                    int ix = faceRight ? gx : (5 - gx);
+                    int ix = faceRight ? gx : (7 - gx);
                     char ch = row[ix];
                     if (ch == '.') continue;
 
