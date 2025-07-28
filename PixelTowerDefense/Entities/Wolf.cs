@@ -17,6 +17,9 @@ namespace PixelTowerDefense.Entities
         public float Age;
         public float GrowthDuration;
 
+        public bool IsBurning;
+        public float BurnTimer;
+
         // home reference (-1 = none)
         public int HomeId;
     }

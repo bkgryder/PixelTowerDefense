@@ -391,6 +391,76 @@ namespace PixelTowerDefense
                         }
                     }
 
+                    if (!affected)
+                    {
+                        for (int i = _rabbits.Count - 1; i >= 0 && !affected; i--)
+                        {
+                            var r = _rabbits[i];
+                            float d = Vector2.Distance(r.Pos - new Vector2(0, r.z), mworld);
+                            if (d < minD)
+                            {
+                                r.IsBurning = true;
+                                r.BurnTimer = Constants.BURN_DURATION;
+                                _rabbits[i] = r;
+                                affected = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!affected)
+                    {
+                        for (int i = _wolves.Count - 1; i >= 0 && !affected; i--)
+                        {
+                            var w = _wolves[i];
+                            float d = Vector2.Distance(w.Pos - new Vector2(0, w.z), mworld);
+                            if (d < minD)
+                            {
+                                w.IsBurning = true;
+                                w.BurnTimer = Constants.BURN_DURATION;
+                                _wolves[i] = w;
+                                affected = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!affected)
+                    {
+                        for (int i = _logs.Count - 1; i >= 0 && !affected; i--)
+                        {
+                            var l = _logs[i];
+                            foreach (var p in l.Shape)
+                            {
+                                var pos = l.Pos + new Vector2(p.X, p.Y);
+                                if (Vector2.Distance(pos, mworld) < minD)
+                                {
+                                    l.IsBurning = true;
+                                    l.BurnTimer = Constants.BURN_DURATION;
+                                    _logs[i] = l;
+                                    affected = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!affected)
+                    {
+                        for (int i = _buildings.Count - 1; i >= 0 && !affected; i--)
+                        {
+                            var b = _buildings[i];
+                            if (Vector2.Distance(b.Pos, mworld) < minD)
+                            {
+                                b.IsBurning = true;
+                                b.BurnTimer = Constants.BURN_DURATION;
+                                _buildings[i] = b;
+                                affected = true;
+                                break;
+                            }
+                        }
+                    }
+
                     _mana = MathF.Max(0f, _mana - Constants.FIRE_COST);
                 }
             }
@@ -497,12 +567,12 @@ namespace PixelTowerDefense
             }
             
             PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
-            PhysicsSystem.SimulateRabbits(_rabbits, _bushes, _seeds, _rabbitHomes, dt);
-            PhysicsSystem.SimulateWolves(_wolves, _rabbits, _meeples, _wolfDens, dt);
+            PhysicsSystem.SimulateRabbits(_rabbits, _bushes, _seeds, _rabbitHomes, _pixels, dt);
+            PhysicsSystem.SimulateWolves(_wolves, _rabbits, _meeples, _wolfDens, _pixels, dt);
             if (_weather == Weather.Rainy)
                 UpdateRain(dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
-            PhysicsSystem.UpdateLogs(_logs, dt);
+            PhysicsSystem.UpdateLogs(_logs, _pixels, dt);
             PhysicsSystem.UpdateSeeds(_seeds, _trees, _bushes, dt);
             PhysicsSystem.UpdateBushes(_bushes, _seeds, _pixels, dt, _weather == Weather.Rainy);
             PhysicsSystem.UpdateTrees(_trees, _seeds, _pixels, dt);
@@ -518,6 +588,38 @@ namespace PixelTowerDefense
                     LightingSystem.AddLight(
                         _lights,
                         m.GetPartPos(0) - new Vector2(0f, m.z),
+                        Constants.FIRE_LIGHT_RADIUS,
+                        Constants.FIRE_LIGHT_INTENSITY,
+                        dt);
+            foreach (var r in _rabbits)
+                if (r.IsBurning)
+                    LightingSystem.AddLight(
+                        _lights,
+                        r.Pos - new Vector2(0f, r.z),
+                        Constants.FIRE_LIGHT_RADIUS,
+                        Constants.FIRE_LIGHT_INTENSITY,
+                        dt);
+            foreach (var w in _wolves)
+                if (w.IsBurning)
+                    LightingSystem.AddLight(
+                        _lights,
+                        w.Pos - new Vector2(0f, w.z),
+                        Constants.FIRE_LIGHT_RADIUS,
+                        Constants.FIRE_LIGHT_INTENSITY,
+                        dt);
+            foreach (var l in _logs)
+                if (l.IsBurning)
+                    LightingSystem.AddLight(
+                        _lights,
+                        l.Pos,
+                        Constants.FIRE_LIGHT_RADIUS,
+                        Constants.FIRE_LIGHT_INTENSITY,
+                        dt);
+            foreach (var b in _buildings)
+                if (b.IsBurning)
+                    LightingSystem.AddLight(
+                        _lights,
+                        b.Pos,
                         Constants.FIRE_LIGHT_RADIUS,
                         Constants.FIRE_LIGHT_INTENSITY,
                         dt);
@@ -587,23 +689,43 @@ namespace PixelTowerDefense
 
             // --- logs ---
             foreach (var l in _logs)
+            {
                 DrawLog(l);
+                if (l.IsBurning)
+                    DrawFlameAt(l.Pos);
+            }
 
             // --- rabbit homes ---
             foreach (var h in _rabbitHomes)
+            {
                 DrawRabbitHome(h);
+                if (h.IsBurning)
+                    DrawFlameAt(h.Pos);
+            }
 
             // --- wolf dens ---
             foreach (var d in _wolfDens)
+            {
                 DrawWolfDen(d);
+                if (d.IsBurning)
+                    DrawFlameAt(d.Pos);
+            }
 
             // --- rabbits ---
             foreach (var r in _rabbits)
+            {
                 DrawRabbit(r);
+                if (r.IsBurning)
+                    DrawFlameAt(r.Pos - new Vector2(0, r.z));
+            }
 
             // --- wolves ---
             foreach (var w in _wolves)
+            {
                 DrawWolf(w);
+                if (w.IsBurning)
+                    DrawFlameAt(w.Pos - new Vector2(0, w.z));
+            }
 
             // --- tree shadows ---
             foreach (var t in _trees)
@@ -615,7 +737,11 @@ namespace PixelTowerDefense
 
             // --- buildings ---
             foreach (var b in _buildings)
+            {
                 DrawBuilding(b);
+                if (b.IsBurning)
+                    DrawFlameAt(b.Pos);
+            }
 
             // --- shadows ---
             foreach (var e in _meeples.OrderBy(s => s.ShadowY))
@@ -1180,6 +1306,11 @@ namespace PixelTowerDefense
         {
             var pos = e.GetPartPos(0);
             pos.Y -= e.z + 1f;
+            DrawFlameAt(pos);
+        }
+
+        private void DrawFlameAt(Vector2 pos)
+        {
             int size = 3 + _rng.Next(2);
             int offX = _rng.Next(-1, 2);
             int offY = _rng.Next(-2, 1);
@@ -1799,6 +1930,47 @@ namespace PixelTowerDefense
                 s.vz += Constants.EXPLOSION_UPWARD;
                 s.State = MeepleState.Launched;
                 _meeples[i] = s;
+            }
+
+            for (int i = 0; i < _rabbits.Count; i++)
+            {
+                var r = _rabbits[i];
+                Vector2 dir = r.Pos - pos;
+                float dist = dir.Length();
+                if (dist > Constants.EXPLOSION_RADIUS)
+                    continue;
+                if (dist > 0f) dir /= dist; else dir = new Vector2(0f, -1f);
+                float strength = (1f - dist / Constants.EXPLOSION_RADIUS) * Constants.EXPLOSION_PUSH;
+                r.Vel += dir * strength;
+                r.vz += Constants.EXPLOSION_UPWARD;
+                _rabbits[i] = r;
+            }
+
+            for (int i = 0; i < _wolves.Count; i++)
+            {
+                var w = _wolves[i];
+                Vector2 dir = w.Pos - pos;
+                float dist = dir.Length();
+                if (dist > Constants.EXPLOSION_RADIUS)
+                    continue;
+                if (dist > 0f) dir /= dist; else dir = new Vector2(0f, -1f);
+                float strength = (1f - dist / Constants.EXPLOSION_RADIUS) * Constants.EXPLOSION_PUSH;
+                w.Vel += dir * strength;
+                w.vz += Constants.EXPLOSION_UPWARD;
+                _wolves[i] = w;
+            }
+
+            for (int i = 0; i < _logs.Count; i++)
+            {
+                var l = _logs[i];
+                Vector2 dir = l.Pos - pos;
+                float dist = dir.Length();
+                if (dist > Constants.EXPLOSION_RADIUS)
+                    continue;
+                if (dist > 0f) dir /= dist; else dir = new Vector2(0f, -1f);
+                float strength = (1f - dist / Constants.EXPLOSION_RADIUS) * Constants.EXPLOSION_PUSH;
+                l.Vel += dir * strength;
+                _logs[i] = l;
             }
 
             LightingSystem.AddLight(

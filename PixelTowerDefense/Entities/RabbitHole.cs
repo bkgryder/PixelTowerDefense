@@ -6,5 +6,7 @@ namespace PixelTowerDefense.Entities
     {
         public Vector2 Pos;
         public float VacantTimer;
+        public bool IsBurning;
+        public float BurnTimer;
     }
 }

@@ -11,6 +11,8 @@ namespace PixelTowerDefense.Entities
         public Point[] Shape;
         public Color Color;
         public int? ReservedBy;
+        public bool IsBurning;
+        public float BurnTimer;
 
         public Log(Vector2 pos, System.Random rng)
         {

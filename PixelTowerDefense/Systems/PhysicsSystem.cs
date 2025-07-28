@@ -473,6 +473,33 @@ namespace PixelTowerDefense.Systems
             for (int i = 0; i < buildings.Count; i++)
             {
                 var b = buildings[i];
+                if (b.IsBurning)
+                {
+                    b.BurnTimer -= dt;
+                    if (_rng.NextDouble() < Constants.FIRE_PARTICLE_RATE * dt)
+                    {
+                        var vel = new Vector2(
+                            _rng.NextFloat(-4f, 4f),
+                            _rng.NextFloat(-20f, -10f));
+                        Color[] firePal =
+                        {
+                            Color.OrangeRed,
+                            Color.Orange,
+                            Color.Yellow,
+                            new Color(255, 100, 0)
+                        };
+                        var c = firePal[_rng.Next(firePal.Length)];
+                        debris.Spawn(new Pixel(b.Pos, vel, c, 0f,
+                            _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f,
+                                           Constants.EMBER_LIFETIME)));
+                    }
+                    if (b.BurnTimer <= 0f)
+                    {
+                        buildings.RemoveAt(i);
+                        i--;
+                        continue;
+                    }
+                }
                 if (b.Kind == BuildingType.CarpenterHut && b.StoredLogs > 0)
                 {
                     if (b.CraftTimer > 0f)
@@ -645,6 +672,35 @@ namespace PixelTowerDefense.Systems
             debris.Spawn(new Pixel(pos, v, c, 0f, 0.3f));
         }
 
+        private static void ExplodeSimple(Vector2 pos, List<Pixel> debris)
+        {
+            Color[] pal =
+            {
+                Color.Red,
+                Color.OrangeRed,
+                Color.Yellow
+            };
+            int count = _rng.Next(6, 12);
+            for (int i = 0; i < count; i++)
+            {
+                var dir = new Vector2(
+                    _rng.NextFloat(-1f, 1f),
+                    _rng.NextFloat(-1f, 1f));
+                if (dir.LengthSquared() > 0f)
+                    dir.Normalize();
+                dir *= _rng.NextFloat(Constants.EXPLOSION_FORCE_MIN,
+                                     Constants.EXPLOSION_FORCE_MAX);
+                var col = pal[_rng.Next(pal.Length)];
+                debris.Spawn(new Pixel(
+                    pos,
+                    dir,
+                    col,
+                    0f,
+                    _rng.NextFloat(Constants.DEBRIS_LIFETIME_MIN,
+                                   Constants.DEBRIS_LIFETIME_MAX)));
+            }
+        }
+
         public static void UpdatePixels(List<Pixel> debris, float dt)
         {
             for (int i = debris.Count - 1; i >= 0; i--)
@@ -677,11 +733,44 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void UpdateLogs(List<Log> logs, float dt)
+        public static void UpdateLogs(List<Log> logs, List<Pixel> debris, float dt)
         {
             for (int i = 0; i < logs.Count; i++)
             {
                 var l = logs[i];
+
+                if (l.IsBurning)
+                {
+                    l.BurnTimer -= dt;
+                    if (_rng.NextDouble() < Constants.FIRE_PARTICLE_RATE * dt)
+                    {
+                        var pos = l.Pos;
+                        var vel = new Vector2(
+                            _rng.NextFloat(-4f, 4f),
+                            _rng.NextFloat(-20f, -10f));
+                        Color[] firePal =
+                        {
+                            Color.OrangeRed,
+                            Color.Orange,
+                            Color.Yellow,
+                            new Color(255, 100, 0)
+                        };
+                        var c = firePal[_rng.Next(firePal.Length)];
+                        debris.Spawn(new Pixel(
+                            pos,
+                            vel,
+                            c,
+                            0f,
+                            _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f,
+                                           Constants.EMBER_LIFETIME)));
+                    }
+                    if (l.BurnTimer <= 0f)
+                    {
+                        logs.RemoveAt(i);
+                        i--;
+                        continue;
+                    }
+                }
 
                 l.Vel *= MathF.Max(0f, 1f - Constants.DEBRIS_FRICTION * dt);
                 l.Pos += l.Vel * dt;
@@ -772,12 +861,46 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void SimulateRabbits(List<Rabbit> rabbits, List<BerryBush> bushes, List<Seed> seeds, List<RabbitHole> homes, float dt)
+        public static void SimulateRabbits(List<Rabbit> rabbits, List<BerryBush> bushes, List<Seed> seeds, List<RabbitHole> homes, List<Pixel> debris, float dt)
         {
             int count = rabbits.Count;
             for (int i = 0; i < count; i++)
             {
                 var r = rabbits[i];
+
+                if (r.IsBurning)
+                {
+                    r.BurnTimer -= dt;
+                    if (_rng.NextDouble() < Constants.FIRE_PARTICLE_RATE * dt)
+                    {
+                        var pos = r.Pos - new Vector2(0, r.z);
+                        var vel = new Vector2(
+                            _rng.NextFloat(-4f, 4f),
+                            _rng.NextFloat(-20f, -10f));
+                        Color[] firePal =
+                        {
+                            Color.OrangeRed,
+                            Color.Orange,
+                            Color.Yellow,
+                            new Color(255, 100, 0)
+                        };
+                        var c = firePal[_rng.Next(firePal.Length)];
+                        debris.Spawn(new Pixel(
+                            pos,
+                            vel,
+                            c,
+                            0f,
+                            _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f,
+                                           Constants.EMBER_LIFETIME)));
+                    }
+                    if (r.BurnTimer <= 0f)
+                    {
+                        rabbits.RemoveAt(i);
+                        count = rabbits.Count;
+                        i--;
+                        continue;
+                    }
+                }
 
                 float prevAge = r.Age;
                 r.Age += dt;
@@ -798,8 +921,17 @@ namespace PixelTowerDefense.Systems
                     r.Pos += r.Vel * dt;
                     if (r.z <= 0f)
                     {
+                        float impact = MathF.Abs(r.vz);
                         r.z = 0f;
                         r.vz = 0f;
+                        if (impact > Constants.EXPLODE_VZ_THRESHOLD)
+                        {
+                            ExplodeSimple(r.Pos, debris);
+                            rabbits.RemoveAt(i);
+                            count = rabbits.Count;
+                            i--;
+                            continue;
+                        }
                     }
                 }
                 else
@@ -927,9 +1059,27 @@ namespace PixelTowerDefense.Systems
                 if (hid >= 0 && hid < homes.Count)
                     occupancy[hid]++;
             }
-            for (int h = homes.Count - 1; h >= 0; h--)
-            {
-                var home = homes[h];
+           for (int h = homes.Count - 1; h >= 0; h--)
+           {
+               var home = homes[h];
+                if (home.IsBurning)
+                {
+                    home.BurnTimer -= dt;
+                    if (home.BurnTimer <= 0f)
+                    {
+                        homes.RemoveAt(h);
+                        for (int i = 0; i < rabbits.Count; i++)
+                        {
+                            var r = rabbits[i];
+                            if (r.HomeId == h)
+                                r.HomeId = -1;
+                            else if (r.HomeId > h)
+                                r.HomeId--;
+                            rabbits[i] = r;
+                        }
+                        continue;
+                    }
+                }
                 if (occupancy[h] == 0)
                 {
                     home.VacantTimer += dt;
@@ -956,11 +1106,43 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void SimulateWolves(List<Wolf> wolves, List<Rabbit> rabbits, List<Meeple> meeples, List<WolfDen> dens, float dt)
+        public static void SimulateWolves(List<Wolf> wolves, List<Rabbit> rabbits, List<Meeple> meeples, List<WolfDen> dens, List<Pixel> debris, float dt)
         {
             for (int i = wolves.Count - 1; i >= 0; i--)
             {
                 var w = wolves[i];
+
+                if (w.IsBurning)
+                {
+                    w.BurnTimer -= dt;
+                    if (_rng.NextDouble() < Constants.FIRE_PARTICLE_RATE * dt)
+                    {
+                        var pos = w.Pos - new Vector2(0, w.z);
+                        var vel = new Vector2(
+                            _rng.NextFloat(-4f, 4f),
+                            _rng.NextFloat(-20f, -10f));
+                        Color[] firePal =
+                        {
+                            Color.OrangeRed,
+                            Color.Orange,
+                            Color.Yellow,
+                            new Color(255, 100, 0)
+                        };
+                        var c = firePal[_rng.Next(firePal.Length)];
+                        debris.Spawn(new Pixel(
+                            pos,
+                            vel,
+                            c,
+                            0f,
+                            _rng.NextFloat(Constants.EMBER_LIFETIME * 0.5f,
+                                           Constants.EMBER_LIFETIME)));
+                    }
+                    if (w.BurnTimer <= 0f)
+                    {
+                        wolves.RemoveAt(i);
+                        continue;
+                    }
+                }
 
                 float prevAge = w.Age;
                 w.Age += dt;
@@ -979,8 +1161,15 @@ namespace PixelTowerDefense.Systems
                     w.Pos += w.Vel * dt;
                     if (w.z <= 0f)
                     {
+                        float impact = MathF.Abs(w.vz);
                         w.z = 0f;
                         w.vz = 0f;
+                        if (impact > Constants.EXPLODE_VZ_THRESHOLD)
+                        {
+                            ExplodeSimple(w.Pos, debris);
+                            wolves.RemoveAt(i);
+                            continue;
+                        }
                     }
                 }
                 else
@@ -1127,9 +1316,27 @@ namespace PixelTowerDefense.Systems
                 if (hid >= 0 && hid < dens.Count)
                     occupancy[hid]++;
             }
-            for (int h = dens.Count - 1; h >= 0; h--)
-            {
-                var den = dens[h];
+           for (int h = dens.Count - 1; h >= 0; h--)
+           {
+               var den = dens[h];
+                if (den.IsBurning)
+                {
+                    den.BurnTimer -= dt;
+                    if (den.BurnTimer <= 0f)
+                    {
+                        dens.RemoveAt(h);
+                        for (int i = 0; i < wolves.Count; i++)
+                        {
+                            var w = wolves[i];
+                            if (w.HomeId == h)
+                                w.HomeId = -1;
+                            else if (w.HomeId > h)
+                                w.HomeId--;
+                            wolves[i] = w;
+                        }
+                        continue;
+                    }
+                }
                 if (occupancy[h] == 0)
                 {
                     den.VacantTimer += dt;
