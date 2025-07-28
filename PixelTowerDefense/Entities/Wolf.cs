@@ -10,5 +10,14 @@ namespace PixelTowerDefense.Entities
         public float vz;
         public float WanderTimer;
         public float ShadowY;
+
+        // survival & lifecycle
+        public float Hunger;
+        public float FullTimer;
+        public float Age;
+        public float GrowthDuration;
+
+        // home reference (-1 = none)
+        public int HomeId;
     }
 }

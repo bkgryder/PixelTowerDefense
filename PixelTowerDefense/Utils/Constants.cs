@@ -134,6 +134,13 @@ namespace PixelTowerDefense.Utils
         public const float WOLF_SEEK_RADIUS = 25f;
         public const float WOLF_ATTACK_RANGE = 1.2f;
         public const float WOLF_DMG = 20f;
+        public const float WOLF_GROW_TIME = 30f;
+        public const float WOLF_HUNGER_MAX = 8f;
+        public const float WOLF_HUNGER_RATE = 1f;
+        public const float WOLF_HUNGER_THRESHOLD = 4f;
+        public const float WOLF_MATE_WINDOW = 5f;
+        public const float WOLF_PUP_CHANCE = 0.3f;
+        public const float WOLF_DEN_DECAY = 40f; // seconds of vacancy before a den disappears
 
         // Precipitate ability
         public const float PRECIPITATE_DROP_SPEED = 130f;

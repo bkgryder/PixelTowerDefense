@@ -22,6 +22,7 @@ namespace PixelTowerDefense
         List<Rabbit> _rabbits = new();
         List<RabbitHole> _rabbitHomes = new();
         List<Wolf> _wolves = new();
+        List<WolfDen> _wolfDens = new();
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
         List<Seed> _seeds = new();
         List<BerryBush> _bushes = new();
@@ -497,7 +498,7 @@ namespace PixelTowerDefense
             
             PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
             PhysicsSystem.SimulateRabbits(_rabbits, _bushes, _seeds, _rabbitHomes, dt);
-            PhysicsSystem.SimulateWolves(_wolves, _rabbits, _meeples, dt);
+            PhysicsSystem.SimulateWolves(_wolves, _rabbits, _meeples, _wolfDens, dt);
             if (_weather == Weather.Rainy)
                 UpdateRain(dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
@@ -591,6 +592,10 @@ namespace PixelTowerDefense
             // --- rabbit homes ---
             foreach (var h in _rabbitHomes)
                 DrawRabbitHome(h);
+
+            // --- wolf dens ---
+            foreach (var d in _wolfDens)
+                DrawWolfDen(d);
 
             // --- rabbits ---
             foreach (var r in _rabbits)
@@ -740,7 +745,19 @@ namespace PixelTowerDefense
                                        Constants.ARENA_RIGHT - 5);
                 float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
                                        Constants.ARENA_BOTTOM - 5);
-                _wolves.Add(new Wolf { Pos = new Vector2(x, y) });
+                _wolves.Add(new Wolf
+                {
+                    Pos = new Vector2(x, y),
+                    Vel = Vector2.Zero,
+                    z = 0f,
+                    vz = 0f,
+                    WanderTimer = 0f,
+                    GrowthDuration = Constants.WOLF_GROW_TIME,
+                    Age = Constants.WOLF_GROW_TIME,
+                    Hunger = 0f,
+                    FullTimer = 0f,
+                    HomeId = -1
+                });
             }
         }
 
@@ -1319,6 +1336,13 @@ namespace PixelTowerDefense
             int x = (int)MathF.Round(h.Pos.X);
             int y = (int)MathF.Round(h.Pos.Y);
             _sb.Draw(_px, new Rectangle(x - 1, y, 3, 1), Color.Black);
+        }
+
+        private void DrawWolfDen(WolfDen d)
+        {
+            int x = (int)MathF.Round(d.Pos.X);
+            int y = (int)MathF.Round(d.Pos.Y);
+            _sb.Draw(_px, new Rectangle(x - 1, y, 3, 1), Color.Gray);
         }
 
         // Palette
