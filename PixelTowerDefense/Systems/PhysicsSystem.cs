@@ -956,11 +956,21 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void SimulateWolves(List<Wolf> wolves, List<Rabbit> rabbits, List<Meeple> meeples, float dt)
+        public static void SimulateWolves(List<Wolf> wolves, List<Rabbit> rabbits, List<Meeple> meeples, List<WolfDen> dens, float dt)
         {
             for (int i = wolves.Count - 1; i >= 0; i--)
             {
                 var w = wolves[i];
+
+                float prevAge = w.Age;
+                w.Age += dt;
+                w.Hunger = MathF.Min(Constants.WOLF_HUNGER_MAX,
+                                     w.Hunger + Constants.WOLF_HUNGER_RATE * dt);
+                if (w.FullTimer > 0f)
+                    w.FullTimer -= dt;
+
+                if (prevAge < w.GrowthDuration && w.Age >= w.GrowthDuration && w.HomeId >= 0)
+                    w.HomeId = -1;
 
                 if (w.z > 0f || w.vz != 0f)
                 {
@@ -975,35 +985,20 @@ namespace PixelTowerDefense.Systems
                 }
                 else
                 {
-                    int midx = FindNearestMeeple(w.Pos, meeples, Constants.WOLF_SEEK_RADIUS);
-                    if (midx >= 0)
+                    if (w.Hunger >= Constants.WOLF_HUNGER_THRESHOLD)
                     {
-                        var m = meeples[midx];
-                        Vector2 dir = m.Pos - w.Pos;
-                        float dist = dir.Length();
-                        if (dist < Constants.WOLF_ATTACK_RANGE)
+                        int midx = FindNearestMeeple(w.Pos, meeples, Constants.WOLF_SEEK_RADIUS);
+                        if (midx >= 0)
                         {
-                            m.Health -= Constants.WOLF_DMG;
-                            meeples[midx] = m;
-                            w.WanderTimer = 0f;
-                        }
-                        else
-                        {
-                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
-                            w.Vel = dir * Constants.WOLF_SPEED;
-                            w.Pos += w.Vel * dt;
-                        }
-                    }
-                    else
-                    {
-                        int ridx = FindNearestRabbit(w.Pos, rabbits, Constants.WOLF_SEEK_RADIUS);
-                        if (ridx >= 0)
-                        {
-                            Vector2 dir = rabbits[ridx].Pos - w.Pos;
+                            var m = meeples[midx];
+                            Vector2 dir = m.Pos - w.Pos;
                             float dist = dir.Length();
                             if (dist < Constants.WOLF_ATTACK_RANGE)
                             {
-                                rabbits.RemoveAt(ridx);
+                                m.Health -= Constants.WOLF_DMG;
+                                meeples[midx] = m;
+                                w.Hunger = 0f;
+                                w.FullTimer = Constants.WOLF_MATE_WINDOW;
                                 w.WanderTimer = 0f;
                             }
                             else
@@ -1015,16 +1010,50 @@ namespace PixelTowerDefense.Systems
                         }
                         else
                         {
-                            w.WanderTimer -= dt;
-                            if (w.WanderTimer <= 0f)
+                            int ridx = FindNearestRabbit(w.Pos, rabbits, Constants.WOLF_SEEK_RADIUS);
+                            if (ridx >= 0)
                             {
-                                w.WanderTimer = _rng.NextFloat(Constants.WOLF_WANDER_MIN, Constants.WOLF_WANDER_MAX);
-                                float ang = MathHelper.ToRadians(_rng.Next(360));
-                                w.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * Constants.WOLF_SPEED;
+                                Vector2 dir = rabbits[ridx].Pos - w.Pos;
+                                float dist = dir.Length();
+                                if (dist < Constants.WOLF_ATTACK_RANGE)
+                                {
+                                    rabbits.RemoveAt(ridx);
+                                    w.Hunger = 0f;
+                                    w.FullTimer = Constants.WOLF_MATE_WINDOW;
+                                    w.WanderTimer = 0f;
+                                }
+                                else
+                                {
+                                    if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                    w.Vel = dir * Constants.WOLF_SPEED;
+                                    w.Pos += w.Vel * dt;
+                                }
                             }
+                            else
+                            {
+                                w.WanderTimer -= dt;
+                                if (w.WanderTimer <= 0f)
+                                {
+                                    w.WanderTimer = _rng.NextFloat(Constants.WOLF_WANDER_MIN, Constants.WOLF_WANDER_MAX);
+                                    float ang = MathHelper.ToRadians(_rng.Next(360));
+                                    w.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * Constants.WOLF_SPEED;
+                                }
 
-                            w.Pos += w.Vel * dt;
+                                w.Pos += w.Vel * dt;
+                            }
                         }
+                    }
+                    else
+                    {
+                        w.WanderTimer -= dt;
+                        if (w.WanderTimer <= 0f)
+                        {
+                            w.WanderTimer = _rng.NextFloat(Constants.WOLF_WANDER_MIN, Constants.WOLF_WANDER_MAX);
+                            float ang = MathHelper.ToRadians(_rng.Next(360));
+                            w.Vel = new Vector2(MathF.Cos(ang), MathF.Sin(ang)) * Constants.WOLF_SPEED;
+                        }
+
+                        w.Pos += w.Vel * dt;
                     }
                 }
 
@@ -1036,7 +1065,94 @@ namespace PixelTowerDefense.Systems
                                            Constants.ARENA_BOTTOM - 1);
                 w.ShadowY = w.Pos.Y;
 
+                if (w.FullTimer > 0f && w.Age >= w.GrowthDuration)
+                {
+                    for (int j = 0; j < wolves.Count; j++)
+                    {
+                        if (j == i) continue;
+                        var mate = wolves[j];
+                        if (mate.FullTimer > 0f && mate.Age >= mate.GrowthDuration &&
+                            Vector2.Distance(mate.Pos, w.Pos) < 2f)
+                        {
+                            if (w.HomeId < 0 && mate.HomeId < 0)
+                            {
+                                dens.Add(new WolfDen { Pos = (w.Pos + mate.Pos) / 2f, VacantTimer = 0f });
+                                int hid = dens.Count - 1;
+                                w.HomeId = hid;
+                                mate.HomeId = hid;
+                            }
+                            else if (w.HomeId < 0 && mate.HomeId >= 0)
+                            {
+                                w.HomeId = mate.HomeId;
+                            }
+                            else if (w.HomeId >= 0 && mate.HomeId < 0)
+                            {
+                                mate.HomeId = w.HomeId;
+                            }
+
+                            if (w.HomeId >= 0 && w.HomeId == mate.HomeId)
+                            {
+                                if (_rng.NextDouble() < Constants.WOLF_PUP_CHANCE)
+                                {
+                                    wolves.Add(new Wolf
+                                    {
+                                        Pos = (w.Pos + mate.Pos) / 2f,
+                                        Vel = Vector2.Zero,
+                                        z = 0f,
+                                        vz = 0f,
+                                        WanderTimer = 0f,
+                                        GrowthDuration = Constants.WOLF_GROW_TIME,
+                                        Age = 0f,
+                                        Hunger = 0f,
+                                        FullTimer = 0f,
+                                        HomeId = w.HomeId
+                                    });
+                                }
+                                w.FullTimer = 0f;
+                                mate.FullTimer = 0f;
+                                wolves[j] = mate;
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 wolves[i] = w;
+            }
+
+            var occupancy = new int[dens.Count];
+            for (int i = 0; i < wolves.Count; i++)
+            {
+                int hid = wolves[i].HomeId;
+                if (hid >= 0 && hid < dens.Count)
+                    occupancy[hid]++;
+            }
+            for (int h = dens.Count - 1; h >= 0; h--)
+            {
+                var den = dens[h];
+                if (occupancy[h] == 0)
+                {
+                    den.VacantTimer += dt;
+                    if (den.VacantTimer >= Constants.WOLF_DEN_DECAY)
+                    {
+                        dens.RemoveAt(h);
+                        for (int i = 0; i < wolves.Count; i++)
+                        {
+                            var w = wolves[i];
+                            if (w.HomeId == h)
+                                w.HomeId = -1;
+                            else if (w.HomeId > h)
+                                w.HomeId--;
+                            wolves[i] = w;
+                        }
+                        continue;
+                    }
+                }
+                else
+                {
+                    den.VacantTimer = 0f;
+                }
+                dens[h] = den;
             }
         }
 
