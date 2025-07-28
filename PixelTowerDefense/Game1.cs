@@ -572,6 +572,10 @@ namespace PixelTowerDefense
                 _sb.Draw(_px, rect, col);
             }
 
+            // --- bush shadows ---
+            foreach (var b in _bushes)
+                DrawBushShadow(b);
+
             // --- berry bushes ---
             foreach (var b in _bushes)
                 DrawBushBottom(b);
@@ -1234,6 +1238,29 @@ namespace PixelTowerDefense
             Color[] firePal = { Color.OrangeRed, Color.Orange, Color.Yellow, new Color(255, 100, 0) };
             var col = firePal[_rng.Next(firePal.Length)];
             _sb.Draw(_px, rect, col);
+        }
+
+        private void DrawBushShadow(BerryBush b)
+        {
+            int baseX = (int)MathF.Round(b.Pos.X);
+            int baseY = (int)MathF.Round(b.Pos.Y);
+
+            int radX = (int)MathF.Round(b.ShadowRadius);
+            int radY = Math.Max(1, radX / 2);
+
+            byte alpha = 80;
+            var col = new Color((byte)0, (byte)0, (byte)0, alpha);
+
+            for (int y = -radY; y <= radY; y++)
+            {
+                for (int x = -radX; x <= radX; x++)
+                {
+                    float nx = x / (float)radX;
+                    float ny = y / (float)radY;
+                    if (nx * nx + ny * ny <= 1f)
+                        _sb.Draw(_px, new Rectangle(baseX + x, baseY + y, 1, 1), col);
+                }
+            }
         }
 
         private void DrawBuilding(Building b)
