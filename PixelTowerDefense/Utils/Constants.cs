@@ -125,6 +125,7 @@ namespace PixelTowerDefense.Utils
         public const float RABBIT_HUNGER_THRESHOLD = 2f;
         public const float RABBIT_MATE_WINDOW = 5f;
         public const float RABBIT_BABY_CHANCE = 0.3f;
+        public const float RABBIT_HOME_DECAY = 30f; // seconds of vacancy before a hole disappears
 
         // Wolves
         public const float WOLF_SPEED = 14f;
