@@ -789,11 +789,7 @@ namespace PixelTowerDefense.Systems
                 if (prevAge < r.GrowthDuration && r.Age >= r.GrowthDuration && r.HomeId >= 0)
                     r.HomeId = -1;
 
-                if (r.Age >= r.GrowthDuration && r.HomeId < 0)
-                {
-                    homes.Add(new RabbitHole { Pos = r.Pos });
-                    r.HomeId = homes.Count - 1;
-                }
+                // rabbits no longer build a home immediately upon becoming adult
 
                 if (r.z > 0f || r.vz != 0f)
                 {
@@ -859,35 +855,55 @@ namespace PixelTowerDefense.Systems
                     }
                 }
 
-                if (r.FullTimer > 0f && r.Age >= r.GrowthDuration && r.HomeId >= 0)
+                if (r.FullTimer > 0f && r.Age >= r.GrowthDuration)
                 {
                     for (int j = 0; j < count; j++)
                     {
                         if (j == i) continue;
                         var mate = rabbits[j];
-                        if (mate.FullTimer > 0f && mate.Age >= mate.GrowthDuration && mate.HomeId == r.HomeId &&
+                        if (mate.FullTimer > 0f && mate.Age >= mate.GrowthDuration &&
                             Vector2.Distance(mate.Pos, r.Pos) < 2f)
                         {
-                            if (_rng.NextDouble() < Constants.RABBIT_BABY_CHANCE)
+                            if (r.HomeId < 0 && mate.HomeId < 0)
                             {
-                                rabbits.Add(new Rabbit
-                                {
-                                    Pos = (r.Pos + mate.Pos) / 2f,
-                                    Vel = Vector2.Zero,
-                                    z = 0f,
-                                    vz = 0f,
-                                    WanderTimer = 0f,
-                                    GrowthDuration = Constants.RABBIT_GROW_TIME,
-                                    Age = 0f,
-                                    Hunger = 0f,
-                                    FullTimer = 0f,
-                                    HomeId = r.HomeId
-                                });
+                                homes.Add(new RabbitHole { Pos = (r.Pos + mate.Pos) / 2f, VacantTimer = 0f });
+                                int hid = homes.Count - 1;
+                                r.HomeId = hid;
+                                mate.HomeId = hid;
                             }
-                            r.FullTimer = 0f;
-                            mate.FullTimer = 0f;
-                            rabbits[j] = mate;
-                            break;
+                            else if (r.HomeId < 0 && mate.HomeId >= 0)
+                            {
+                                r.HomeId = mate.HomeId;
+                            }
+                            else if (r.HomeId >= 0 && mate.HomeId < 0)
+                            {
+                                mate.HomeId = r.HomeId;
+                            }
+
+                            if (r.HomeId >= 0 && r.HomeId == mate.HomeId)
+                            {
+                                if (_rng.NextDouble() < Constants.RABBIT_BABY_CHANCE)
+                                {
+                                    rabbits.Add(new Rabbit
+                                    {
+                                        Pos = (r.Pos + mate.Pos) / 2f,
+                                        Vel = Vector2.Zero,
+                                        z = 0f,
+                                        vz = 0f,
+                                        WanderTimer = 0f,
+                                        GrowthDuration = Constants.RABBIT_GROW_TIME,
+                                        Age = 0f,
+                                        Hunger = 0f,
+                                        FullTimer = 0f,
+                                        HomeId = r.HomeId
+                                    });
+                                    count = rabbits.Count; // update in case list resized
+                                }
+                                r.FullTimer = 0f;
+                                mate.FullTimer = 0f;
+                                rabbits[j] = mate;
+                                break;
+                            }
                         }
                     }
                 }
@@ -901,6 +917,42 @@ namespace PixelTowerDefense.Systems
                 r.ShadowY = r.Pos.Y;
 
                 rabbits[i] = r;
+            }
+
+            // update home vacancy timers
+            var occupancy = new int[homes.Count];
+            for (int i = 0; i < rabbits.Count; i++)
+            {
+                int hid = rabbits[i].HomeId;
+                if (hid >= 0 && hid < homes.Count)
+                    occupancy[hid]++;
+            }
+            for (int h = homes.Count - 1; h >= 0; h--)
+            {
+                var home = homes[h];
+                if (occupancy[h] == 0)
+                {
+                    home.VacantTimer += dt;
+                    if (home.VacantTimer >= Constants.RABBIT_HOME_DECAY)
+                    {
+                        homes.RemoveAt(h);
+                        for (int i = 0; i < rabbits.Count; i++)
+                        {
+                            var r = rabbits[i];
+                            if (r.HomeId == h)
+                                r.HomeId = -1;
+                            else if (r.HomeId > h)
+                                r.HomeId--;
+                            rabbits[i] = r;
+                        }
+                        continue;
+                    }
+                }
+                else
+                {
+                    home.VacantTimer = 0f;
+                }
+                homes[h] = home;
             }
         }
 
