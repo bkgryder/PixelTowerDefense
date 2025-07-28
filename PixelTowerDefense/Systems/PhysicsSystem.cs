@@ -748,24 +748,12 @@ namespace PixelTowerDefense.Systems
                     bool nearSeed = false;
                     if (!nearPlant)
                     {
-                        bool nearBush = false;
-                        foreach (var b in bushes)
+                        for (int j = 0; j < seeds.Count; j++)
                         {
-                            if (Vector2.Distance(b.Pos, s.Pos) < Constants.SEED_MIN_TREE_DIST)
-                            { nearBush = true; break; }
+                            if (j == i) continue;
+                            if (Vector2.Distance(seeds[j].Pos, s.Pos) < Constants.SEED_MIN_SEED_DIST)
+                            { nearSeed = true; break; }
                         }
-                        nearSeed = false;
-                        if (!nearBush)
-                        {
-                            for (int j = 0; j < seeds.Count; j++)
-                            {
-                                if (j == i) continue;
-                                if (Vector2.Distance(seeds[j].Pos, s.Pos) < Constants.SEED_MIN_SEED_DIST)
-                                { nearSeed = true; break; }
-                            }
-                        }
-                        if (!nearBush && !nearSeed)
-                            bushes.Add(new BerryBush(s.Pos, _rng));
                     }
 
                     if (!nearPlant && !nearSeed)
