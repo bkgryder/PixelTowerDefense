@@ -264,13 +264,18 @@ namespace PixelTowerDefense.Systems
                                     float dist = dir.Length();
                                     if (dist < tree.CollisionRadius + Constants.TOUCH_RANGE)
                                     {
-                                        if (!tree.IsStump)
+                                        if (!tree.IsDead)
                                         {
                                             tree.Health--;
                                             if (tree.Health <= 0)
                                             {
-                                                tree.IsStump = true;
-                                                tree.CollisionRadius = Constants.STUMP_RADIUS;
+                                                tree.IsDead = true;
+                                                tree.PaleTimer = 0f;
+                                                tree.FallDelay = 0f;
+                                                tree.FallTimer = 0f;
+                                                tree.Fallen = false;
+                                                tree.DecompTimer = 0f;
+                                                tree.RemoveWhenFallen = true;
                                                 logs.Add(new Log(tree.Pos, _rng));
                                             }
                                             trees[tidx] = tree;
@@ -1194,6 +1199,12 @@ namespace PixelTowerDefense.Systems
                     seeds.Add(new Seed(spawn, vel, vz0, _rng));
                 }
 
+                if (t.Fallen && t.RemoveWhenFallen)
+                {
+                    trees.RemoveAt(i);
+                    continue;
+                }
+
                 if (t.Fallen && t.DecompTimer >= Constants.TREE_DISINTEGRATE_TIME)
                 {
                     trees.RemoveAt(i);
@@ -1242,8 +1253,13 @@ namespace PixelTowerDefense.Systems
                 logs.Add(new Log(tree.Pos, rng));
                 if (tree.Health <= 0)
                 {
-                    tree.IsStump = true;
-                    tree.CollisionRadius = Constants.STUMP_RADIUS;
+                    tree.IsDead = true;
+                    tree.PaleTimer = 0f;
+                    tree.FallDelay = 0f;
+                    tree.FallTimer = 0f;
+                    tree.Fallen = false;
+                    tree.DecompTimer = 0f;
+                    tree.RemoveWhenFallen = true;
                 }
                 worker.WanderTimer = Constants.BASE_CHOP / (1f + 0.1f * worker.Strength);
             }

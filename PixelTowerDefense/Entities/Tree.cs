@@ -33,6 +33,9 @@ namespace PixelTowerDefense.Entities
         public float BurnTimer;
         public float BurnProgress;
 
+        /// <summary>Remove tree immediately once fallen.</summary>
+        public bool RemoveWhenFallen;
+
         // appearance
         public float ShadowRadius;
 
@@ -79,6 +82,7 @@ namespace PixelTowerDefense.Entities
             IsBurning = false;
             BurnTimer = 0f;
             BurnProgress = 0f;
+            RemoveWhenFallen = false;
 
             GenerateShape(0f);
         }
