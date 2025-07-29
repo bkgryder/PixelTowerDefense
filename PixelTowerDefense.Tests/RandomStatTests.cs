@@ -28,7 +28,7 @@ public class RandomStatTests
         worker.Worker = new Worker();
         var workers = new List<Meeple> { worker };
         var trees = new List<Tree> { new Tree(new Vector2(1f,0f), rng) };
-        var logs = new List<Log> { new Log(new Vector2(0f,1f), rng) };
+        var logs = new List<Wood> { new Wood(new Vector2(0f,1f), rng) };
         var buildings = new List<Building>();
         var bushes = new List<BerryBush>();
         var debris = new List<Pixel>();
@@ -38,7 +38,7 @@ public class RandomStatTests
 
         if (worker.Dexterity >= worker.Strength)
         {
-            Assert.True(workers[0].CarriedLogIdx >= 0);
+            Assert.True(workers[0].CarriedWoodIdx >= 0);
             Assert.Equal(Constants.TREE_HEALTH, trees[0].Health);
         }
         else

@@ -7,10 +7,10 @@ using Xunit;
 
 namespace PixelTowerDefense.Tests;
 
-public class WorkerCarpenterTests
+public class WorkerWoodTests
 {
     [Fact]
-    public void Worker_ChopsTree_SpawnsLogs()
+    public void Worker_ChopsTree_SpawnsWood()
     {
         var rng = new System.Random(0);
         var worker = new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
@@ -18,7 +18,7 @@ public class WorkerCarpenterTests
         { Worker = new Worker() };
         var tree = new Tree(new Vector2(0.5f, 0f), rng);
         tree.Health = 3;
-        var logs = new List<Log>();
+        var logs = new List<Wood>();
 
         PhysicsSystem.WorkerChopTree(ref worker, ref tree, logs, rng);
 
@@ -29,32 +29,20 @@ public class WorkerCarpenterTests
     }
 
     [Fact]
-    public void Worker_DepositsLog_AtCarpenterHut()
+    public void Worker_DepositsWood_AtStorageHut()
     {
         var worker = new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
                                 5, 5, 5, 5)
         {
             Worker = new Worker(),
-            CarriedLogs = 1
+            CarriedWood = 1
         };
-        var hut = new Building { Pos = Vector2.Zero, Kind = BuildingType.CarpenterHut };
+        var hut = new Building { Pos = Vector2.Zero, Kind = BuildingType.StorageHut };
 
-        PhysicsSystem.WorkerDepositLog(ref worker, ref hut);
+        PhysicsSystem.WorkerDepositWood(ref worker, ref hut);
 
-        Assert.Equal(0, worker.CarriedLogs);
-        Assert.Equal(1, hut.StoredLogs);
-        Assert.Equal(Constants.BASE_CRAFT / (1f + 0.1f * worker.Intellect), hut.CraftTimer);
-    }
-
-    [Fact]
-    public void CarpenterHut_ConvertsLogsIntoPlanks()
-    {
-        var hut = new Building { Pos = Vector2.Zero, Kind = BuildingType.CarpenterHut, StoredLogs = 1, CraftTimer = Constants.BASE_CRAFT };
-
-        PhysicsSystem.UpdateCarpenter(ref hut, Constants.BASE_CRAFT);
-
-        Assert.Equal(0, hut.StoredLogs);
-        Assert.Equal(1, hut.StoredPlanks);
+        Assert.Equal(0, worker.CarriedWood);
+        Assert.Equal(1, hut.StoredWood);
     }
 
     [Fact]
@@ -68,7 +56,7 @@ public class WorkerCarpenterTests
                                  10, 5, 5, 5)
         { Worker = new Worker() };
         var tree = new Tree(new Vector2(0.5f, 0f), rng);
-        var logs = new List<Log>();
+        var logs = new List<Wood>();
 
         PhysicsSystem.WorkerChopTree(ref weak, ref tree, logs, rng);
         float weakCooldown = weak.WanderTimer;
@@ -82,26 +70,4 @@ public class WorkerCarpenterTests
         Assert.True(strongCooldown < weakCooldown);
     }
 
-    [Fact]
-    public void SmartWorkers_CraftFaster()
-    {
-        var hutA = new Building { Pos = Vector2.Zero, Kind = BuildingType.CarpenterHut };
-        var hutB = new Building { Pos = Vector2.Zero, Kind = BuildingType.CarpenterHut };
-
-        var slow = new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
-                               5, 5, 1, 5)
-        { Worker = new Worker(), CarriedLogs = 1 };
-        var smart = new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
-                                5, 5, 10, 5)
-        { Worker = new Worker(), CarriedLogs = 1 };
-
-        PhysicsSystem.WorkerDepositLog(ref slow, ref hutA);
-        PhysicsSystem.WorkerDepositLog(ref smart, ref hutB);
-
-        PhysicsSystem.UpdateCarpenter(ref hutA, 0.75f);
-        PhysicsSystem.UpdateCarpenter(ref hutB, 0.75f);
-
-        Assert.Equal(0, hutA.StoredPlanks);
-        Assert.Equal(1, hutB.StoredPlanks);
-    }
 }

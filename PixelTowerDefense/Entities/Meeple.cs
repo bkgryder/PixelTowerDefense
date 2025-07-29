@@ -18,8 +18,7 @@ namespace PixelTowerDefense.Entities
         None,
         HarvestBerries,
         ChopTree,
-        HaulLog,
-        CarryLogToCarpenter,
+        HaulWood,
         DepositResource
     }
 
@@ -74,8 +73,8 @@ namespace PixelTowerDefense.Entities
         public float Health;
 
         public int CarriedBerries;
-        public int CarriedLogs;
-        public int CarriedLogIdx;
+        public int CarriedWood;
+        public int CarriedWoodIdx;
 
         public string Name;
 
@@ -114,8 +113,8 @@ namespace PixelTowerDefense.Entities
             Hunger = 0f;
             Health = health;
             CarriedBerries = 0;
-            CarriedLogs = 0;
-            CarriedLogIdx = -1;
+            CarriedWood = 0;
+            CarriedWoodIdx = -1;
             Name = string.Empty;
             Combatant = null;
             Worker = null;
