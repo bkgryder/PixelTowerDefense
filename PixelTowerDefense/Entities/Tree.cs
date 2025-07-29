@@ -94,10 +94,19 @@ namespace PixelTowerDefense.Entities
             float trunkLight = 1f + RandSpan(grng) * 0.05f;
             float leafLight = 1f + RandSpan(grng) * 0.05f;
 
+            Color baseCol = arch.TrunkBase;
+            Color tipCol = arch.TrunkTip;
+            if (arch.TrunkVariations != null && arch.TrunkVariations.Length > 0)
+            {
+                var pair = arch.TrunkVariations[grng.Next(arch.TrunkVariations.Length)];
+                baseCol = pair.Base;
+                tipCol = pair.Tip;
+            }
+
             TrunkBase = Utils.ColorUtils.AdjustColor(
-                arch.TrunkBase, Gen.HueShift, 1f, trunkLight);
+                baseCol, Gen.HueShift, 1f, trunkLight);
             TrunkTip = Utils.ColorUtils.AdjustColor(
-                arch.TrunkTip, Gen.HueShift, 1f, trunkLight);
+                tipCol, Gen.HueShift, 1f, trunkLight);
             LeafA = Utils.ColorUtils.AdjustColor(
                 arch.LeafA, Gen.HueShift, 1f, leafLight);
             LeafB = Utils.ColorUtils.AdjustColor(
