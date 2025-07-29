@@ -211,7 +211,14 @@ namespace PixelTowerDefense.Systems
                                                 if (seed.Stage == BuildStage.Planned)
                                                 {
                                                     seed.Stage = BuildStage.Framed;
-                                                    seed.RequiredResources = 5;
+                                                    int[] costs = seed.Kind switch
+                                                    {
+                                                        BuildingType.StorageHut => Constants.STORAGE_HUT_COSTS,
+                                                        BuildingType.HousingHut => Constants.HOUSING_HUT_COSTS,
+                                                        BuildingType.CarpenterHut => Constants.STORAGE_HUT_COSTS,
+                                                        _ => Constants.STORAGE_HUT_COSTS
+                                                    };
+                                                    seed.RequiredResources = costs[1];
                                                 }
                                                 else if (seed.Stage == BuildStage.Framed)
                                                 {
@@ -583,6 +590,23 @@ namespace PixelTowerDefense.Systems
                 if (seeds[i].Stage != BuildStage.Built)
                     continue;
 
+                int berryCap = 0, logCap = 0, plankCap = 0, beds = 0;
+                switch (seeds[i].Kind)
+                {
+                    case BuildingType.StorageHut:
+                        berryCap = Constants.STORAGE_BERRY_CAPACITY;
+                        logCap = Constants.STORAGE_LOG_CAPACITY;
+                        plankCap = Constants.STORAGE_PLANK_CAPACITY;
+                        break;
+                    case BuildingType.HousingHut:
+                        beds = Constants.HOUSING_BED_SLOTS;
+                        break;
+                    case BuildingType.CarpenterHut:
+                        logCap = Constants.STORAGE_LOG_CAPACITY;
+                        plankCap = Constants.STORAGE_PLANK_CAPACITY;
+                        break;
+                }
+
                 buildings.Add(new Building
                 {
                     Pos = seeds[i].Pos,
@@ -590,7 +614,11 @@ namespace PixelTowerDefense.Systems
                     StoredBerries = 0,
                     StoredWood = 0,
                     HousedMeeples = 0,
-                    ReservedBy = null
+                    ReservedBy = null,
+                    BerryCapacity = berryCap,
+                    LogCapacity = logCap,
+                    PlankCapacity = plankCap,
+                    BedSlots = beds
                 });
 
                 seeds.RemoveAt(i);
@@ -1490,7 +1518,8 @@ namespace PixelTowerDefense.Systems
         {
             if (building.Kind == BuildingType.StorageHut &&
                 Vector2.Distance(worker.Pos, building.Pos) <= 1f &&
-                worker.CarriedWood > 0)
+                worker.CarriedWood > 0 &&
+                building.StoredWood < building.LogCapacity)
             {
                 building.StoredWood += worker.CarriedWood;
                 worker.CarriedWood = 0;
@@ -1560,7 +1589,7 @@ namespace PixelTowerDefense.Systems
             for (int i = 0; i < huts.Count; i++)
             {
                 if (huts[i].Kind != BuildingType.StorageHut) continue;
-                if (huts[i].StoredBerries >= Building.CAPACITY) continue;
+                if (huts[i].StoredBerries >= huts[i].BerryCapacity) continue;
                 if (huts[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
                 if (d < best)
@@ -1599,6 +1628,7 @@ namespace PixelTowerDefense.Systems
             {
                 if (huts[i].Kind != BuildingType.StorageHut) continue;
                 if (huts[i].ReservedBy != null) continue;
+                if (huts[i].StoredWood >= huts[i].LogCapacity) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
                 if (d < best)
                 {

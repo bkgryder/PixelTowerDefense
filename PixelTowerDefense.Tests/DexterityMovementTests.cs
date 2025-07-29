@@ -35,7 +35,15 @@ public class DexterityMovementTests
         };
         var buildings = new List<Building>
         {
-            new Building { Pos = new Vector2(10f, 0f), Kind = BuildingType.StorageHut }
+            new Building
+            {
+                Pos = new Vector2(10f, 0f),
+                Kind = BuildingType.StorageHut,
+                BerryCapacity = Constants.STORAGE_BERRY_CAPACITY,
+                LogCapacity = Constants.STORAGE_LOG_CAPACITY,
+                PlankCapacity = Constants.STORAGE_PLANK_CAPACITY,
+                BedSlots = 0
+            }
         };
         var debris = new List<Pixel>();
         var bushes = new List<BerryBush>();

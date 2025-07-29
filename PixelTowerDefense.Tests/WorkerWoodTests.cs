@@ -37,7 +37,15 @@ public class WorkerWoodTests
             Worker = new Worker(),
             CarriedWood = 1
         };
-        var hut = new Building { Pos = Vector2.Zero, Kind = BuildingType.StorageHut };
+        var hut = new Building
+        {
+            Pos = Vector2.Zero,
+            Kind = BuildingType.StorageHut,
+            BerryCapacity = Constants.STORAGE_BERRY_CAPACITY,
+            LogCapacity = Constants.STORAGE_LOG_CAPACITY,
+            PlankCapacity = Constants.STORAGE_PLANK_CAPACITY,
+            BedSlots = 0
+        };
 
         PhysicsSystem.WorkerDepositWood(ref worker, ref hut);
 

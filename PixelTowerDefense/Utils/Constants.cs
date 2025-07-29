@@ -163,6 +163,18 @@ namespace PixelTowerDefense.Utils
         // Worker actions
         public const float BASE_CHOP = 0.5f;
 
+        // Building blueprints
+        public static readonly int[] STORAGE_HUT_COSTS = { 5, 5 };
+        public static readonly int[] HOUSING_HUT_COSTS = { 5, 5 };
+        public const int HUT_FOOTPRINT_W = 3, HUT_FOOTPRINT_H = 3;
+        public const int COTTAGE_FOOTPRINT_W = 5, COTTAGE_FOOTPRINT_H = 5;
+
+        // Building capacities
+        public const int STORAGE_BERRY_CAPACITY = 30;
+        public const int STORAGE_LOG_CAPACITY = 30;
+        public const int STORAGE_PLANK_CAPACITY = 30;
+        public const int HOUSING_BED_SLOTS = 5;
+
         // Legacy constant kept for backward compatibility
         public const float CARPENTER_CRAFT_TIME = BASE_CRAFT;
 
