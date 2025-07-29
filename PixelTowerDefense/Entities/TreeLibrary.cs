@@ -16,6 +16,18 @@ namespace PixelTowerDefense.Entities
         public float HueShift;
     }
 
+    public struct ColorPair
+    {
+        public Color Base;
+        public Color Tip;
+
+        public ColorPair(Color baseColor, Color tipColor)
+        {
+            Base = baseColor;
+            Tip = tipColor;
+        }
+    }
+
     public sealed class TreeArchetype
     {
         public TreeSpecies Species;
@@ -30,6 +42,7 @@ namespace PixelTowerDefense.Entities
         public float LeafKeepProb;
 
         public Color TrunkBase, TrunkTip;
+        public ColorPair[] TrunkVariations;
         public Color LeafA, LeafB;
     }
 
@@ -52,6 +65,11 @@ namespace PixelTowerDefense.Entities
             LeafKeepProb = 0.85f,
             TrunkBase = new Color(80, 60, 40),
             TrunkTip = new Color(120, 95, 70),
+            TrunkVariations = new[]
+            {
+                new ColorPair(new Color(70, 50, 35), new Color(110, 85, 60)),
+                new ColorPair(new Color(60, 45, 30), new Color(100, 75, 55)),
+            },
             LeafA = new Color(28, 92, 36),
             LeafB = new Color(18, 70, 26),
         };
@@ -73,6 +91,11 @@ namespace PixelTowerDefense.Entities
             LeafKeepProb = 0.92f,
             TrunkBase = new Color(70, 55, 40),
             TrunkTip = new Color(110, 85, 60),
+            TrunkVariations = new[]
+            {
+                new ColorPair(new Color(60, 48, 35), new Color(100, 78, 55)),
+                new ColorPair(new Color(80, 62, 45), new Color(120, 95, 70)),
+            },
             LeafA = new Color(22, 80, 40),
             LeafB = new Color(14, 56, 30),
         };
@@ -94,6 +117,12 @@ namespace PixelTowerDefense.Entities
             LeafKeepProb = 0.80f,
             TrunkBase = new Color(200, 200, 200),
             TrunkTip = new Color(240, 240, 240),
+            TrunkVariations = new[]
+            {
+                new ColorPair(new Color(220, 220, 220), new Color(255, 255, 255)),
+                new ColorPair(new Color(180, 180, 180), new Color(220, 220, 220)),
+                new ColorPair(new Color(100, 100, 100), new Color(150, 150, 150)),
+            },
             LeafA = new Color(40, 120, 40),
             LeafB = new Color(28, 96, 28),
         };
