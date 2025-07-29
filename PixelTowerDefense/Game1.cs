@@ -30,6 +30,7 @@ namespace PixelTowerDefense
         List<Stone> _stones = new();
         List<Tree> _trees = new();
         List<Building> _buildings = new();
+        List<BuildingSeed> _buildingSeeds = new();
         Random _rng = new();
         World.GameWorld _world = new();
         GroundMap _ground;
@@ -517,8 +518,9 @@ namespace PixelTowerDefense
             {
                 _dragging = false;
             }
-            
-            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _wood, _water, dt);
+
+            VillagePlanner.Update(_meeples, _buildings, _wood, _buildingSeeds, _rng);
+            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _buildingSeeds, _trees, _wood, _water, dt);
             PhysicsSystem.SimulateRabbits(_rabbits, _bushes, _seeds, _rabbitHomes, dt);
             PhysicsSystem.SimulateWolves(_wolves, _rabbits, _meeples, _wolfDens, dt);
             if (_weather == Weather.Rainy)
@@ -638,6 +640,8 @@ namespace PixelTowerDefense
             // --- buildings ---
             foreach (var b in _buildings)
                 DrawBuilding(b);
+            foreach (var s in _buildingSeeds)
+                DrawBuildingSeed(s);
 
             // --- shadows ---
             foreach (var e in _meeples.OrderBy(s => s.ShadowY))
@@ -716,7 +720,7 @@ namespace PixelTowerDefense
                 var y = _rng.NextFloat(Constants.ARENA_TOP + 2, Constants.ARENA_BOTTOM - 2);
                 var pal = side == Faction.Friendly ? Meeple.FRIENDLY_SHIRTS : Meeple.ENEMY_SHIRTS;
                 var shirt = pal[_rng.Next(pal.Length)];
-                _meeples.Add(new Meeple(new Vector2(x, y), side, shirt){Combatant = withCombat ? new Combatant() : (Combatant?)null});
+                _meeples.Add(new Meeple(new Vector2(x, y), side, shirt) { Combatant = withCombat ? new Combatant() : (Combatant?)null });
             }
         }
 
@@ -1124,7 +1128,7 @@ namespace PixelTowerDefense
                 GraphicsDevice.Viewport.Height - (int)(size1.Y + size2.Y + 6) - 5,
                 (int)width + 4,
                 (int)(size1.Y + size2.Y + 6));
-            _sb.Draw(_px, rect, new Color(0,0,0,180));
+            _sb.Draw(_px, rect, new Color(0, 0, 0, 180));
             _sb.DrawString(_font, line1, new Vector2(rect.X + 2, rect.Y + 2), Color.Yellow);
             _sb.DrawString(_font, line2, new Vector2(rect.X + 2, rect.Y + 4 + size1.Y), Color.Yellow);
         }
@@ -1320,6 +1324,17 @@ namespace PixelTowerDefense
                     _sb.Draw(_px, new Rectangle((int)pos.X, (int)pos.Y - 2, 1, 1), Color.Peru);
                     break;
             }
+        }
+
+        private void DrawBuildingSeed(BuildingSeed s)
+        {
+            Color col = s.Stage switch
+            {
+                BuildStage.Planned => Color.Yellow,
+                BuildStage.Framed => Color.Orange,
+                _ => Color.White
+            };
+            _sb.Draw(_px, new Rectangle((int)s.Pos.X, (int)s.Pos.Y, 1, 1), col);
         }
 
         private void DrawStone(Stone s)

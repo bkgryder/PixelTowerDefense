@@ -19,7 +19,8 @@ namespace PixelTowerDefense.Entities
         HarvestBerries,
         ChopTree,
         HaulWood,
-        DepositResource
+        DepositResource,
+        BuildSeed
     }
 
     public struct Worker

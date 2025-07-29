@@ -16,6 +16,7 @@ namespace PixelTowerDefense.Systems
             List<Pixel> debris,
             List<BerryBush> bushes,
             List<Building> buildings,
+            List<BuildingSeed> seeds,
             List<Tree> trees,
             List<Wood> logs,
             WaterMap water,
@@ -77,6 +78,7 @@ namespace PixelTowerDefense.Systems
                         e.Hunger = MathF.Min(Constants.HUNGER_MAX, e.Hunger + Constants.HUNGER_RATE * dt);
                         if (e.Worker != null)
                         {
+                            var wdata = e.Worker.Value;
                             if (e.CarriedBerries == 1 && e.Hunger > Constants.HUNGER_THRESHOLD)
                             {
                                 int hidx = FindNearestDepositHut(e.Pos, buildings);
@@ -144,7 +146,7 @@ namespace PixelTowerDefense.Systems
                             if (e.Hunger >= Constants.HUNGER_THRESHOLD && e.CarriedBerries == 0)
                             {
                                 int bidx;
-                                var wdata = e.Worker.Value;
+                                wdata = e.Worker.Value;
                                 if (wdata.CurrentJob == JobType.HarvestBerries && wdata.TargetIdx != null)
                                     bidx = wdata.TargetIdx.Value;
                                 else
@@ -189,23 +191,40 @@ namespace PixelTowerDefense.Systems
                             }
 
                             // --- log & tree jobs ---
+                            wdata = e.Worker.Value;
+                            int reservedSeed = FindReservedSeed(i, seeds);
                             if (e.CarriedWoodIdx >= 0)
                             {
                                 if (e.CarriedWoodIdx < logs.Count)
                                 {
                                     var log = logs[e.CarriedWoodIdx];
-                                    int hidx = FindNearestStorageForWood(e.Pos, buildings);
-                                    if (hidx >= 0)
+                                    if (reservedSeed >= 0)
                                     {
-                                        var hut = buildings[hidx];
-                                        Vector2 dir = hut.Pos - e.Pos;
+                                        var seed = seeds[reservedSeed];
+                                        Vector2 dir = seed.Pos - e.Pos;
                                         float dist = dir.Length();
                                         if (dist < 1f)
                                         {
-                                            hut.StoredWood++;
-                                            buildings[hidx] = hut;
+                                            seed.RequiredResources--;
+                                            if (seed.RequiredResources <= 0)
+                                            {
+                                                if (seed.Stage == BuildStage.Planned)
+                                                {
+                                                    seed.Stage = BuildStage.Framed;
+                                                    seed.RequiredResources = 5;
+                                                }
+                                                else if (seed.Stage == BuildStage.Framed)
+                                                {
+                                                    seed.Stage = BuildStage.Built;
+                                                    VillagePlanner.OnBuildComplete();
+                                                }
+                                            }
+                                            seed.ReservedBy = null;
+                                            seeds[reservedSeed] = seed;
                                             logs.RemoveAt(e.CarriedWoodIdx);
                                             e.CarriedWoodIdx = -1;
+                                            wdata.CurrentJob = JobType.None;
+                                            wdata.TargetIdx = null;
                                         }
                                         else
                                         {
@@ -216,7 +235,35 @@ namespace PixelTowerDefense.Systems
                                             logs[e.CarriedWoodIdx] = log;
                                         }
                                         e.Angle = 0f;
+                                        e.Worker = wdata;
                                         break;
+                                    }
+                                    else
+                                    {
+                                        int hidx = FindNearestStorageForWood(e.Pos, buildings);
+                                        if (hidx >= 0)
+                                        {
+                                            var hut = buildings[hidx];
+                                            Vector2 dir = hut.Pos - e.Pos;
+                                            float dist = dir.Length();
+                                            if (dist < 1f)
+                                            {
+                                                hut.StoredWood++;
+                                                buildings[hidx] = hut;
+                                                logs.RemoveAt(e.CarriedWoodIdx);
+                                                e.CarriedWoodIdx = -1;
+                                            }
+                                            else
+                                            {
+                                                if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                                e.Vel = dir * e.MoveSpeed;
+                                                e.Pos += e.Vel * dt;
+                                                log.Pos = e.Pos;
+                                                logs[e.CarriedWoodIdx] = log;
+                                            }
+                                            e.Angle = 0f;
+                                            break;
+                                        }
                                     }
                                 }
                                 else
@@ -226,22 +273,82 @@ namespace PixelTowerDefense.Systems
                             }
                             else
                             {
-                                int lidx = FindNearestLooseWood(e.Pos, logs);
+                                if (reservedSeed >= 0)
+                                {
+                                    int lidx = FindNearestLooseWood(e.Pos, logs);
+                                    if (lidx >= 0)
+                                    {
+                                        var log = logs[lidx];
+                                        Vector2 dir = log.Pos - e.Pos;
+                                        float dist = dir.Length();
+                                        if (dist < Constants.HARVEST_RANGE)
+                                        {
+                                            log.IsCarried = true;
+                                            logs[lidx] = log;
+                                            e.CarriedWoodIdx = lidx;
+                                            e.WanderTimer = 0f;
+                                        }
+                                        else
+                                        {
+                                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                            e.Vel = dir * e.MoveSpeed;
+                                            e.Pos += e.Vel * dt;
+                                        }
+                                        e.Angle = 0f;
+                                        e.Worker = wdata;
+                                        break;
+                                    }
+                                }
+
+                                int sidx = FindNearestSeedNeedingWood(e.Pos, seeds);
+                                if (sidx >= 0)
+                                {
+                                    var seed = seeds[sidx];
+                                    seed.ReservedBy = i;
+                                    seeds[sidx] = seed;
+                                    wdata.CurrentJob = JobType.BuildSeed;
+                                    wdata.TargetIdx = sidx;
+                                    e.Worker = wdata;
+                                    int lidx = FindNearestLooseWood(e.Pos, logs);
+                                    if (lidx >= 0)
+                                    {
+                                        var log = logs[lidx];
+                                        Vector2 dir = log.Pos - e.Pos;
+                                        float dist = dir.Length();
+                                        if (dist < Constants.HARVEST_RANGE)
+                                        {
+                                            log.IsCarried = true;
+                                            logs[lidx] = log;
+                                            e.CarriedWoodIdx = lidx;
+                                            e.WanderTimer = 0f;
+                                        }
+                                        else
+                                        {
+                                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                            e.Vel = dir * e.MoveSpeed;
+                                            e.Pos += e.Vel * dt;
+                                        }
+                                        e.Angle = 0f;
+                                        break;
+                                    }
+                                }
+
+                                int lidx2 = FindNearestLooseWood(e.Pos, logs);
                                 int tidx = FindNearestTree(e.Pos, trees);
 
-                                float haulScore = lidx >= 0 ? JobAffinity(JobType.HaulWood, e) : -1f;
+                                float haulScore = lidx2 >= 0 ? JobAffinity(JobType.HaulWood, e) : -1f;
                                 float chopScore = tidx >= 0 ? JobAffinity(JobType.ChopTree, e) : -1f;
 
-                                if (haulScore >= chopScore && lidx >= 0)
+                                if (haulScore >= chopScore && lidx2 >= 0)
                                 {
-                                    var log = logs[lidx];
+                                    var log = logs[lidx2];
                                     Vector2 dir = log.Pos - e.Pos;
                                     float dist = dir.Length();
                                     if (dist < Constants.HARVEST_RANGE)
                                     {
                                         log.IsCarried = true;
-                                        logs[lidx] = log;
-                                        e.CarriedWoodIdx = lidx;
+                                        logs[lidx2] = log;
+                                        e.CarriedWoodIdx = lidx2;
                                         e.WanderTimer = 0f;
                                     }
                                     else
@@ -439,9 +546,9 @@ namespace PixelTowerDefense.Systems
                 e.Pos.X = MathHelper.Clamp(e.Pos.X,
                            Constants.ARENA_LEFT + 2,
                            Constants.ARENA_RIGHT - 2);
-               e.Pos.Y = MathHelper.Clamp(e.Pos.Y,
-                          Constants.ARENA_TOP + 2,
-                          Constants.ARENA_BOTTOM - 2);
+                e.Pos.Y = MathHelper.Clamp(e.Pos.Y,
+                           Constants.ARENA_TOP + 2,
+                           Constants.ARENA_BOTTOM - 2);
 
                 foreach (var t in trees)
                 {
@@ -814,8 +921,8 @@ namespace PixelTowerDefense.Systems
                                     r.FullTimer = Constants.RABBIT_MATE_WINDOW;
                                     if (_rng.NextDouble() < Constants.RABBIT_SEED_CHANCE)
                                     {
-                                        Vector2 vel = new Vector2(_rng.NextFloat(-10f,10f), _rng.NextFloat(-10f,10f));
-                                        float vz0 = _rng.NextFloat(20f,40f);
+                                        Vector2 vel = new Vector2(_rng.NextFloat(-10f, 10f), _rng.NextFloat(-10f, 10f));
+                                        float vz0 = _rng.NextFloat(20f, 40f);
                                         seeds.Add(new Seed(r.Pos, vel, vz0, _rng, SeedKind.Bush));
                                     }
                                 }
@@ -1500,6 +1607,35 @@ namespace PixelTowerDefense.Systems
                 }
             }
             return idx;
+        }
+
+        private static int FindNearestSeedNeedingWood(Vector2 pos, List<BuildingSeed> seeds)
+        {
+            int idx = -1;
+            float best = float.MaxValue;
+            for (int i = 0; i < seeds.Count; i++)
+            {
+                if (seeds[i].Stage == BuildStage.Built) continue;
+                if (seeds[i].RequiredResources <= 0) continue;
+                if (seeds[i].ReservedBy != null) continue;
+                float d = Vector2.Distance(pos, seeds[i].Pos);
+                if (d < best)
+                {
+                    best = d;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        private static int FindReservedSeed(int workerIdx, List<BuildingSeed> seeds)
+        {
+            for (int i = 0; i < seeds.Count; i++)
+            {
+                if (seeds[i].ReservedBy == workerIdx)
+                    return i;
+            }
+            return -1;
         }
 
         private static int FindNearestTree(Vector2 pos, List<Tree> trees)

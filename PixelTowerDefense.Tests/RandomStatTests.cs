@@ -27,14 +27,15 @@ public class RandomStatTests
         var worker = Meeple.SpawnMeeple(Vector2.Zero, Faction.Friendly, Color.White, rng);
         worker.Worker = new Worker();
         var workers = new List<Meeple> { worker };
-        var trees = new List<Tree> { new Tree(new Vector2(1f,0f), rng) };
-        var logs = new List<Wood> { new Wood(new Vector2(0f,1f), rng) };
+        var trees = new List<Tree> { new Tree(new Vector2(1f, 0f), rng) };
+        var logs = new List<Wood> { new Wood(new Vector2(0f, 1f), rng) };
         var buildings = new List<Building>();
         var bushes = new List<BerryBush>();
         var debris = new List<Pixel>();
         var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
-        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 0.1f);
+        var seeds = new List<BuildingSeed>();
+        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, seeds, trees, logs, water, 0.1f);
 
         if (worker.Dexterity >= worker.Strength)
         {
