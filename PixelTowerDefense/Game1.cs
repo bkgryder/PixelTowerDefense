@@ -134,6 +134,20 @@ namespace PixelTowerDefense
             //SpawnLogs(4);
             //SpawnStones(4);
 
+            TreeArchetype PickArch(Biome biome)
+            {
+                // map your ground biomes to archetypes
+                return biome switch
+                {
+                    Biome.Forest => _rng.NextDouble() < 0.3 ? TreeLibrary.Pine : TreeLibrary.Oak,
+                    Biome.Snow => TreeLibrary.Pine,
+                    Biome.Meadow => _rng.NextDouble() < 0.7 ? TreeLibrary.Oak : TreeLibrary.Birch,
+                    //Biome.Marsh => TreeLibrary.Willow,      // if you add one
+                    Biome.Grass => TreeLibrary.Birch,
+                    _ => TreeLibrary.Oak
+                };
+            }
+
             // spawn clustered tree patches
             for (int i = 0; i < 6; i++)
             {
@@ -144,7 +158,15 @@ namespace PixelTowerDefense
                 {
                     float ox = _rng.NextFloat(-65f, 65f);
                     float oy = _rng.NextFloat(-65f, 65f);
-                    _trees.Add(new Tree(new Vector2(cx + ox, cy + oy), _rng));
+                    var p = new Vector2(cx + ox, cy + oy);
+
+                    // sample biome cell:
+                    int gx = Math.Clamp((int)((p.X - Constants.ARENA_LEFT) / Constants.CELL_PIXELS), 0, _ground.W - 1);
+                    int gy = Math.Clamp((int)((p.Y - Constants.ARENA_TOP) / Constants.CELL_PIXELS), 0, _ground.H - 1);
+                    var biome = _ground.Cells[gx, gy].Biome;
+
+                    var arch = PickArch(biome);
+                    _trees.Add(new Tree(p, _rng, arch, worldSeed: 12345));
                 }
             }
 
@@ -797,17 +819,6 @@ namespace PixelTowerDefense
             }
         }
 
-        private void SpawnTrees(int count)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
-                                       Constants.ARENA_RIGHT - 5);
-                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
-                                       Constants.ARENA_BOTTOM - 5);
-                _trees.Add(new Tree(new Vector2(x, y), _rng));
-            }
-        }
 
         private bool Edge(KeyboardState kb, Keys k)
             => kb.IsKeyDown(k) && _prevKb.IsKeyUp(k);
@@ -864,7 +875,7 @@ namespace PixelTowerDefense
                 for (int x = x0; x < x1; x++)
                 {
                     var cell = map.Cells[x, y];
-                    var style = BiomeStyles.Get(cell.Biome);
+                    var style = BiomeTypes.Get(cell.Biome);
                     int pxX = Constants.ARENA_LEFT + x * cellSize;
                     int pxY = Constants.ARENA_TOP + y * cellSize;
                     sb.Draw(px, new Rectangle(pxX, pxY, cellSize, cellSize), style.Base);
@@ -1594,17 +1605,26 @@ namespace PixelTowerDefense
                 float y = p.X * sin + p.Y * cos;
                 int dx = baseX + (int)MathF.Round(x);
                 int dy = baseY + (int)MathF.Round(y);
+
                 if (leafDecay > 0f)
                 {
                     float skipChance = MathF.Min(leafDecay, 0.95f);
                     int hash = (dx * 73856093) ^ (dy * 19349663);
                     double r = ((hash & 0x7fffffff) / (double)int.MaxValue);
-                    if (r < skipChance)
-                        continue;
+                    if (r < skipChance) continue;
                 }
-                Color col = t.IsDead ? Color.Lerp(new Color(20, 110, 20), Color.Goldenrod, leafDecay) : new Color(20, 110, 20);
-                _sb.Draw(_px, new Rectangle(dx, dy, 1, 1), col);
+
+                // subtle vertical gradient + dithering
+                float tY = Math.Clamp((-p.Y) / Math.Max(1, t.MaxHeight), 0f, 1f);
+                Color baseCol = Color.Lerp(t.LeafB, t.LeafA, tY);
+                if (((dx + dy) & 1) == 1) baseCol = Color.Lerp(baseCol, t.LeafA, 0.25f);
+
+                if (t.IsDead)
+                    baseCol = Color.Lerp(baseCol, Color.Goldenrod, leafDecay);
+
+                _sb.Draw(_px, new Rectangle(dx, dy, 1, 1), baseCol);
             }
+
         }
 
         private void DrawTreeFlame(Tree t)

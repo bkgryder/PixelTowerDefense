@@ -45,47 +45,85 @@ namespace PixelTowerDefense.Entities
         private int _leafRadius;
         private float _lean;
 
+        public TreeSpecies Species;
+        public TreeGenotype Gen;
+        public Color TrunkBase, TrunkTip, LeafA, LeafB;
 
-        public Tree(Vector2 pos, System.Random rng)
+        private float _branchSplitProb;
+        private int _branchLenMin, _branchLenMax;
+        private float _leafKeepProb;
+        private float _ellipseRatio;
+
+        public int MaxHeight => _maxHeight; // expose for rendering gradient
+
+        public Tree(Vector2 pos, System.Random rng, TreeArchetype arch, int worldSeed) : this()
         {
             Pos = pos;
 
+            // genotype
+            int seed = Hash(worldSeed, pos);
+            var grng = new Random(seed);
+            Gen = new TreeGenotype
+            {
+                Seed = seed,
+                HeightBias = RandSpan(grng),
+                RadiusBias = RandSpan(grng),
+                LeanBias = RandSpan(grng),
+                BranchProbBias = RandSpan(grng),
+                LeafDensityBias = RandSpan(grng),
+                HueShift = grng.Next(-10, 11)
+            };
+
+            Species = arch.Species;
+
+            _maxHeight = (int)MathF.Round(MathHelper.Lerp(arch.HeightMin, arch.HeightMax, 0.5f + 0.5f * Gen.HeightBias));
+            _baseWidth = (int)MathF.Round(MathHelper.Lerp(arch.BaseWidthMin, arch.BaseWidthMax, 0.5f));
+            _leafRadius = (int)MathF.Round(MathHelper.Lerp(arch.LeafRadiusMin, arch.LeafRadiusMax, 0.5f + 0.5f * Gen.RadiusBias));
+            _lean = MathHelper.Lerp(arch.LeanMin, arch.LeanMax, 0.5f + 0.5f * Gen.LeanBias);
+
+            _branchSplitProb = Math.Clamp(arch.BranchSplitProb * (1f + 0.4f * Gen.BranchProbBias), 0f, 1f);
+            _branchLenMin = arch.BranchLenRange.X;
+            _branchLenMax = arch.BranchLenRange.Y;
+            _leafKeepProb = Math.Clamp(arch.LeafKeepProb * (1f + 0.3f * Gen.LeafDensityBias), 0.1f, 0.99f);
+            _ellipseRatio = arch.CanopyEllipseRatio;
+
+            TrunkBase = arch.TrunkBase;
+            TrunkTip = arch.TrunkTip;
+            LeafA = arch.LeafA;
+            LeafB = arch.LeafB;
+
+            // existing lifecycle init
             TrunkPixels = Array.Empty<Point>();
             LeafPixels = Array.Empty<Point>();
 
             Age = 0f;
-            GrowthDuration = Utils.RandEx.NextFloat(rng, Utils.Constants.TREE_GROW_TIME_MIN,
-                                                   Utils.Constants.TREE_GROW_TIME_MAX);
-            DeathAge = GrowthDuration + Utils.RandEx.NextFloat(rng,
-                                                              Utils.Constants.TREE_LIFESPAN_MIN,
-                                                              Utils.Constants.TREE_LIFESPAN_MAX);
-            Seed = rng.Next();
-
-            _maxHeight = rng.Next(20, 28);
-            _baseWidth = rng.Next(1, 2); // half-width of the trunk base
-            _leafRadius = rng.Next(4, 7);
-            _lean = Utils.RandEx.NextFloat(rng, -0.3f, 0.3f);
+            GrowthDuration = Utils.RandEx.NextFloat(rng, Utils.Constants.TREE_GROW_TIME_MIN, Utils.Constants.TREE_GROW_TIME_MAX);
+            DeathAge = GrowthDuration + Utils.RandEx.NextFloat(rng, Utils.Constants.TREE_LIFESPAN_MIN, Utils.Constants.TREE_LIFESPAN_MAX);
+            Seed = grng.Next();
 
             CollisionRadius = _baseWidth + 0.5f;
             Health = Utils.Constants.TREE_HEALTH;
-            IsStump = false;
-            ReservedBy = null;
-
-            IsDead = false;
-            PaleTimer = 0f;
-            FallDelay = 0f;
-            FallTimer = 0f;
-            Fallen = false;
-            DecompTimer = 0f;
-            FallDir = rng.NextDouble() < 0.5 ? -1 : 1;
-            LeafTimer = 0f;
-            IsBurning = false;
-            BurnTimer = 0f;
-            BurnProgress = 0f;
+            IsStump = false; ReservedBy = null;
+            IsDead = false; PaleTimer = 0f; FallDelay = 0f; FallTimer = 0f; Fallen = false;
+            DecompTimer = 0f; FallDir = rng.NextDouble() < 0.5 ? -1 : 1;
+            LeafTimer = 0f; IsBurning = false; BurnTimer = 0f; BurnProgress = 0f;
             RemoveWhenFallen = false;
 
             GenerateShape(0f);
         }
+
+        private static int Hash(int worldSeed, Vector2 p)
+        {
+            unchecked
+            {
+                int h = worldSeed;
+                h = h * 16777619 ^ (int)MathF.Round(p.X * 1000f);
+                h = h * 16777619 ^ (int)MathF.Round(p.Y * 1000f);
+                return h;
+            }
+        }
+        private static float RandSpan(Random r) => (float)r.NextDouble() * 2f - 1f;
+
 
         private void GenerateShape(float factor)
         {
@@ -106,13 +144,14 @@ namespace PixelTowerDefense.Entities
                 for (int x = -width; x <= width; x++)
                     trunk.Add(new Point(offset + x, -i));
 
-                if (i > height / 3 && i < height - 2 && rng.NextDouble() < 0.15)
+                if (i > height / 3 && i < height - 2 && rng.NextDouble() < _branchSplitProb)
                 {
                     int dir = rng.NextDouble() < 0.5 ? -1 : 1;
-                    int branchLen = rng.Next(5, 10);
+                    int branchLen = rng.Next(_branchLenMin, _branchLenMax + 1);
                     for (int j = 1; j <= branchLen; j++)
-                        trunk.Add(new Point(offset + dir * (width + j), -i - j / 2));
+                        trunk.Add(new Point(offset + dir * (width + j), -i - j / 3));
                 }
+
             }
             TrunkPixels = trunk.ToArray();
 
@@ -126,10 +165,12 @@ namespace PixelTowerDefense.Entities
                     for (int x = -radius; x <= radius; x++)
                     {
                         int r = x * x + (y * 2) * (y * 2);
-                        if (r <= radius * radius * 4 && rng.NextDouble() > 0.2)
+                        float ellipseY = _ellipseRatio;
+                        if ((x * x) + (int)(y * y) <= radius * radius && rng.NextDouble() < _leafKeepProb)
                             leaves.Add(new Point(topOffset + x, -height + y));
                     }
                 }
+
             }
             LeafPixels = leaves.ToArray();
 

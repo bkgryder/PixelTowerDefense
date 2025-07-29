@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 
 namespace PixelTowerDefense.World
 {
-    public struct BiomeStyle
+    public struct BiomeType
     {
         public Color Base;
         public Color Shade;
@@ -11,12 +11,12 @@ namespace PixelTowerDefense.World
         public Color Detail;
     }
 
-    public static class BiomeStyles
+    public static class BiomeTypes
     {
-        public static BiomeStyle Get(Biome biome)
+        public static BiomeType Get(Biome biome)
             => biome switch
             {
-                Biome.Grass => new BiomeStyle
+                Biome.Grass => new BiomeType
                 {
                     Base = new Color(70, 160, 70),
                     Shade = new Color(30, 80, 30),
@@ -24,7 +24,7 @@ namespace PixelTowerDefense.World
                     ShadePct = 0.5f,
                     Detail = new Color(90, 180, 90)
                 },
-                Biome.Meadow => new BiomeStyle
+                Biome.Meadow => new BiomeType
                 {
                     Base = new Color(120, 180, 90),
                     Shade = new Color(70, 120, 60),
@@ -32,7 +32,7 @@ namespace PixelTowerDefense.World
                     ShadePct = 0.4f,
                     Detail = new Color(150, 200, 110)
                 },
-                Biome.Forest => new BiomeStyle
+                Biome.Forest => new BiomeType
                 {
                     Base = new Color(40, 120, 40),
                     Shade = new Color(20, 60, 20),
@@ -40,7 +40,7 @@ namespace PixelTowerDefense.World
                     ShadePct = 0.6f,
                     Detail = new Color(60, 140, 60)
                 },
-                Biome.Marsh => new BiomeStyle
+                Biome.Marsh => new BiomeType
                 {
                     Base = new Color(40, 100, 70),
                     Shade = new Color(20, 50, 40),
@@ -48,7 +48,7 @@ namespace PixelTowerDefense.World
                     ShadePct = 0.5f,
                     Detail = new Color(60, 120, 90)
                 },
-                Biome.Sand => new BiomeStyle
+                Biome.Sand => new BiomeType
                 {
                     Base = new Color(194, 178, 128),
                     Shade = new Color(150, 140, 90),
@@ -56,7 +56,7 @@ namespace PixelTowerDefense.World
                     ShadePct = 0.3f,
                     Detail = new Color(220, 200, 150)
                 },
-                Biome.Rock => new BiomeStyle
+                Biome.Rock => new BiomeType
                 {
                     Base = new Color(110, 110, 120),
                     Shade = new Color(70, 70, 80),
@@ -64,7 +64,7 @@ namespace PixelTowerDefense.World
                     ShadePct = 0.6f,
                     Detail = new Color(130, 130, 140)
                 },
-                Biome.Snow => new BiomeStyle
+                Biome.Snow => new BiomeType
                 {
                     Base = new Color(235, 235, 235),
                     Shade = new Color(180, 180, 180),
@@ -72,7 +72,7 @@ namespace PixelTowerDefense.World
                     ShadePct = 0.4f,
                     Detail = new Color(255, 255, 255)
                 },
-                _ => new BiomeStyle
+                _ => new BiomeType
                 {
                     Base = Color.Magenta,
                     Shade = Color.Black,

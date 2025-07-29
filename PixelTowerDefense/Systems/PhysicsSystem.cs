@@ -763,8 +763,9 @@ namespace PixelTowerDefense.Systems
 
                     if (!nearPlant && !nearSeed)
                     {
+                        var arch = _rng.NextDouble() < 0.6 ? TreeLibrary.Oak : TreeLibrary.Pine;
                         if (s.Kind == SeedKind.Tree)
-                            trees.Add(new Tree(s.Pos, _rng));
+                            trees.Add(new Tree(s.Pos, _rng, arch, worldSeed: 0));
                         else
                             bushes.Add(new BerryBush(s.Pos, _rng, false));
                     }
