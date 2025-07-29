@@ -4,8 +4,8 @@ namespace PixelTowerDefense.Entities
 {
     public enum BuildingType
     {
-        StockpileHut,
-        CarpenterHut
+        StorageHut,
+        HousingHut
     }
 
     public struct Building
@@ -13,11 +13,11 @@ namespace PixelTowerDefense.Entities
         public Vector2 Pos;
         public BuildingType Kind;
         public int StoredBerries;
-        public int StoredLogs;
-        public int StoredPlanks;
-        public float CraftTimer;
+        public int StoredWood;
+        public int HousedMeeples;
         public int? ReservedBy;
 
         public const int CAPACITY = 30;
+        public const int HOUSE_CAPACITY = 5;
     }
 }

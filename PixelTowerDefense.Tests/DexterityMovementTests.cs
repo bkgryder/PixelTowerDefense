@@ -10,7 +10,7 @@ namespace PixelTowerDefense.Tests;
 public class DexterityMovementTests
 {
     [Fact]
-    public void FasterWorkers_MoveFarther_WhenHaulingLogs()
+    public void FasterWorkers_MoveFarther_WhenHaulingWood()
     {
         var rng = new System.Random(0);
         var workers = new List<Meeple>
@@ -19,23 +19,23 @@ public class DexterityMovementTests
                        5, 3, 5, 5)
             {
                 Worker = new Worker(),
-                CarriedLogIdx = 0
+                CarriedWoodIdx = 0
             },
             new Meeple(Vector2.Zero, Faction.Friendly, Color.White,
                        5, 8, 5, 5)
             {
                 Worker = new Worker(),
-                CarriedLogIdx = 1
+                CarriedWoodIdx = 1
             }
         };
-        var logs = new List<Log>
+        var logs = new List<Wood>
         {
-            new Log(Vector2.Zero, rng) { IsCarried = true },
-            new Log(Vector2.Zero, rng) { IsCarried = true }
+            new Wood(Vector2.Zero, rng) { IsCarried = true },
+            new Wood(Vector2.Zero, rng) { IsCarried = true }
         };
         var buildings = new List<Building>
         {
-            new Building { Pos = new Vector2(10f, 0f), Kind = BuildingType.CarpenterHut }
+            new Building { Pos = new Vector2(10f, 0f), Kind = BuildingType.StorageHut }
         };
         var debris = new List<Pixel>();
         var bushes = new List<BerryBush>();

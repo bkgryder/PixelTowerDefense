@@ -36,7 +36,7 @@ public class ResourceReservationTests
         };
         var buildings = new List<Building>();
         var trees = new List<Tree>();
-        var logs = new List<Log>();
+        var logs = new List<Wood>();
         var debris = new List<Pixel>();
         var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 

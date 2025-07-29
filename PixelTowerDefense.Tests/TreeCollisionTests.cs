@@ -21,7 +21,7 @@ public class TreeCollisionTests
         var debris = new List<Pixel>();
         var bushes = new List<BerryBush>();
         var buildings = new List<Building>();
-        var logs = new List<Log>();
+        var logs = new List<Wood>();
         var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
         PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, trees, logs, water, 0.1f);
@@ -48,7 +48,7 @@ public class TreeCollisionTests
         var debris = new List<Pixel>();
         var bushes = new List<BerryBush>();
         var buildings = new List<Building>();
-        var logs = new List<Log>();
+        var logs = new List<Wood>();
         var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
         PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, trees, logs, water, 0.1f);

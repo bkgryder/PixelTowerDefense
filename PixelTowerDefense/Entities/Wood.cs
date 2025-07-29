@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace PixelTowerDefense.Entities
 {
-    public struct Log
+    public struct Wood
     {
         public Vector2 Pos;
         public Vector2 Vel;
@@ -12,7 +12,7 @@ namespace PixelTowerDefense.Entities
         public Color Color;
         public int? ReservedBy;
 
-        public Log(Vector2 pos, System.Random rng)
+        public Wood(Vector2 pos, System.Random rng)
         {
             Pos = pos;
             Vel = Vector2.Zero;

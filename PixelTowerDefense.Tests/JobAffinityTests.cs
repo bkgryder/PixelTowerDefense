@@ -21,7 +21,7 @@ public class JobAffinityTests
             { Worker = new Worker() }
         };
         var trees = new List<Tree> { new Tree(new Vector2(1f, 0f), rng) };
-        var logs = new List<Log> { new Log(new Vector2(0f, 1f), rng) };
+        var logs = new List<Wood> { new Wood(new Vector2(0f, 1f), rng) };
         var buildings = new List<Building>();
         var bushes = new List<BerryBush>();
         var debris = new List<Pixel>();
@@ -30,7 +30,7 @@ public class JobAffinityTests
         PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 0.1f);
 
         Assert.Equal(Constants.TREE_HEALTH - 1, trees[0].Health);
-        Assert.Equal(-1, workers[0].CarriedLogIdx);
+        Assert.Equal(-1, workers[0].CarriedWoodIdx);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class JobAffinityTests
             { Worker = new Worker() }
         };
         var trees = new List<Tree> { new Tree(new Vector2(1f, 0f), rng) };
-        var logs = new List<Log> { new Log(new Vector2(0f, 1f), rng) };
+        var logs = new List<Wood> { new Wood(new Vector2(0f, 1f), rng) };
         var buildings = new List<Building>();
         var bushes = new List<BerryBush>();
         var debris = new List<Pixel>();
@@ -52,7 +52,7 @@ public class JobAffinityTests
 
         PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 0.1f);
 
-        Assert.True(workers[0].CarriedLogIdx >= 0);
+        Assert.True(workers[0].CarriedWoodIdx >= 0);
         Assert.Equal(Constants.TREE_HEALTH, trees[0].Health);
     }
 }
