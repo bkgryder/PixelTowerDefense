@@ -12,6 +12,7 @@ namespace PixelTowerDefense.Entities
     public struct BuildingSeed
     {
         public Vector2 Pos;
+        public BuildingType Kind;
         public BuildStage Stage;
         public int RequiredResources;
         public int? ReservedBy;

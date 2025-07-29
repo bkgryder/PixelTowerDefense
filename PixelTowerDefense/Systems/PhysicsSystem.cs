@@ -578,6 +578,24 @@ namespace PixelTowerDefense.Systems
 
             ResolveDominoCollisions(meeples);
 
+            for (int i = seeds.Count - 1; i >= 0; i--)
+            {
+                if (seeds[i].Stage != BuildStage.Built)
+                    continue;
+
+                buildings.Add(new Building
+                {
+                    Pos = seeds[i].Pos,
+                    Kind = seeds[i].Kind,
+                    StoredBerries = 0,
+                    StoredWood = 0,
+                    HousedMeeples = 0,
+                    ReservedBy = null
+                });
+
+                seeds.RemoveAt(i);
+            }
+
             // housing and storage buildings currently have no per-frame behavior
         }
 
