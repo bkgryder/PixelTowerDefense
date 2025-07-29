@@ -1303,46 +1303,80 @@ namespace PixelTowerDefense
 
         private void DrawBuilding(Building b)
         {
-            var pos = b.Pos;
-            switch (b.Kind)
+            if (!BuildingSprites.Sprites.TryGetValue((b.Kind, BuildStage.Built), out var sprite))
+                return;
+
+            int baseX = (int)MathF.Round(b.Pos.X) - sprite[0].Length / 2;
+            int baseY = (int)MathF.Round(b.Pos.Y) - 2;
+
+            for (int gy = 0; gy < sprite.Length; gy++)
             {
-                case BuildingType.StorageHut:
-                    _sb.Draw(_px, new Rectangle((int)pos.X - 1, (int)pos.Y - 1, 3, 3), Color.SaddleBrown);
-                    _sb.Draw(_px, new Rectangle((int)pos.X, (int)pos.Y - 2, 1, 1), Color.BurlyWood);
-                    int stackH = b.BerryCapacity / 3;
-                    for (int i = 0; i < b.StoredBerries; i++)
-                    {
-                        int col = i / stackH;
-                        int level = i % stackH;
-                        int x = (int)pos.X - 1 + col;
-                        int y = (int)pos.Y - 3 - level;
-                        _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.Red);
-                    }
-                    for (int i = 0; i < b.StoredWood; i++)
-                    {
-                        int col = (i + b.StoredBerries) / stackH;
-                        int level = (i + b.StoredBerries) % stackH;
-                        int x = (int)pos.X - 1 + col;
-                        int y = (int)pos.Y - 3 - level;
-                        _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.SaddleBrown);
-                    }
-                    break;
-                case BuildingType.HousingHut:
-                    _sb.Draw(_px, new Rectangle((int)pos.X - 1, (int)pos.Y - 1, 3, 3), Color.Sienna);
-                    _sb.Draw(_px, new Rectangle((int)pos.X, (int)pos.Y - 2, 1, 1), Color.Peru);
-                    break;
+                string row = sprite[gy];
+                for (int gx = 0; gx < row.Length; gx++)
+                {
+                    char ch = row[gx];
+                    if (ch == '.') continue;
+
+                    Color col;
+                    if (ch == 'r')
+                        col = b.Kind == BuildingType.StorageHut ? Color.BurlyWood : Color.Peru;
+                    else
+                        col = b.Kind == BuildingType.StorageHut ? Color.SaddleBrown : Color.Sienna;
+
+                    _sb.Draw(_px, new Rectangle(baseX + gx, baseY + gy, 1, 1), col);
+                }
+            }
+
+            if (b.Kind == BuildingType.StorageHut)
+            {
+                int stackH = b.BerryCapacity / 3;
+                for (int i = 0; i < b.StoredBerries; i++)
+                {
+                    int col = i / stackH;
+                    int level = i % stackH;
+                    int x = (int)b.Pos.X - 1 + col;
+                    int y = (int)b.Pos.Y - 3 - level;
+                    _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.Red);
+                }
+                for (int i = 0; i < b.StoredWood; i++)
+                {
+                    int col = (i + b.StoredBerries) / stackH;
+                    int level = (i + b.StoredBerries) % stackH;
+                    int x = (int)b.Pos.X - 1 + col;
+                    int y = (int)b.Pos.Y - 3 - level;
+                    _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.SaddleBrown);
+                }
             }
         }
 
         private void DrawBuildingSeed(BuildingSeed s)
         {
-            Color col = s.Stage switch
+            if (!BuildingSprites.Sprites.TryGetValue((s.Kind, s.Stage), out var sprite))
+                return;
+
+            int baseX = (int)MathF.Round(s.Pos.X) - sprite[0].Length / 2;
+            int baseY = (int)MathF.Round(s.Pos.Y) - 2;
+
+            for (int gy = 0; gy < sprite.Length; gy++)
             {
-                BuildStage.Planned => Color.Yellow,
-                BuildStage.Framed => Color.Orange,
-                _ => Color.White
-            };
-            _sb.Draw(_px, new Rectangle((int)s.Pos.X, (int)s.Pos.Y, 1, 1), col);
+                string row = sprite[gy];
+                for (int gx = 0; gx < row.Length; gx++)
+                {
+                    char ch = row[gx];
+                    if (ch == '.') continue;
+
+                    Color col = s.Stage switch
+                    {
+                        BuildStage.Planned => Color.Yellow,
+                        BuildStage.Framed => Color.Orange,
+                        _ => (ch == 'r'
+                                ? (s.Kind == BuildingType.StorageHut ? Color.BurlyWood : Color.Peru)
+                                : (s.Kind == BuildingType.StorageHut ? Color.SaddleBrown : Color.Sienna))
+                    };
+
+                    _sb.Draw(_px, new Rectangle(baseX + gx, baseY + gy, 1, 1), col);
+                }
+            }
         }
 
         private void DrawStone(Stone s)
