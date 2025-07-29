@@ -1510,7 +1510,6 @@ namespace PixelTowerDefense
             else
             {
                 float pale = t.IsDead ? MathF.Min(1f, t.PaleTimer / Constants.TREE_PALE_TIME) : 0f;
-                Color col = Color.Lerp(new Color(100, 70, 40), Color.SandyBrown, pale * 0.5f);
                 float angle = 0f;
                 if (t.FallTimer > 0f || t.Fallen)
                     angle = t.FallDir * MathHelper.PiOver2 * MathF.Min(t.FallTimer / Constants.TREE_FALL_TIME, 1f);
@@ -1523,6 +1522,8 @@ namespace PixelTowerDefense
                     float y = p.X * sin + p.Y * cos;
                     int dx = baseX + (int)MathF.Round(x);
                     int dy = baseY + (int)MathF.Round(y);
+                    Color col = Color.Lerp(t.TrunkBase, t.TrunkTip, Math.Clamp((-p.Y) / Math.Max(1, t.MaxHeight), 0f, 1f));
+                    col = Color.Lerp(col, Color.SandyBrown, pale * 0.5f);
                     if (decomp > 0f)
                     {
                         float skipChance = MathF.Min(decomp, 0.9f);
