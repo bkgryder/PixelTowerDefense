@@ -56,22 +56,6 @@ namespace PixelTowerDefense.World
                     ShadePct = 0.3f,
                     Detail = new Color(220, 200, 150)
                 },
-                Biome.Rock => new BiomeType
-                {
-                    Base = new Color(110, 110, 120),
-                    Shade = new Color(70, 70, 80),
-                    PatternId = 1,
-                    ShadePct = 0.6f,
-                    Detail = new Color(130, 130, 140)
-                },
-                Biome.Snow => new BiomeType
-                {
-                    Base = new Color(235, 235, 235),
-                    Shade = new Color(180, 180, 180),
-                    PatternId = 2,
-                    ShadePct = 0.4f,
-                    Detail = new Color(255, 255, 255)
-                },
                 _ => new BiomeType
                 {
                     Base = Color.Magenta,
