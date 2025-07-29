@@ -17,7 +17,7 @@ namespace PixelTowerDefense.Systems
             List<BerryBush> bushes,
             List<Building> buildings,
             List<Tree> trees,
-            List<Log> logs,
+            List<Wood> logs,
             WaterMap water,
             float dt
         )
@@ -189,14 +189,12 @@ namespace PixelTowerDefense.Systems
                             }
 
                             // --- log & tree jobs ---
-                            if (e.CarriedLogIdx >= 0)
+                            if (e.CarriedWoodIdx >= 0)
                             {
-                                if (e.CarriedLogIdx < logs.Count)
+                                if (e.CarriedWoodIdx < logs.Count)
                                 {
-                                    var log = logs[e.CarriedLogIdx];
-                                    int hidx = FindNearestCarpenter(e.Pos, buildings);
-                                    if (hidx < 0)
-                                        hidx = FindNearestStockpileForLogs(e.Pos, buildings);
+                                    var log = logs[e.CarriedWoodIdx];
+                                    int hidx = FindNearestStorageForWood(e.Pos, buildings);
                                     if (hidx >= 0)
                                     {
                                         var hut = buildings[hidx];
@@ -204,12 +202,10 @@ namespace PixelTowerDefense.Systems
                                         float dist = dir.Length();
                                         if (dist < 1f)
                                         {
-                                            hut.StoredLogs++;
-                                            if (hut.CraftTimer <= 0f)
-                                                hut.CraftTimer = Constants.BASE_CRAFT / (1f + 0.1f * e.Intellect);
+                                            hut.StoredWood++;
                                             buildings[hidx] = hut;
-                                            logs.RemoveAt(e.CarriedLogIdx);
-                                            e.CarriedLogIdx = -1;
+                                            logs.RemoveAt(e.CarriedWoodIdx);
+                                            e.CarriedWoodIdx = -1;
                                         }
                                         else
                                         {
@@ -217,7 +213,7 @@ namespace PixelTowerDefense.Systems
                                             e.Vel = dir * e.MoveSpeed;
                                             e.Pos += e.Vel * dt;
                                             log.Pos = e.Pos;
-                                            logs[e.CarriedLogIdx] = log;
+                                            logs[e.CarriedWoodIdx] = log;
                                         }
                                         e.Angle = 0f;
                                         break;
@@ -225,15 +221,15 @@ namespace PixelTowerDefense.Systems
                                 }
                                 else
                                 {
-                                    e.CarriedLogIdx = -1;
+                                    e.CarriedWoodIdx = -1;
                                 }
                             }
                             else
                             {
-                                int lidx = FindNearestLooseLog(e.Pos, logs);
+                                int lidx = FindNearestLooseWood(e.Pos, logs);
                                 int tidx = FindNearestTree(e.Pos, trees);
 
-                                float haulScore = lidx >= 0 ? JobAffinity(JobType.HaulLog, e) : -1f;
+                                float haulScore = lidx >= 0 ? JobAffinity(JobType.HaulWood, e) : -1f;
                                 float chopScore = tidx >= 0 ? JobAffinity(JobType.ChopTree, e) : -1f;
 
                                 if (haulScore >= chopScore && lidx >= 0)
@@ -245,7 +241,7 @@ namespace PixelTowerDefense.Systems
                                     {
                                         log.IsCarried = true;
                                         logs[lidx] = log;
-                                        e.CarriedLogIdx = lidx;
+                                        e.CarriedWoodIdx = lidx;
                                         e.WanderTimer = 0f;
                                     }
                                     else
@@ -276,7 +272,7 @@ namespace PixelTowerDefense.Systems
                                                 tree.Fallen = false;
                                                 tree.DecompTimer = 0f;
                                                 tree.RemoveWhenFallen = true;
-                                                logs.Add(new Log(tree.Pos, _rng));
+                                                logs.Add(new Wood(tree.Pos, _rng));
                                             }
                                             trees[tidx] = tree;
                                         }
@@ -475,24 +471,7 @@ namespace PixelTowerDefense.Systems
 
             ResolveDominoCollisions(meeples);
 
-            for (int i = 0; i < buildings.Count; i++)
-            {
-                var b = buildings[i];
-                if (b.Kind == BuildingType.CarpenterHut && b.StoredLogs > 0)
-                {
-                    if (b.CraftTimer > 0f)
-                    {
-                        b.CraftTimer -= dt;
-                        if (b.CraftTimer <= 0f)
-                        {
-                            b.StoredLogs--;
-                            b.StoredPlanks++;
-                            b.CraftTimer = b.StoredLogs > 0 ? Constants.BASE_CRAFT : 0f;
-                        }
-                    }
-                }
-                buildings[i] = b;
-            }
+            // housing and storage buildings currently have no per-frame behavior
         }
 
         private static void ExplodeEnemy(Meeple e, List<Pixel> debris)
@@ -682,7 +661,7 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void UpdateLogs(List<Log> logs, float dt)
+        public static void UpdateWood(List<Wood> logs, float dt)
         {
             for (int i = 0; i < logs.Count; i++)
             {
@@ -1361,13 +1340,13 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void WorkerChopTree(ref Meeple worker, ref Tree tree, List<Log> logs, Random rng)
+        public static void WorkerChopTree(ref Meeple worker, ref Tree tree, List<Wood> logs, Random rng)
         {
             if (Vector2.Distance(worker.Pos, tree.Pos) <= 1f && tree.Health > 0)
             {
                 tree.Health--;
-                logs.Add(new Log(tree.Pos, rng));
-                logs.Add(new Log(tree.Pos, rng));
+                logs.Add(new Wood(tree.Pos, rng));
+                logs.Add(new Wood(tree.Pos, rng));
                 if (tree.Health <= 0)
                 {
                     tree.IsDead = true;
@@ -1382,34 +1361,18 @@ namespace PixelTowerDefense.Systems
             }
         }
 
-        public static void WorkerDepositLog(ref Meeple worker, ref Building building)
+        public static void WorkerDepositWood(ref Meeple worker, ref Building building)
         {
-            if (building.Kind == BuildingType.CarpenterHut &&
+            if (building.Kind == BuildingType.StorageHut &&
                 Vector2.Distance(worker.Pos, building.Pos) <= 1f &&
-                worker.CarriedLogs > 0)
+                worker.CarriedWood > 0)
             {
-                building.StoredLogs += worker.CarriedLogs;
-                worker.CarriedLogs = 0;
-                if (building.CraftTimer <= 0f)
-                    building.CraftTimer = Constants.BASE_CRAFT / (1f + 0.1f * worker.Intellect);
+                building.StoredWood += worker.CarriedWood;
+                worker.CarriedWood = 0;
             }
         }
 
-        public static void UpdateCarpenter(ref Building building, float dt)
-        {
-            if (building.Kind != BuildingType.CarpenterHut) return;
 
-            if (building.StoredLogs > 0)
-            {
-                building.CraftTimer -= dt;
-                if (building.CraftTimer <= 0f)
-                {
-                    building.StoredLogs--;
-                    building.StoredPlanks++;
-                    building.CraftTimer = building.StoredLogs > 0 ? Constants.BASE_CRAFT : 0f;
-                }
-            }
-        }
 
         private static void ResolveDominoCollisions(List<Meeple> meeples)
         {
@@ -1471,7 +1434,7 @@ namespace PixelTowerDefense.Systems
             float best = float.MaxValue;
             for (int i = 0; i < huts.Count; i++)
             {
-                if (huts[i].Kind != BuildingType.StockpileHut) continue;
+                if (huts[i].Kind != BuildingType.StorageHut) continue;
                 if (huts[i].StoredBerries >= Building.CAPACITY) continue;
                 if (huts[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
@@ -1490,7 +1453,7 @@ namespace PixelTowerDefense.Systems
             float best = float.MaxValue;
             for (int i = 0; i < huts.Count; i++)
             {
-                if (huts[i].Kind != BuildingType.StockpileHut) continue;
+                if (huts[i].Kind != BuildingType.StorageHut) continue;
                 if (huts[i].StoredBerries <= 0) continue;
                 if (huts[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
@@ -1503,13 +1466,13 @@ namespace PixelTowerDefense.Systems
             return idx;
         }
 
-        private static int FindNearestCarpenter(Vector2 pos, List<Building> huts)
+        private static int FindNearestStorageForWood(Vector2 pos, List<Building> huts)
         {
             int idx = -1;
             float best = float.MaxValue;
             for (int i = 0; i < huts.Count; i++)
             {
-                if (huts[i].Kind != BuildingType.CarpenterHut) continue;
+                if (huts[i].Kind != BuildingType.StorageHut) continue;
                 if (huts[i].ReservedBy != null) continue;
                 float d = Vector2.Distance(pos, huts[i].Pos);
                 if (d < best)
@@ -1521,25 +1484,7 @@ namespace PixelTowerDefense.Systems
             return idx;
         }
 
-        private static int FindNearestStockpileForLogs(Vector2 pos, List<Building> huts)
-        {
-            int idx = -1;
-            float best = float.MaxValue;
-            for (int i = 0; i < huts.Count; i++)
-            {
-                if (huts[i].Kind != BuildingType.StockpileHut) continue;
-                if (huts[i].ReservedBy != null) continue;
-                float d = Vector2.Distance(pos, huts[i].Pos);
-                if (d < best)
-                {
-                    best = d;
-                    idx = i;
-                }
-            }
-            return idx;
-        }
-
-        private static int FindNearestLooseLog(Vector2 pos, List<Log> logs)
+        private static int FindNearestLooseWood(Vector2 pos, List<Wood> logs)
         {
             int idx = -1;
             float best = float.MaxValue;
@@ -1580,8 +1525,7 @@ namespace PixelTowerDefense.Systems
             return job switch
             {
                 JobType.ChopTree => m.Strength,
-                JobType.HaulLog => m.Dexterity,
-                JobType.CarryLogToCarpenter => 100f,
+                JobType.HaulWood => m.Dexterity,
                 _ => 0f
             };
         }

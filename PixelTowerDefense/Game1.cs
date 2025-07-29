@@ -26,7 +26,7 @@ namespace PixelTowerDefense
         List<Pixel> _pixels = new(Constants.MAX_DEBRIS);
         List<Seed> _seeds = new();
         List<BerryBush> _bushes = new();
-        List<Log> _logs = new();
+        List<Wood> _wood = new();
         List<Stone> _stones = new();
         List<Tree> _trees = new();
         List<Building> _buildings = new();
@@ -131,7 +131,7 @@ namespace PixelTowerDefense
             SpawnRabbits(8);
             SpawnWolves(2);
             SpawnBerryBushes(5);
-            //SpawnLogs(4);
+            //SpawnWood(4);
             //SpawnStones(4);
 
             TreeArchetype PickArch(Biome biome)
@@ -175,20 +175,20 @@ namespace PixelTowerDefense
             _buildings.Add(new Building
             {
                 Pos = new Vector2(midX, midY),
-                Kind = BuildingType.StockpileHut,
+                Kind = BuildingType.StorageHut,
                 StoredBerries = 0,
-                StoredLogs = 0,
-                StoredPlanks = 0,
-                CraftTimer = 0f
+                StoredWood = 0,
+                HousedMeeples = 0,
+                ReservedBy = null
             });
             _buildings.Add(new Building
             {
                 Pos = new Vector2(midX + 6, midY),
-                Kind = BuildingType.CarpenterHut,
+                Kind = BuildingType.HousingHut,
                 StoredBerries = 0,
-                StoredLogs = 0,
-                StoredPlanks = 0,
-                CraftTimer = 0f
+                StoredWood = 0,
+                HousedMeeples = 0,
+                ReservedBy = null
             });
             _camX = midX - (GraphicsDevice.Viewport.Width * 0.5f) / _zoom;
             _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
@@ -518,13 +518,13 @@ namespace PixelTowerDefense
                 _dragging = false;
             }
             
-            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _logs, _water, dt);
+            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _wood, _water, dt);
             PhysicsSystem.SimulateRabbits(_rabbits, _bushes, _seeds, _rabbitHomes, dt);
             PhysicsSystem.SimulateWolves(_wolves, _rabbits, _meeples, _wolfDens, dt);
             if (_weather == Weather.Rainy)
                 UpdateRain(dt);
             PhysicsSystem.UpdatePixels(_pixels, dt);
-            PhysicsSystem.UpdateLogs(_logs, dt);
+            PhysicsSystem.UpdateWood(_wood, dt);
             PhysicsSystem.UpdateSeeds(_seeds, _trees, _bushes, dt);
             PhysicsSystem.UpdateBushes(_bushes, _seeds, _pixels, dt, _weather == Weather.Rainy);
             PhysicsSystem.UpdateTrees(_trees, _seeds, _pixels, dt);
@@ -607,9 +607,9 @@ namespace PixelTowerDefense
             foreach (var s in _stones)
                 DrawStone(s);
 
-            // --- logs ---
-            foreach (var l in _logs)
-                DrawLog(l);
+            // --- wood ---
+            foreach (var w in _wood)
+                DrawWood(w);
 
             // --- rabbit homes ---
             foreach (var h in _rabbitHomes)
@@ -795,7 +795,7 @@ namespace PixelTowerDefense
             }
         }
 
-        private void SpawnLogs(int count)
+        private void SpawnWood(int count)
         {
             for (int i = 0; i < count; i++)
             {
@@ -803,7 +803,7 @@ namespace PixelTowerDefense
                                        Constants.ARENA_RIGHT - 5);
                 float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
                                        Constants.ARENA_BOTTOM - 5);
-                _logs.Add(new Log(new Vector2(x, y), _rng));
+                _wood.Add(new Wood(new Vector2(x, y), _rng));
             }
         }
 
@@ -851,9 +851,8 @@ namespace PixelTowerDefense
         private void DrawHint()
         {
             int berries = _buildings.Sum(b => b.StoredBerries);
-            int logs = _buildings.Sum(b => b.StoredLogs);
-            int planks = _buildings.Sum(b => b.StoredPlanks);
-            string text = $"BERRIES: {berries}   LOGS: {logs}   PLANKS: {planks}";
+            int wood = _buildings.Sum(b => b.StoredWood);
+            string text = $"BERRIES: {berries}   WOOD: {wood}";
             _sb.DrawString(_font, text, new Vector2(35, 8), Color.White);
         }
 
@@ -951,8 +950,7 @@ namespace PixelTowerDefense
                 JobType.None => "IDLE",
                 JobType.HarvestBerries => "BERRY",
                 JobType.ChopTree => "CHOP",
-                JobType.HaulLog => "HAUL",
-                JobType.CarryLogToCarpenter => "CARRY",
+                JobType.HaulWood => "HAUL",
                 JobType.DepositResource => "DEPOSIT",
                 _ => job.ToString().ToUpper()
             };
@@ -1022,13 +1020,13 @@ namespace PixelTowerDefense
                 }
             }
 
-            foreach (var l in _logs)
+            foreach (var l in _wood)
             {
                 int bx = (int)MathF.Round(l.Pos.X);
                 int by = (int)MathF.Round(l.Pos.Y);
                 foreach (var off in l.Shape)
                     if (bx + off.X == p.X && by + off.Y == p.Y)
-                        return "Log";
+                        return "Wood";
             }
 
             foreach (var r in _rabbits)
@@ -1296,7 +1294,7 @@ namespace PixelTowerDefense
             var pos = b.Pos;
             switch (b.Kind)
             {
-                case BuildingType.StockpileHut:
+                case BuildingType.StorageHut:
                     _sb.Draw(_px, new Rectangle((int)pos.X - 1, (int)pos.Y - 1, 3, 3), Color.SaddleBrown);
                     _sb.Draw(_px, new Rectangle((int)pos.X, (int)pos.Y - 2, 1, 1), Color.BurlyWood);
                     int stackH = Building.CAPACITY / 3;
@@ -1308,20 +1306,18 @@ namespace PixelTowerDefense
                         int y = (int)pos.Y - 3 - level;
                         _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.Red);
                     }
+                    for (int i = 0; i < b.StoredWood; i++)
+                    {
+                        int col = (i + b.StoredBerries) / stackH;
+                        int level = (i + b.StoredBerries) % stackH;
+                        int x = (int)pos.X - 1 + col;
+                        int y = (int)pos.Y - 3 - level;
+                        _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.SaddleBrown);
+                    }
                     break;
-                case BuildingType.CarpenterHut:
+                case BuildingType.HousingHut:
                     _sb.Draw(_px, new Rectangle((int)pos.X - 1, (int)pos.Y - 1, 3, 3), Color.Sienna);
                     _sb.Draw(_px, new Rectangle((int)pos.X, (int)pos.Y - 2, 1, 1), Color.Peru);
-                    for (int i = 0; i < b.StoredLogs; i++)
-                    {
-                        int y = (int)pos.Y - 3 - i;
-                        _sb.Draw(_px, new Rectangle((int)pos.X - 2, y, 1, 1), Color.SaddleBrown);
-                    }
-                    for (int i = 0; i < b.StoredPlanks; i++)
-                    {
-                        int y = (int)pos.Y - 3 - i;
-                        _sb.Draw(_px, new Rectangle((int)pos.X + 2, y, 1, 1), Color.BurlyWood);
-                    }
                     break;
             }
         }
@@ -1334,7 +1330,7 @@ namespace PixelTowerDefense
                 _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), s.Color);
         }
 
-        private void DrawLog(Log l)
+        private void DrawWood(Wood l)
         {
             int baseX = (int)MathF.Round(l.Pos.X);
             int baseY = (int)MathF.Round(l.Pos.Y);
