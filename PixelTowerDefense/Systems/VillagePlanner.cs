@@ -25,14 +25,7 @@ namespace PixelTowerDefense.Systems
                 var stock = buildings.FirstOrDefault(b => b.Kind == BuildingType.StorageHut);
                 Vector2 origin = stock.Pos;
                 Vector2 pos = origin + new Vector2(rng.Next(-4, 5), rng.Next(-4, 5));
-                seeds.Add(new BuildingSeed
-                {
-                    Pos = pos,
-                    Kind = BuildingType.HousingHut,
-                    Stage = BuildStage.Planned,
-                    RequiredResources = 5,
-                    ReservedBy = null
-                });
+                seeds.Add(new BuildingSeed(pos, BuildingType.HousingHut));
             }
         }
 

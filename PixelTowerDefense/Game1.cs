@@ -180,7 +180,11 @@ namespace PixelTowerDefense
                 StoredBerries = 0,
                 StoredWood = 0,
                 HousedMeeples = 0,
-                ReservedBy = null
+                ReservedBy = null,
+                BerryCapacity = Constants.STORAGE_BERRY_CAPACITY,
+                LogCapacity = Constants.STORAGE_LOG_CAPACITY,
+                PlankCapacity = Constants.STORAGE_PLANK_CAPACITY,
+                BedSlots = 0
             });
             _buildings.Add(new Building
             {
@@ -189,7 +193,11 @@ namespace PixelTowerDefense
                 StoredBerries = 0,
                 StoredWood = 0,
                 HousedMeeples = 0,
-                ReservedBy = null
+                ReservedBy = null,
+                BerryCapacity = 0,
+                LogCapacity = 0,
+                PlankCapacity = 0,
+                BedSlots = Constants.HOUSING_BED_SLOTS
             });
             _camX = midX - (GraphicsDevice.Viewport.Width * 0.5f) / _zoom;
             _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
@@ -1301,7 +1309,7 @@ namespace PixelTowerDefense
                 case BuildingType.StorageHut:
                     _sb.Draw(_px, new Rectangle((int)pos.X - 1, (int)pos.Y - 1, 3, 3), Color.SaddleBrown);
                     _sb.Draw(_px, new Rectangle((int)pos.X, (int)pos.Y - 2, 1, 1), Color.BurlyWood);
-                    int stackH = Building.CAPACITY / 3;
+                    int stackH = b.BerryCapacity / 3;
                     for (int i = 0; i < b.StoredBerries; i++)
                     {
                         int col = i / stackH;
