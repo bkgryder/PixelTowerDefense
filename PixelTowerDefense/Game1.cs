@@ -128,7 +128,7 @@ namespace PixelTowerDefense
                 Constants.LAKE_COUNT,
                 _rng);
 
-            SpawnMeeple(0);
+            SpawnMeeple(10);
             SpawnRabbits(8);
             SpawnWolves(2);
             SpawnBerryBushes(5);
