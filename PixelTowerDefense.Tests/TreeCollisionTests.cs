@@ -24,7 +24,8 @@ public class TreeCollisionTests
         var logs = new List<Wood>();
         var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
-        PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, trees, logs, water, 0.1f);
+        var seeds = new List<BuildingSeed>();
+        PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, seeds, trees, logs, water, 0.1f);
 
         float dist = Vector2.Distance(meeples[0].Pos, trees[0].Pos);
         Assert.True(dist >= trees[0].CollisionRadius - 0.001f);
@@ -51,7 +52,8 @@ public class TreeCollisionTests
         var logs = new List<Wood>();
         var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
-        PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, trees, logs, water, 0.1f);
+        var seeds2 = new List<BuildingSeed>();
+        PhysicsSystem.SimulateAll(meeples, debris, bushes, buildings, seeds2, trees, logs, water, 0.1f);
 
         Assert.True(Vector2.Distance(new Vector2(5f, 5f), meeples[0].Pos) < 0.001f);
     }
