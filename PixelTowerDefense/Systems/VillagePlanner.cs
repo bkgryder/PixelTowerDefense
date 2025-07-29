@@ -28,6 +28,7 @@ namespace PixelTowerDefense.Systems
                 seeds.Add(new BuildingSeed
                 {
                     Pos = pos,
+                    Kind = BuildingType.HousingHut,
                     Stage = BuildStage.Planned,
                     RequiredResources = 5,
                     ReservedBy = null
