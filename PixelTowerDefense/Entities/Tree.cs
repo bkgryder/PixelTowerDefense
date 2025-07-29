@@ -56,6 +56,10 @@ namespace PixelTowerDefense.Entities
 
         public int MaxHeight => _maxHeight; // expose for rendering gradient
 
+        public Tree(Vector2 pos, System.Random rng) : this(pos, rng, TreeLibrary.Oak, 0)
+        {
+        }
+
         public Tree(Vector2 pos, System.Random rng, TreeArchetype arch, int worldSeed) : this()
         {
             Pos = pos;
@@ -87,10 +91,17 @@ namespace PixelTowerDefense.Entities
             _leafKeepProb = Math.Clamp(arch.LeafKeepProb * (1f + 0.3f * Gen.LeafDensityBias), 0.1f, 0.99f);
             _ellipseRatio = arch.CanopyEllipseRatio;
 
-            TrunkBase = arch.TrunkBase;
-            TrunkTip = arch.TrunkTip;
-            LeafA = arch.LeafA;
-            LeafB = arch.LeafB;
+            float trunkLight = 1f + RandSpan(grng) * 0.05f;
+            float leafLight = 1f + RandSpan(grng) * 0.05f;
+
+            TrunkBase = Utils.ColorUtils.AdjustColor(
+                arch.TrunkBase, Gen.HueShift, 1f, trunkLight);
+            TrunkTip = Utils.ColorUtils.AdjustColor(
+                arch.TrunkTip, Gen.HueShift, 1f, trunkLight);
+            LeafA = Utils.ColorUtils.AdjustColor(
+                arch.LeafA, Gen.HueShift, 1f, leafLight);
+            LeafB = Utils.ColorUtils.AdjustColor(
+                arch.LeafB, Gen.HueShift, 1f, leafLight);
 
             // existing lifecycle init
             TrunkPixels = Array.Empty<Point>();
@@ -136,6 +147,7 @@ namespace PixelTowerDefense.Entities
             float lean = _lean * factor;
 
             var trunk = new List<Point>();
+            var leaves = new List<Point>();
             for (int i = 0; i < height; i++)
             {
                 float t = i / (float)height;
@@ -149,13 +161,24 @@ namespace PixelTowerDefense.Entities
                     int dir = rng.NextDouble() < 0.5 ? -1 : 1;
                     int branchLen = rng.Next(_branchLenMin, _branchLenMax + 1);
                     for (int j = 1; j <= branchLen; j++)
-                        trunk.Add(new Point(offset + dir * (width + j), -i - j / 3));
+                    {
+                        int bx = offset + dir * (width + j);
+                        int by = -i - j / 3;
+                        trunk.Add(new Point(bx, by));
+                        if (factor >= 0.3f && j >= branchLen / 2)
+                        {
+                            int brad = Math.Max(1, (int)MathF.Round(_leafRadius * factor * 0.3f));
+                            for (int ly = -brad; ly <= brad; ly++)
+                                for (int lx = -brad; lx <= brad; lx++)
+                                    if (lx * lx + ly * ly <= brad * brad && rng.NextDouble() < _leafKeepProb)
+                                        leaves.Add(new Point(bx + lx, by + ly));
+                        }
+                    }
                 }
 
             }
             TrunkPixels = trunk.ToArray();
 
-            var leaves = new List<Point>();
             if (factor >= 0.3f)
             {
                 int radius = Math.Max(1, (int)MathF.Round(_leafRadius * factor));
@@ -164,8 +187,6 @@ namespace PixelTowerDefense.Entities
                 {
                     for (int x = -radius; x <= radius; x++)
                     {
-                        int r = x * x + (y * 2) * (y * 2);
-                        float ellipseY = _ellipseRatio;
                         if ((x * x) + (int)(y * y) <= radius * radius && rng.NextDouble() < _leafKeepProb)
                             leaves.Add(new Point(topOffset + x, -height + y));
                     }
