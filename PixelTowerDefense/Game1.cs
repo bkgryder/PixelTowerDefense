@@ -1518,8 +1518,11 @@ namespace PixelTowerDefense
                     float y = p.X * sin + p.Y * cos;
                     int dx = baseX + (int)MathF.Round(x);
                     int dy = baseY + (int)MathF.Round(y);
-                    Color col = Color.Lerp(t.TrunkBase, t.TrunkTip, Math.Clamp((-p.Y) / Math.Max(1, t.MaxHeight), 0f, 1f));
+
+                    Color col = Color.Lerp(t.TrunkBase, t.TrunkTip,
+                        Math.Clamp((-p.Y) / Math.Max(1, t.MaxHeight), 0f, 1f));
                     col = Color.Lerp(col, Color.SandyBrown, pale * 0.5f);
+
                     if (decomp > 0f)
                     {
                         float skipChance = MathF.Min(decomp, 0.9f);
@@ -1529,6 +1532,15 @@ namespace PixelTowerDefense
                             continue;
                         col = Color.Lerp(col, Color.SandyBrown, decomp);
                     }
+
+                    // add subtle pixel-level variation
+                    {
+                        int hash = (dx * 1237) ^ (dy * 2399);
+                        double r = ((hash & 0x7fffffff) / (double)int.MaxValue);
+                        float noise = (float)(r * 0.2 - 0.1); // range [-0.1, 0.1]
+                        col = ColorUtils.AdjustColor(col, 0f, 1f, 1f + noise);
+                    }
+
                     _sb.Draw(_px, new Rectangle(dx, dy, 1, 1), col);
                 }
             }
