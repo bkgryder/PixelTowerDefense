@@ -57,7 +57,9 @@ namespace PixelTowerDefense.Systems
 
             for (int attempt = 0; attempt < 10; attempt++)
             {
-                float dist = rng.Next(6, 11);
+                // Base distance plus half the footprint to avoid overlap with
+                // existing larger buildings
+                float dist = rng.Next(6, 11) + System.MathF.Max(w, h) / 2f;
                 float ang = rng.NextFloat(0f, System.MathF.Tau);
                 Vector2 pos = origin + new Vector2(System.MathF.Cos(ang), System.MathF.Sin(ang)) * dist;
                 if (!Collides(pos, w, h, buildings, seeds))
