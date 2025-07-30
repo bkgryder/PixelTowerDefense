@@ -188,7 +188,7 @@ namespace PixelTowerDefense
             });
             _buildings.Add(new Building
             {
-                Pos = new Vector2(midX + 6, midY),
+                Pos = new Vector2(midX + 12, midY),
                 Kind = BuildingType.HousingHut,
                 StoredBerries = 0,
                 StoredWood = 0,

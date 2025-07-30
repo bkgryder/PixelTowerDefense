@@ -8,50 +8,86 @@ namespace PixelTowerDefense.Entities
         {
             { (BuildingType.StorageHut, BuildStage.Planned), new[]
                 {
-                    "...",
-                    ".p.",
-                    "p.p",
-                    ".p."
+                    "pppppppppp",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "pppppppppp"
                 }
             },
             { (BuildingType.StorageHut, BuildStage.Framed), new[]
                 {
-                    "...",
-                    "fff",
-                    "f.f",
-                    "fff"
+                    "ffffffffff",
+                    "f........f",
+                    "f........f",
+                    "ffffffffff",
+                    "f........f",
+                    "f........f",
+                    "ffffffffff",
+                    "f........f",
+                    "f........f",
+                    "ffffffffff"
                 }
             },
             { (BuildingType.StorageHut, BuildStage.Built), new[]
                 {
-                    ".r.",
-                    "www",
-                    "w.w",
-                    "www"
+                    ".rrrrrrrr.",
+                    "wwwwwwwwww",
+                    "wwwwwwwwww",
+                    "wwwwwwwwww",
+                    "wwwwwwwwww",
+                    "w........w",
+                    "w........w",
+                    "w........w",
+                    "w........w",
+                    "wwwwwwwwww"
                 }
             },
             { (BuildingType.HousingHut, BuildStage.Planned), new[]
                 {
-                    "...",
-                    ".p.",
-                    "p.p",
-                    ".p."
+                    "pppppppppp",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "p........p",
+                    "pppppppppp"
                 }
             },
             { (BuildingType.HousingHut, BuildStage.Framed), new[]
                 {
-                    "...",
-                    "fff",
-                    "f.f",
-                    "fff"
+                    "ffffffffff",
+                    "f........f",
+                    "f........f",
+                    "ffffffffff",
+                    "f........f",
+                    "f........f",
+                    "ffffffffff",
+                    "f........f",
+                    "f........f",
+                    "ffffffffff"
                 }
             },
             { (BuildingType.HousingHut, BuildStage.Built), new[]
                 {
-                    ".r.",
-                    "www",
-                    "w.w",
-                    "www"
+                    ".rrrrrrrr.",
+                    "wwwwwwwwww",
+                    "wwwwwwwwww",
+                    "wwwwwwwwww",
+                    "wwwwwwwwww",
+                    "wwww..wwww",
+                    "wwww..wwww",
+                    "wwww..wwww",
+                    "wwww..wwww",
+                    "wwwwwwwwww"
                 }
             }
         };
