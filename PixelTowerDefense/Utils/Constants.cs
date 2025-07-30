@@ -166,7 +166,8 @@ namespace PixelTowerDefense.Utils
         // Building blueprints
         public static readonly int[] STORAGE_HUT_COSTS = { 5, 5 };
         public static readonly int[] HOUSING_HUT_COSTS = { 5, 5 };
-        public const int HUT_FOOTPRINT_W = 3, HUT_FOOTPRINT_H = 3;
+        // Updated to match the new, larger hut sprites
+        public const int HUT_FOOTPRINT_W = 10, HUT_FOOTPRINT_H = 10;
         public const int COTTAGE_FOOTPRINT_W = 5, COTTAGE_FOOTPRINT_H = 5;
 
         // Building capacities

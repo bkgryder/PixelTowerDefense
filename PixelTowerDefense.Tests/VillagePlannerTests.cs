@@ -31,7 +31,8 @@ public class VillagePlannerTests
         Assert.Single(seeds);
         Assert.Equal(BuildingType.StorageHut, seeds[0].Kind);
         float dist = Vector2.Distance(seeds[0].Pos, buildings[0].Pos);
-        Assert.InRange(dist, 6f, 10f);
+        // Distances account for the larger hut footprints
+        Assert.InRange(dist, 11f, 15f);
     }
 
     [Fact]
