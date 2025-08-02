@@ -9,10 +9,17 @@ namespace PixelTowerDefense.Entities
         CarpenterHut
     }
 
+    public enum BuildingStage
+    {
+        Ghost,
+        Built
+    }
+
     public struct Building
     {
         public Vector2 Pos;
         public BuildingType Kind;
+        public BuildingStage Stage;
         public int StoredBerries;
         public int StoredWood;
         public int HousedMeeples;
@@ -22,5 +29,9 @@ namespace PixelTowerDefense.Entities
         public int LogCapacity;
         public int PlankCapacity;
         public int BedSlots;
+
+        public int RequiredLogs;
+        public int RequiredPlanks;
+        public float WorkProgress;
     }
 }

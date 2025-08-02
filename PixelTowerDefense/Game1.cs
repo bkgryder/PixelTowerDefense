@@ -30,7 +30,6 @@ namespace PixelTowerDefense
         List<Stone> _stones = new();
         List<Tree> _trees = new();
         List<Building> _buildings = new();
-        List<BuildingSeed> _buildingSeeds = new();
         Random _rng = new();
         World.GameWorld _world = new();
         GroundMap _ground;
@@ -66,6 +65,8 @@ namespace PixelTowerDefense
         int _wolfDragIdx;
         Vector2 _wolfDragStartWorld;
         float _wolfDragStartTime;
+
+        bool _buildMode;
 
         // hovered meeple index
         int _hoverIdx;
@@ -177,6 +178,7 @@ namespace PixelTowerDefense
             {
                 Pos = new Vector2(midX, midY),
                 Kind = BuildingType.StorageHut,
+                Stage = BuildingStage.Built,
                 StoredBerries = 0,
                 StoredWood = 0,
                 HousedMeeples = 0,
@@ -184,12 +186,16 @@ namespace PixelTowerDefense
                 BerryCapacity = Constants.STORAGE_BERRY_CAPACITY,
                 LogCapacity = Constants.STORAGE_LOG_CAPACITY,
                 PlankCapacity = Constants.STORAGE_PLANK_CAPACITY,
-                BedSlots = 0
+                BedSlots = 0,
+                RequiredLogs = 0,
+                RequiredPlanks = 0,
+                WorkProgress = 0f
             });
             _buildings.Add(new Building
             {
                 Pos = new Vector2(midX + 12, midY),
                 Kind = BuildingType.HousingHut,
+                Stage = BuildingStage.Built,
                 StoredBerries = 0,
                 StoredWood = 0,
                 HousedMeeples = 0,
@@ -197,7 +203,10 @@ namespace PixelTowerDefense
                 BerryCapacity = 0,
                 LogCapacity = 0,
                 PlankCapacity = 0,
-                BedSlots = Constants.HOUSING_BED_SLOTS
+                BedSlots = Constants.HOUSING_BED_SLOTS,
+                RequiredLogs = 0,
+                RequiredPlanks = 0,
+                WorkProgress = 0f
             });
             _camX = midX - (GraphicsDevice.Viewport.Width * 0.5f) / _zoom;
             _camY = midY - (GraphicsDevice.Viewport.Height * 0.5f) / _zoom;
@@ -259,6 +268,9 @@ namespace PixelTowerDefense
 
             if (Edge(kb, Keys.F6))
                 _weather = _weather == Weather.Clear ? Weather.Rainy : Weather.Clear;
+
+            if (Edge(kb, Keys.B))
+                _buildMode = !_buildMode;
 
 
 
@@ -323,7 +335,32 @@ namespace PixelTowerDefense
                 }
             }
 
-            if (_currentAbility == Ability.Fire)
+            if (_buildMode)
+            {
+                bool mPress = ms.LeftButton == ButtonState.Pressed &&
+                              _prevMs.LeftButton == ButtonState.Released;
+                if (mPress)
+                {
+                    _buildings.Add(new Building
+                    {
+                        Pos = mworld,
+                        Kind = BuildingType.StorageHut,
+                        Stage = BuildingStage.Ghost,
+                        StoredBerries = 0,
+                        StoredWood = 0,
+                        HousedMeeples = 0,
+                        ReservedBy = null,
+                        BerryCapacity = Constants.STORAGE_BERRY_CAPACITY,
+                        LogCapacity = Constants.STORAGE_LOG_CAPACITY,
+                        PlankCapacity = Constants.STORAGE_PLANK_CAPACITY,
+                        BedSlots = 0,
+                        RequiredLogs = Constants.STORAGE_HUT_COSTS[0],
+                        RequiredPlanks = Constants.STORAGE_HUT_COSTS[1],
+                        WorkProgress = 0f
+                    });
+                }
+            }
+            else if (_currentAbility == Ability.Fire)
             {
                 bool mPress = ms.LeftButton == ButtonState.Pressed &&
                               _prevMs.LeftButton == ButtonState.Released;
@@ -527,8 +564,7 @@ namespace PixelTowerDefense
                 _dragging = false;
             }
 
-            VillagePlanner.Update(_meeples, _buildings, _wood, _buildingSeeds, _rng);
-            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _buildingSeeds, _trees, _wood, _water, dt);
+            PhysicsSystem.SimulateAll(_meeples, _pixels, _bushes, _buildings, _trees, _wood, _water, dt);
             PhysicsSystem.SimulateRabbits(_rabbits, _bushes, _seeds, _rabbitHomes, dt);
             PhysicsSystem.SimulateWolves(_wolves, _rabbits, _meeples, _wolfDens, dt);
             if (_weather == Weather.Rainy)
@@ -648,8 +684,6 @@ namespace PixelTowerDefense
             // --- buildings ---
             foreach (var b in _buildings)
                 DrawBuilding(b);
-            foreach (var s in _buildingSeeds)
-                DrawBuildingSeed(s);
 
             // --- shadows ---
             foreach (var e in _meeples.OrderBy(s => s.ShadowY))
@@ -1318,7 +1352,11 @@ namespace PixelTowerDefense
                     if (ch == '.') continue;
 
                     Color col;
-                    if (ch == 'r')
+                    if (b.Stage == BuildingStage.Ghost)
+                    {
+                        col = new Color(Color.Gray, 0.5f);
+                    }
+                    else if (ch == 'r')
                         col = b.Kind == BuildingType.StorageHut ? Color.BurlyWood : Color.Peru;
                     else
                         col = b.Kind == BuildingType.StorageHut ? Color.SaddleBrown : Color.Sienna;
@@ -1327,7 +1365,7 @@ namespace PixelTowerDefense
                 }
             }
 
-            if (b.Kind == BuildingType.StorageHut)
+            if (b.Stage == BuildingStage.Built && b.Kind == BuildingType.StorageHut)
             {
                 int stackH = b.BerryCapacity / 3;
                 for (int i = 0; i < b.StoredBerries; i++)
@@ -1349,35 +1387,7 @@ namespace PixelTowerDefense
             }
         }
 
-        private void DrawBuildingSeed(BuildingSeed s)
-        {
-            if (!BuildingSprites.Sprites.TryGetValue((s.Kind, s.Stage), out var sprite))
-                return;
-
-            int baseX = (int)MathF.Round(s.Pos.X) - sprite[0].Length / 2;
-            int baseY = (int)MathF.Round(s.Pos.Y) - 2;
-
-            for (int gy = 0; gy < sprite.Length; gy++)
-            {
-                string row = sprite[gy];
-                for (int gx = 0; gx < row.Length; gx++)
-                {
-                    char ch = row[gx];
-                    if (ch == '.') continue;
-
-                    Color col = s.Stage switch
-                    {
-                        BuildStage.Planned => Color.Yellow,
-                        BuildStage.Framed => Color.Orange,
-                        _ => (ch == 'r'
-                                ? (s.Kind == BuildingType.StorageHut ? Color.BurlyWood : Color.Peru)
-                                : (s.Kind == BuildingType.StorageHut ? Color.SaddleBrown : Color.Sienna))
-                    };
-
-                    _sb.Draw(_px, new Rectangle(baseX + gx, baseY + gy, 1, 1), col);
-                }
-            }
-        }
+        
 
         private void DrawStone(Stone s)
         {

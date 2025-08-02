@@ -16,7 +16,6 @@ namespace PixelTowerDefense.Systems
             List<Pixel> debris,
             List<BerryBush> bushes,
             List<Building> buildings,
-            List<BuildingSeed> seeds,
             List<Tree> trees,
             List<Wood> logs,
             WaterMap water,
@@ -192,46 +191,32 @@ namespace PixelTowerDefense.Systems
 
                             // --- log & tree jobs ---
                             wdata = e.Worker.Value;
-                            int reservedSeed = FindReservedSeed(i, seeds);
+                            int reservedBuilding = FindReservedBuilding(i, buildings);
                             if (e.CarriedWoodIdx >= 0)
                             {
                                 if (e.CarriedWoodIdx < logs.Count)
                                 {
                                     var log = logs[e.CarriedWoodIdx];
-                                    if (reservedSeed >= 0)
+                                    if (reservedBuilding >= 0)
                                     {
-                                        var seed = seeds[reservedSeed];
-                                        Vector2 dir = seed.Pos - e.Pos;
+                                        var bld = buildings[reservedBuilding];
+                                        Vector2 dir = bld.Pos - e.Pos;
                                         float dist = dir.Length();
                                         if (dist < 1f)
                                         {
-                                            seed.RequiredResources--;
-                                            if (seed.RequiredResources <= 0)
-                                            {
-                                                if (seed.Stage == BuildStage.Planned)
-                                                {
-                                                    seed.Stage = BuildStage.Framed;
-                                                    int[] costs = seed.Kind switch
-                                                    {
-                                                        BuildingType.StorageHut => Constants.STORAGE_HUT_COSTS,
-                                                        BuildingType.HousingHut => Constants.HOUSING_HUT_COSTS,
-                                                        BuildingType.CarpenterHut => Constants.STORAGE_HUT_COSTS,
-                                                        _ => Constants.STORAGE_HUT_COSTS
-                                                    };
-                                                    seed.RequiredResources = costs[1];
-                                                }
-                                                else if (seed.Stage == BuildStage.Framed)
-                                                {
-                                                    seed.Stage = BuildStage.Built;
-                                                    VillagePlanner.OnBuildComplete();
-                                                }
-                                            }
-                                            seed.ReservedBy = null;
-                                            seeds[reservedSeed] = seed;
+                                            if (bld.RequiredLogs > 0)
+                                                bld.RequiredLogs--;
+                                            else if (bld.RequiredPlanks > 0)
+                                                bld.RequiredPlanks--;
+                                            if (bld.RequiredLogs <= 0 && bld.RequiredPlanks <= 0)
+                                                bld.Stage = BuildingStage.Built;
+        
+                                            bld.ReservedBy = null;
+                                            buildings[reservedBuilding] = bld;
                                             logs.RemoveAt(e.CarriedWoodIdx);
                                             e.CarriedWoodIdx = -1;
                                             wdata.CurrentJob = JobType.None;
-                                            wdata.TargetIdx = null;
+        wdata.TargetIdx = null;
                                         }
                                         else
                                         {
@@ -280,7 +265,7 @@ namespace PixelTowerDefense.Systems
                             }
                             else
                             {
-                                if (reservedSeed >= 0)
+                                if (reservedBuilding >= 0)
                                 {
                                     int lidx = FindNearestLooseWood(e.Pos, logs);
                                     if (lidx >= 0)
@@ -307,14 +292,14 @@ namespace PixelTowerDefense.Systems
                                     }
                                 }
 
-                                int sidx = FindNearestSeedNeedingWood(e.Pos, seeds);
-                                if (sidx >= 0)
+                                int bidx = FindNearestGhostNeedingWood(e.Pos, buildings);
+                                if (bidx >= 0)
                                 {
-                                    var seed = seeds[sidx];
-                                    seed.ReservedBy = i;
-                                    seeds[sidx] = seed;
-                                    wdata.CurrentJob = JobType.BuildSeed;
-                                    wdata.TargetIdx = sidx;
+                                    var bld = buildings[bidx];
+                                    bld.ReservedBy = i;
+                                    buildings[bidx] = bld;
+                                    wdata.CurrentJob = JobType.Build;
+                                    wdata.TargetIdx = bidx;
                                     e.Worker = wdata;
                                     int lidx = FindNearestLooseWood(e.Pos, logs);
                                     if (lidx >= 0)
@@ -584,45 +569,6 @@ namespace PixelTowerDefense.Systems
             }
 
             ResolveDominoCollisions(meeples);
-
-            for (int i = seeds.Count - 1; i >= 0; i--)
-            {
-                if (seeds[i].Stage != BuildStage.Built)
-                    continue;
-
-                int berryCap = 0, logCap = 0, plankCap = 0, beds = 0;
-                switch (seeds[i].Kind)
-                {
-                    case BuildingType.StorageHut:
-                        berryCap = Constants.STORAGE_BERRY_CAPACITY;
-                        logCap = Constants.STORAGE_LOG_CAPACITY;
-                        plankCap = Constants.STORAGE_PLANK_CAPACITY;
-                        break;
-                    case BuildingType.HousingHut:
-                        beds = Constants.HOUSING_BED_SLOTS;
-                        break;
-                    case BuildingType.CarpenterHut:
-                        logCap = Constants.STORAGE_LOG_CAPACITY;
-                        plankCap = Constants.STORAGE_PLANK_CAPACITY;
-                        break;
-                }
-
-                buildings.Add(new Building
-                {
-                    Pos = seeds[i].Pos,
-                    Kind = seeds[i].Kind,
-                    StoredBerries = 0,
-                    StoredWood = 0,
-                    HousedMeeples = 0,
-                    ReservedBy = null,
-                    BerryCapacity = berryCap,
-                    LogCapacity = logCap,
-                    PlankCapacity = plankCap,
-                    BedSlots = beds
-                });
-
-                seeds.RemoveAt(i);
-            }
 
             // housing and storage buildings currently have no per-frame behavior
         }
@@ -1657,16 +1603,17 @@ namespace PixelTowerDefense.Systems
             return idx;
         }
 
-        private static int FindNearestSeedNeedingWood(Vector2 pos, List<BuildingSeed> seeds)
+        private static int FindNearestGhostNeedingWood(Vector2 pos, List<Building> buildings)
         {
             int idx = -1;
-            float best = float.MaxValue;
-            for (int i = 0; i < seeds.Count; i++)
+            float best = 30f;
+            for (int i = 0; i < buildings.Count; i++)
             {
-                if (seeds[i].Stage == BuildStage.Built) continue;
-                if (seeds[i].RequiredResources <= 0) continue;
-                if (seeds[i].ReservedBy != null) continue;
-                float d = Vector2.Distance(pos, seeds[i].Pos);
+                var b = buildings[i];
+                if (b.Stage != BuildingStage.Ghost) continue;
+                if (b.RequiredLogs <= 0 && b.RequiredPlanks <= 0) continue;
+                if (b.ReservedBy != null) continue;
+                float d = Vector2.Distance(pos, b.Pos);
                 if (d < best)
                 {
                     best = d;
@@ -1676,11 +1623,11 @@ namespace PixelTowerDefense.Systems
             return idx;
         }
 
-        private static int FindReservedSeed(int workerIdx, List<BuildingSeed> seeds)
+        private static int FindReservedBuilding(int workerIdx, List<Building> buildings)
         {
-            for (int i = 0; i < seeds.Count; i++)
+            for (int i = 0; i < buildings.Count; i++)
             {
-                if (seeds[i].ReservedBy == workerIdx)
+                if (buildings[i].ReservedBy == workerIdx)
                     return i;
             }
             return -1;

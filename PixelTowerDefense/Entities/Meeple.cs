@@ -20,7 +20,7 @@ namespace PixelTowerDefense.Entities
         ChopTree,
         HaulWood,
         DepositResource,
-        BuildSeed
+        Build
     }
 
     public struct Worker
