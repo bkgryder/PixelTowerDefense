@@ -616,17 +616,17 @@ namespace PixelTowerDefense
 
             // --- debris ---
             foreach (var p in _pixels)
-                _sb.Draw(_px, p.Bounds, p.Col);
+                _sb.Draw(_px, ToIsoRect(p.Bounds), p.Col);
 
             foreach (var s in _seeds)
             {
-                var rect = new Rectangle((int)MathF.Round(s.Pos.X), (int)MathF.Round(s.Pos.Y - s.z), 1, 1);
+                var rect = ToIsoRect(new Rectangle((int)MathF.Round(s.Pos.X), (int)MathF.Round(s.Pos.Y - s.z), 1, 1));
                 _sb.Draw(_px, rect, Color.SandyBrown);
             }
 
             foreach (var r in _rain)
             {
-                var rect = new Rectangle((int)MathF.Round(r.Pos.X), (int)MathF.Round(r.Pos.Y - r.z), 1, 1);
+                var rect = ToIsoRect(new Rectangle((int)MathF.Round(r.Pos.X), (int)MathF.Round(r.Pos.Y - r.z), 1, 1));
                 _sb.Draw(_px, rect, Color.CornflowerBlue);
             }
 
@@ -636,7 +636,7 @@ namespace PixelTowerDefense
             foreach (var cp in _cloudPixels)
             {
                 var pos = _cloudCenter + cp.Pos;
-                var rect = new Rectangle((int)MathF.Round(pos.X), (int)MathF.Round(pos.Y), 1, 1);
+                var rect = ToIsoRect(new Rectangle((int)MathF.Round(pos.X), (int)MathF.Round(pos.Y), 1, 1));
                 var col = new Color(cp.Col.R, cp.Col.G, cp.Col.B, (byte)(_rainAlpha * 255));
                 _sb.Draw(_px, rect, col);
             }
@@ -902,6 +902,19 @@ namespace PixelTowerDefense
             _sb.DrawString(_font, text, new Vector2(35, 8), Color.White);
         }
 
+        private static Vector2 ToIsoWorld(float x, float y)
+            => IsoUtils.ToIso(new Vector2(x, y), 1, 1);
+
+        private static Rectangle ToIsoRect(Rectangle rect)
+        {
+            var iso = ToIsoWorld(rect.X, rect.Y);
+            return new Rectangle(
+                (int)MathF.Round(iso.X),
+                (int)MathF.Round(iso.Y),
+                rect.Width,
+                Math.Max(1, rect.Height / 2));
+        }
+
         private static void DrawGround(SpriteBatch sb, GroundMap map, Texture2D px, float zoom, Rectangle visible)
         {
             int cellSize = Constants.CELL_PIXELS;
@@ -923,7 +936,7 @@ namespace PixelTowerDefense
                     var style = BiomeTypes.Get(cell.Biome);
                     int pxX = Constants.ARENA_LEFT + x * cellSize;
                     int pxY = Constants.ARENA_TOP + y * cellSize;
-                    sb.Draw(px, new Rectangle(pxX, pxY, cellSize, cellSize), style.Base);
+                    sb.Draw(px, ToIsoRect(new Rectangle(pxX, pxY, cellSize, cellSize)), style.Base);
 
                     // shade pattern
                     if (shade > 0f)
@@ -932,7 +945,7 @@ namespace PixelTowerDefense
                             for (int ix = 0; ix < cellSize; ix++)
                                 if (PatternAtlas.IsSet(style.PatternId, ix + cell.Variant, iy + cell.Variant))
                                 {
-                                    var r = new Rectangle(pxX + ix, pxY + iy, 1, 1);
+                                    var r = ToIsoRect(new Rectangle(pxX + ix, pxY + iy, 1, 1));
                                     var col = style.Shade * shade;
                                     sb.Draw(px, r, col);
                                 }
@@ -940,10 +953,10 @@ namespace PixelTowerDefense
 
                     // borders
                     if (x + 1 < map.W && map.Cells[x + 1, y].Biome != cell.Biome)
-                        sb.Draw(px, new Rectangle(pxX + cellSize - 1, pxY, 1, cellSize),
+                        sb.Draw(px, ToIsoRect(new Rectangle(pxX + cellSize - 1, pxY, 1, cellSize)),
                             style.Base * Constants.GROUND_BORDER_ALPHA);
                     if (y + 1 < map.H && map.Cells[x, y + 1].Biome != cell.Biome)
-                        sb.Draw(px, new Rectangle(pxX, pxY + cellSize - 1, cellSize, 1),
+                        sb.Draw(px, ToIsoRect(new Rectangle(pxX, pxY + cellSize - 1, cellSize, 1)),
                             style.Base * Constants.GROUND_BORDER_ALPHA);
 
                     // sparse decal
@@ -954,7 +967,7 @@ namespace PixelTowerDefense
                         {
                             int dx = hash % cellSize;
                             int dy = (hash >> 3) % cellSize;
-                            sb.Draw(px, new Rectangle(pxX + dx, pxY + dy, 1, 1), style.Detail);
+                            sb.Draw(px, ToIsoRect(new Rectangle(pxX + dx, pxY + dy, 1, 1)), style.Detail);
                         }
                     }
                 }
@@ -983,7 +996,7 @@ namespace PixelTowerDefense
                     Color col = Color.Lerp(baseCol, shallow, wave * 0.3f);
 
                     sb.Draw(px,
-                        new Rectangle(Constants.ARENA_LEFT + x, Constants.ARENA_TOP + y, pxSize, pxSize),
+                        ToIsoRect(new Rectangle(Constants.ARENA_LEFT + x, Constants.ARENA_TOP + y, pxSize, pxSize)),
                         col);
                 }
             }
