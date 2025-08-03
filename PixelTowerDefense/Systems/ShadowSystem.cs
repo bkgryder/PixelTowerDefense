@@ -21,7 +21,10 @@ namespace PixelTowerDefense.Systems
                 float bottom = float.MinValue;
                 for (int p = -halfSeg; p < halfSeg; p++)
                 {
-                    bottom = MathF.Max(bottom, e.GetPartPos(p).Y);
+                    // Convert part position to isometric space so the shadow
+                    // ordering matches the rendered coordinates.
+                    var partIso = IsoUtils.ToIso(e.GetPartPos(p), 1, 1);
+                    bottom = MathF.Max(bottom, partIso.Y);
                 }
 
                 float target = bottom + 1f;
