@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Entities;
 using PixelTowerDefense.Systems;
+using PixelTowerDefense.Utils;
 using Xunit;
 
 namespace PixelTowerDefense.Tests;
@@ -30,9 +31,11 @@ public class VillagePlannerTests
 
         Assert.Single(seeds);
         Assert.Equal(BuildingType.StorageHut, seeds[0].Kind);
-        float dist = Vector2.Distance(seeds[0].Pos, buildings[0].Pos);
+        float dist = Vector2.Distance(
+            IsoUtils.ToCart(seeds[0].Pos, 1, 1),
+            IsoUtils.ToCart(buildings[0].Pos, 1, 1));
         // Distances account for the larger hut footprints
-        Assert.InRange(dist, 11f, 15f);
+        Assert.InRange(dist, 15f, 21f);
     }
 
     [Fact]
