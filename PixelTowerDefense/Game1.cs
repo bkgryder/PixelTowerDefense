@@ -134,7 +134,7 @@ namespace PixelTowerDefense
             SpawnWolves(2);
             SpawnBerryBushes(5);
             //SpawnWood(4);
-            //SpawnStones(4);
+            SpawnStones();
 
             TreeArchetype PickArch(Biome biome)
             {
@@ -853,15 +853,25 @@ namespace PixelTowerDefense
             }
         }
 
-        private void SpawnStones(int count)
+        private void SpawnStones()
         {
-            for (int i = 0; i < count; i++)
+            int step = 8;
+            int arenaW = Constants.ARENA_RIGHT - Constants.ARENA_LEFT;
+            int arenaH = Constants.ARENA_BOTTOM - Constants.ARENA_TOP;
+            for (int y = Constants.ARENA_TOP + 5; y < Constants.ARENA_BOTTOM - 5; y += step)
             {
-                float x = _rng.NextFloat(Constants.ARENA_LEFT + 5,
-                                       Constants.ARENA_RIGHT - 5);
-                float y = _rng.NextFloat(Constants.ARENA_TOP + 5,
-                                       Constants.ARENA_BOTTOM - 5);
-                _stones.Add(new Stone(new Vector2(x, y), _rng));
+                for (int x = Constants.ARENA_LEFT + 5; x < Constants.ARENA_RIGHT - 5; x += step)
+                {
+                    float nx = (x - Constants.ARENA_LEFT) / (float)arenaW;
+                    float ny = (y - Constants.ARENA_TOP) / (float)arenaH;
+                    float n = Noise.FractalNoise(nx * 3f, ny * 3f, 42);
+                    if (n > 0.75f)
+                    {
+                        float px = x + _rng.NextFloat(-2f, 2f);
+                        float py = y + _rng.NextFloat(-2f, 2f);
+                        _stones.Add(new Stone(new Vector2(px, py), _rng));
+                    }
+                }
             }
         }
 
@@ -1095,8 +1105,8 @@ namespace PixelTowerDefense
             {
                 int bx = (int)MathF.Round(s.Pos.X);
                 int by = (int)MathF.Round(s.Pos.Y);
-                foreach (var off in s.Shape)
-                    if (bx + off.X == p.X && by + off.Y == p.Y)
+                foreach (var off in s.Pixels)
+                    if (bx + off.Offset.X == p.X && by + off.Offset.Y == p.Y)
                         return "Stone";
             }
 
@@ -1393,8 +1403,10 @@ namespace PixelTowerDefense
         {
             int baseX = (int)MathF.Round(s.Pos.X);
             int baseY = (int)MathF.Round(s.Pos.Y);
-            foreach (var p in s.Shape)
-                _sb.Draw(_px, new Rectangle(baseX + p.X, baseY + p.Y, 1, 1), s.Color);
+            foreach (var p in s.Pixels)
+                _sb.Draw(_px, new Rectangle(baseX + p.Offset.X + 1, baseY + p.Offset.Y + 1, 1, 1), Color.Black * 0.4f);
+            foreach (var p in s.Pixels)
+                _sb.Draw(_px, new Rectangle(baseX + p.Offset.X, baseY + p.Offset.Y, 1, 1), p.Color);
         }
 
         private void DrawWood(Wood l)
