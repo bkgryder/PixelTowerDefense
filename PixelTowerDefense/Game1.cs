@@ -313,12 +313,10 @@ namespace PixelTowerDefense
             }
 
             var mscr = new Point(ms.X, ms.Y);
-            var mouseIso = new Vector2(_camX + mscr.X / _zoom,
-                                       _camY + mscr.Y / _zoom);
-            var prevIso = new Vector2(_camX + _prevMs.X / _zoom,
-                                      _camY + _prevMs.Y / _zoom);
-            var mouseWorldCart = IsoUtils.ToCart(mouseIso, 1, 1);
-            var prevMouseWorldCart = IsoUtils.ToCart(prevIso, 1, 1);
+            var mworld = new Vector2(_camX + mscr.X / _zoom,
+                                     _camY + mscr.Y / _zoom);
+            var prevWorld = new Vector2(_camX + _prevMs.X / _zoom,
+                                        _camY + _prevMs.Y / _zoom);
 
             // determine hovered meeple
             _hoverIdx = -1;
@@ -328,7 +326,7 @@ namespace PixelTowerDefense
                 var e = _meeples[i];
                 for (int p = -2; p <= 2; p++)
                 {
-                    float d = Vector2.Distance(e.GetPartPos(p), mouseWorldCart);
+                    float d = Vector2.Distance(e.GetPartPos(p), mworld);
                     if (d < hoverDist)
                     {
                         hoverDist = d;
@@ -345,7 +343,7 @@ namespace PixelTowerDefense
                 {
                     _buildings.Add(new Building
                     {
-                        Pos = mouseWorldCart,
+                        Pos = mworld,
                         Kind = BuildingType.StorageHut,
                         Stage = BuildingStage.Ghost,
                         StoredBerries = 0,
@@ -375,7 +373,7 @@ namespace PixelTowerDefense
                         var e = _meeples[i];
                         for (int p = -2; p <= 2; p++)
                         {
-                            float d = Vector2.Distance(e.GetPartPos(p), mouseWorldCart);
+                            float d = Vector2.Distance(e.GetPartPos(p), mworld);
                             if (d < minD)
                             {
                                 e.IsBurning = true;
@@ -397,7 +395,7 @@ namespace PixelTowerDefense
                             foreach (var p in t.TrunkPixels)
                             {
                                 var pos = new Vector2(bx + p.X, by + p.Y);
-                                if (Vector2.Distance(pos, mouseWorldCart) < minD)
+                                if (Vector2.Distance(pos, mworld) < minD)
                                 {
                                     t.IsBurning = true;
                                     t.BurnTimer = Constants.TREE_BURN_DURATION;
@@ -411,7 +409,7 @@ namespace PixelTowerDefense
                                 foreach (var p in t.LeafPixels)
                                 {
                                     var pos = new Vector2(bx + p.X, by + p.Y);
-                                    if (Vector2.Distance(pos, mouseWorldCart) < minD)
+                                    if (Vector2.Distance(pos, mworld) < minD)
                                     {
                                         t.IsBurning = true;
                                         t.BurnTimer = Constants.TREE_BURN_DURATION;
@@ -434,7 +432,7 @@ namespace PixelTowerDefense
                             foreach (var p in b.TrunkPixels)
                             {
                                 var pos = new Vector2(bx + p.X, by + p.Y);
-                                if (Vector2.Distance(pos, mouseWorldCart) < minD)
+                                if (Vector2.Distance(pos, mworld) < minD)
                                 {
                                     b.IsBurning = true;
                                     b.BurnTimer = Constants.BUSH_BURN_DURATION;
@@ -448,7 +446,7 @@ namespace PixelTowerDefense
                                 foreach (var p in b.LeafPixels)
                                 {
                                     var pos = new Vector2(bx + p.X, by + p.Y);
-                                    if (Vector2.Distance(pos, mouseWorldCart) < minD)
+                                    if (Vector2.Distance(pos, mworld) < minD)
                                     {
                                         b.IsBurning = true;
                                         b.BurnTimer = Constants.BUSH_BURN_DURATION;
@@ -472,21 +470,21 @@ namespace PixelTowerDefense
                         gt, ms, _prevMs,
                         ref _dragging, ref _dragIdx, ref _dragPart,
                         ref _dragStartWorld, ref _dragStartTime,
-                        mouseWorldCart, prevMouseWorldCart,
+                        mworld, prevWorld,
                         _meeples, _pixels
                     );
                     InputSystem.HandleRabbitDrag(
                         gt, ms, _prevMs,
                         ref _rabbitDragging, ref _rabbitDragIdx,
                         ref _rabbitDragStartWorld, ref _rabbitDragStartTime,
-                        mouseWorldCart,
+                        mworld,
                         _rabbits
                     );
                     InputSystem.HandleWolfDrag(
                         gt, ms, _prevMs,
                         ref _wolfDragging, ref _wolfDragIdx,
                         ref _wolfDragStartWorld, ref _wolfDragStartTime,
-                        mouseWorldCart,
+                        mworld,
                         _wolves
                     );
                     if (_dragging)
@@ -509,7 +507,7 @@ namespace PixelTowerDefense
                               _prevMs.LeftButton == ButtonState.Released;
                 if (mPress && _mana >= Constants.EXPLOSION_COST)
                 {
-                    TriggerExplosion(mouseWorldCart);
+                    TriggerExplosion(mworld);
                     _mana = MathF.Max(0f, _mana - Constants.EXPLOSION_COST);
                 }
             }
@@ -526,7 +524,7 @@ namespace PixelTowerDefense
 
                 if (_raining)
                 {
-                    var target = mouseWorldCart + new Vector2(0f, Constants.PRECIPITATE_CLOUD_OFFSET_Y);
+                    var target = mworld + new Vector2(0f, Constants.PRECIPITATE_CLOUD_OFFSET_Y);
                     float lerp = MathHelper.Clamp(Constants.PRECIPITATE_CLOUD_LERP * dt, 0f, 1f);
                     _cloudCenter = Vector2.Lerp(_cloudCenter, target, lerp);
                 }
