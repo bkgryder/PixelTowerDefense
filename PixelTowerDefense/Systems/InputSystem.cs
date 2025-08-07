@@ -19,8 +19,8 @@ namespace PixelTowerDefense.Systems
             ref int dragPart,
             ref Vector2 dragStartWorld,
             ref float dragStartTime,
-            Vector2 mouseWorldCart,
-            Vector2 prevMouseWorldCart,
+            Vector2 mouseWorld,
+            Vector2 prevMouseWorld,
             List<Meeple> meeples,
             List<Pixel> debris
         )
@@ -40,14 +40,14 @@ namespace PixelTowerDefense.Systems
                     if (e.State != MeepleState.Idle) continue;
                     for (int p = -2; p <= 2; p++)
                     {
-                float d = Vector2.Distance(e.GetPartPos(p), mouseWorldCart);
+                        float d = Vector2.Distance(e.GetPartPos(p), mouseWorld);
                         if (d < minD)
                         {
                             minD = d;
                             dragging = true;
                             dragIdx = i;
                             dragPart = p;
-                            dragStartWorld = mouseWorldCart;
+                            dragStartWorld = mouseWorld;
                             dragStartTime = (float)gt.TotalGameTime.TotalSeconds;
                             // lift
                             e.z = Constants.GRAB_Z;
@@ -79,13 +79,13 @@ namespace PixelTowerDefense.Systems
 
                 float spring = Constants.DRAG_SPRING,
                       damping = Constants.DRAG_DAMPING;
-                float targetAngle = MathF.Atan2(mouseWorldCart.X - e.Pos.X,
-                                                mouseWorldCart.Y - e.Pos.Y);
+                float targetAngle = MathF.Atan2(mouseWorld.X - e.Pos.X,
+                                                mouseWorld.Y - e.Pos.Y);
                 if (dragPart != 0)
                     targetAngle -= MathF.Asin(dragPart * Constants.PART_LEN / (Constants.ENEMY_H * 0.5f));
 
-                float prevTargetAngle = MathF.Atan2(prevMouseWorldCart.X - e.Pos.X,
-                                                   prevMouseWorldCart.Y - e.Pos.Y);
+                float prevTargetAngle = MathF.Atan2(prevMouseWorld.X - e.Pos.X,
+                                                   prevMouseWorld.Y - e.Pos.Y);
                 if (dragPart != 0)
                     prevTargetAngle -= MathF.Asin(dragPart * Constants.PART_LEN / (Constants.ENEMY_H * 0.5f));
 
@@ -100,7 +100,7 @@ namespace PixelTowerDefense.Systems
                 e.AngularVel *= MathF.Exp(-damping * dt);
                 e.Angle += e.AngularVel * dt;
 
-                e.Pos = mouseWorldCart - grabVec;
+                e.Pos = mouseWorld - grabVec;
                 e.z = Constants.GRAB_Z;
                 e.vz = 0f;
 
@@ -120,7 +120,7 @@ namespace PixelTowerDefense.Systems
                 var e = meeples[dragIdx];
                 float t2 = (float)gt.TotalGameTime.TotalSeconds;
                 float dt = MathF.Max(0.01f, t2 - dragStartTime);
-                var delta = mouseWorldCart - dragStartWorld;
+                var delta = mouseWorld - dragStartWorld;
                 var avgV = delta / dt;
 
                 e.Vel = avgV * Constants.THROW_SENSITIVITY;
@@ -163,7 +163,7 @@ namespace PixelTowerDefense.Systems
             ref int dragIdx,
             ref Vector2 dragStartWorld,
             ref float dragStartTime,
-            Vector2 mouseWorldCart,
+            Vector2 mouseWorld,
             List<Rabbit> rabbits
         )
         {
@@ -178,13 +178,13 @@ namespace PixelTowerDefense.Systems
                 for (int i = rabbits.Count - 1; i >= 0; i--)
                 {
                     var r = rabbits[i];
-                    float d = Vector2.Distance(r.Pos - new Vector2(0, r.z), mouseWorldCart);
+                    float d = Vector2.Distance(r.Pos - new Vector2(0, r.z), mouseWorld);
                     if (d < minD)
                     {
                         minD = d;
                         dragging = true;
                         dragIdx = i;
-                        dragStartWorld = mouseWorldCart;
+                        dragStartWorld = mouseWorld;
                         dragStartTime = (float)gt.TotalGameTime.TotalSeconds;
                         r.z = Constants.GRAB_Z;
                         r.vz = 0f;
@@ -203,7 +203,7 @@ namespace PixelTowerDefense.Systems
                 }
 
                 var r = rabbits[dragIdx];
-                r.Pos = mouseWorldCart;
+                r.Pos = mouseWorld;
                 r.z = Constants.GRAB_Z;
                 r.vz = 0f;
                 rabbits[dragIdx] = r;
@@ -221,7 +221,7 @@ namespace PixelTowerDefense.Systems
                 var r = rabbits[dragIdx];
                 float t2 = (float)gt.TotalGameTime.TotalSeconds;
                 float dt = MathF.Max(0.01f, t2 - dragStartTime);
-                var delta = mouseWorldCart - dragStartWorld;
+                var delta = mouseWorld - dragStartWorld;
                 var avgV = delta / dt;
                 r.Vel = avgV * Constants.THROW_SENSITIVITY;
                 r.vz = avgV.Length() * Constants.THROW_VZ_SCALE + Constants.INITIAL_Z;
@@ -239,7 +239,7 @@ namespace PixelTowerDefense.Systems
             ref int dragIdx,
             ref Vector2 dragStartWorld,
             ref float dragStartTime,
-            Vector2 mouseWorldCart,
+            Vector2 mouseWorld,
             List<Wolf> wolves
         )
         {
@@ -254,13 +254,13 @@ namespace PixelTowerDefense.Systems
                 for (int i = wolves.Count - 1; i >= 0; i--)
                 {
                     var w = wolves[i];
-                    float d = Vector2.Distance(w.Pos - new Vector2(0, w.z), mouseWorldCart);
+                    float d = Vector2.Distance(w.Pos - new Vector2(0, w.z), mouseWorld);
                     if (d < minD)
                     {
                         minD = d;
                         dragging = true;
                         dragIdx = i;
-                        dragStartWorld = mouseWorldCart;
+                        dragStartWorld = mouseWorld;
                         dragStartTime = (float)gt.TotalGameTime.TotalSeconds;
                         w.z = Constants.GRAB_Z;
                         w.vz = 0f;
@@ -279,7 +279,7 @@ namespace PixelTowerDefense.Systems
                 }
 
                 var w = wolves[dragIdx];
-                w.Pos = mouseWorldCart;
+                w.Pos = mouseWorld;
                 w.z = Constants.GRAB_Z;
                 w.vz = 0f;
                 wolves[dragIdx] = w;
@@ -297,7 +297,7 @@ namespace PixelTowerDefense.Systems
                 var w = wolves[dragIdx];
                 float t2 = (float)gt.TotalGameTime.TotalSeconds;
                 float dt = MathF.Max(0.01f, t2 - dragStartTime);
-                var delta = mouseWorldCart - dragStartWorld;
+                var delta = mouseWorld - dragStartWorld;
                 var avgV = delta / dt;
                 w.Vel = avgV * Constants.THROW_SENSITIVITY;
                 w.vz = avgV.Length() * Constants.THROW_VZ_SCALE + Constants.INITIAL_Z;
