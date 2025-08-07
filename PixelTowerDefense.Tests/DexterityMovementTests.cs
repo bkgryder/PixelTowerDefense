@@ -50,11 +50,10 @@ public class DexterityMovementTests
         var trees = new List<Tree>();
         var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
-        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 1f);
+        var seeds = new List<BuildingSeed>();
+        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, seeds, trees, logs, water, 1f);
 
-        var slowCart = IsoUtils.ToCart(workers[0].Pos, 1, 1);
-        var fastCart = IsoUtils.ToCart(workers[1].Pos, 1, 1);
-        Assert.True(fastCart.Length() > slowCart.Length());
+        Assert.True(workers[1].Pos.X > workers[0].Pos.X);
     }
 }
 

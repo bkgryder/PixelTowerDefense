@@ -27,7 +27,8 @@ public class JobAffinityTests
         var debris = new List<Pixel>();
         var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
-        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 0.1f);
+        var seeds = new List<BuildingSeed>();
+        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, seeds, trees, logs, water, 0.1f);
 
         Assert.Equal(Constants.TREE_HEALTH - 1, trees[0].Health);
         Assert.Equal(-1, workers[0].CarriedWoodIdx);
@@ -50,7 +51,8 @@ public class JobAffinityTests
         var debris = new List<Pixel>();
         var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
-        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 0.1f);
+        var seeds2 = new List<BuildingSeed>();
+        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, seeds2, trees, logs, water, 0.1f);
 
         Assert.True(workers[0].CarriedWoodIdx >= 0);
         Assert.Equal(Constants.TREE_HEALTH, trees[0].Health);

@@ -34,7 +34,8 @@ public class RandomStatTests
         var debris = new List<Pixel>();
         var water = new WaterMap(Constants.CHUNK_PIXEL_SIZE, Constants.CHUNK_PIXEL_SIZE);
 
-        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, trees, logs, water, 0.1f);
+        var seeds = new List<BuildingSeed>();
+        PhysicsSystem.SimulateAll(workers, debris, bushes, buildings, seeds, trees, logs, water, 0.1f);
 
         if (worker.Dexterity >= worker.Strength)
         {
