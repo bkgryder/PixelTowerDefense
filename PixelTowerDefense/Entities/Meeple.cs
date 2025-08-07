@@ -95,8 +95,7 @@ namespace PixelTowerDefense.Entities
 
         public Meeple(Vector2 spawn, Faction side, Color shirt, float health = Constants.ENEMY_MAX_HEALTH)
         {
-            // store positions in isometric space for rendering
-            Pos = IsoUtils.ToIso(spawn, 1, 1);
+            Pos = spawn;
             Vel = Vector2.Zero;
             WanderTimer = 1f;
             Angle = 0f;
@@ -141,11 +140,9 @@ namespace PixelTowerDefense.Entities
         public Vector2 GetPartPos(int part)
         {
             float l = part * Constants.PART_LEN;
-            // convert stored isometric position back to cartesian for calculations
-            var cart = IsoUtils.ToCart(Pos, 1, 1);
             return new Vector2(
-                cart.X + MathF.Sin(Angle) * l,
-                cart.Y + MathF.Cos(Angle) * l
+                Pos.X + MathF.Sin(Angle) * l,
+                Pos.Y + MathF.Cos(Angle) * l
             );
         }
 

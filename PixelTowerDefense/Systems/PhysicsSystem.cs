@@ -11,23 +11,6 @@ namespace PixelTowerDefense.Systems
     {
         private static Random _rng = new Random();
 
-        private static void Move(ref Meeple e, Vector2 dir, float speed, float dt)
-        {
-            if (dir != Vector2.Zero)
-                dir.Normalize();
-            var velCart = dir * speed;
-            e.Vel = IsoUtils.ToIsoDirection(velCart, 1, 1);
-            var newCart = IsoUtils.ToCart(e.Pos, 1, 1) + velCart * dt;
-            e.Pos = IsoUtils.ToIso(newCart, 1, 1);
-        }
-
-        private static void Advance(ref Meeple e, float dt)
-        {
-            var cart = IsoUtils.ToCart(e.Pos, 1, 1) +
-                       IsoUtils.ToCartDirection(e.Vel, 1, 1) * dt;
-            e.Pos = IsoUtils.ToIso(cart, 1, 1);
-        }
-
         public static void SimulateAll(
             List<Meeple> meeples,
             List<Pixel> debris,
@@ -101,8 +84,7 @@ namespace PixelTowerDefense.Systems
                                 if (hidx >= 0)
                                 {
                                     var hut = buildings[hidx];
-                                    Vector2 dir = IsoUtils.ToCart(hut.Pos, 1, 1) -
-                                                   IsoUtils.ToCart(e.Pos, 1, 1);
+                                    Vector2 dir = hut.Pos - e.Pos;
                                     float dist = dir.Length();
                                     if (dist < 1f)
                                     {
@@ -113,7 +95,9 @@ namespace PixelTowerDefense.Systems
                                     }
                                     else
                                     {
-                                        Move(ref e, dir, e.MoveSpeed, dt);
+                                        if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                        e.Vel = dir * e.MoveSpeed;
+                                        e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
                                     break;
@@ -134,8 +118,7 @@ namespace PixelTowerDefense.Systems
                                     if (hidx >= 0)
                                     {
                                         var hut = buildings[hidx];
-                                        Vector2 dir = IsoUtils.ToCart(hut.Pos, 1, 1) -
-                                                       IsoUtils.ToCart(e.Pos, 1, 1);
+                                        Vector2 dir = hut.Pos - e.Pos;
                                         float dist = dir.Length();
                                         if (dist < 1f)
                                         {
@@ -149,7 +132,9 @@ namespace PixelTowerDefense.Systems
                                         }
                                         else
                                         {
-                                            Move(ref e, dir, e.MoveSpeed, dt);
+                                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                            e.Vel = dir * e.MoveSpeed;
+                                            e.Pos += e.Vel * dt;
                                         }
                                         e.Angle = 0f;
                                         break;
@@ -178,8 +163,7 @@ namespace PixelTowerDefense.Systems
                                 if (bidx >= 0)
                                 {
                                     var bush = bushes[bidx];
-                                    Vector2 dir = IsoUtils.ToCart(bush.Pos, 1, 1) -
-                                                   IsoUtils.ToCart(e.Pos, 1, 1);
+                                    Vector2 dir = bush.Pos - e.Pos;
                                     float dist = dir.Length();
                                     if (dist < Constants.HARVEST_RANGE)
                                     {
@@ -195,7 +179,9 @@ namespace PixelTowerDefense.Systems
                                     }
                                     else
                                     {
-                                        Move(ref e, dir, e.MoveSpeed, dt);
+                                        if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                        e.Vel = dir * e.MoveSpeed;
+                                        e.Pos += e.Vel * dt;
                                     }
                                     e.Angle = 0f;
                                     e.Worker = wdata;
@@ -214,8 +200,7 @@ namespace PixelTowerDefense.Systems
                                     if (reservedBuilding >= 0)
                                     {
                                         var bld = buildings[reservedBuilding];
-                                        Vector2 dir = IsoUtils.ToCart(bld.Pos, 1, 1) -
-                                                       IsoUtils.ToCart(e.Pos, 1, 1);
+                                        Vector2 dir = bld.Pos - e.Pos;
                                         float dist = dir.Length();
                                         if (dist < 1f)
                                         {
@@ -225,9 +210,9 @@ namespace PixelTowerDefense.Systems
                                                 bld.RequiredPlanks--;
                                             if (bld.RequiredLogs <= 0 && bld.RequiredPlanks <= 0)
                                                 bld.Stage = BuildingStage.Built;
-
+        
                                             bld.ReservedBy = null;
-        buildings[reservedBuilding] = bld;
+                                            buildings[reservedBuilding] = bld;
                                             logs.RemoveAt(e.CarriedWoodIdx);
                                             e.CarriedWoodIdx = -1;
                                             wdata.CurrentJob = JobType.None;
@@ -235,7 +220,9 @@ namespace PixelTowerDefense.Systems
                                         }
                                         else
                                         {
-                                            Move(ref e, dir, e.MoveSpeed, dt);
+                                            if (dist > 0f) dir /= dist; else dir = Vector2.Zero;
+                                            e.Vel = dir * e.MoveSpeed;
+                                            e.Pos += e.Vel * dt;
                                             log.Pos = e.Pos;
                                             logs[e.CarriedWoodIdx] = log;
                                         }
