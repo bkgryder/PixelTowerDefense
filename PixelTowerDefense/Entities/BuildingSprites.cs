@@ -41,10 +41,10 @@ namespace PixelTowerDefense.Entities
                     "wwwwwwwwww",
                     "wwwwwwwwww",
                     "wwwwwwwwww",
-                    "w........w",
-                    "w........w",
-                    "w........w",
-                    "w........w",
+                    "www....www",
+                    "www....www",
+                    "www....www",
+                    "www....www",
                     "wwwwwwwwww"
                 }
             },

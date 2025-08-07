@@ -201,7 +201,7 @@ namespace PixelTowerDefense.Utils
 
         // Tree burning
         public const float TREE_BURN_DURATION = 1f;
-        public const float TREE_FIRE_SPREAD_RATE = 20f; // pixels per second
+        public const float TREE_FIRE_SPREAD_RATE = 1f; // pixels per second
         public const float TREE_EMBER_RATE = 2f;        // particles per second
 
         // Tree seed launch
