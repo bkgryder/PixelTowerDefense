@@ -1,95 +1,21 @@
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
 namespace PixelTowerDefense.Entities
 {
     public static class BuildingSprites
     {
-        public static readonly Dictionary<(BuildingType, BuildStage), string[]> Sprites = new()
+        public const int TILE_SIZE = 32;
+
+        private static Rectangle Tile(int x, int y)
+            => new Rectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+        public static readonly Dictionary<(BuildingType, BuildStage), Rectangle> Sprites = new()
         {
-            { (BuildingType.StorageHut, BuildStage.Planned), new[]
-                {
-                    "pppppppppp",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "pppppppppp"
-                }
-            },
-            { (BuildingType.StorageHut, BuildStage.Framed), new[]
-                {
-                    "ffffffffff",
-                    "f........f",
-                    "f........f",
-                    "ffffffffff",
-                    "f........f",
-                    "f........f",
-                    "ffffffffff",
-                    "f........f",
-                    "f........f",
-                    "ffffffffff"
-                }
-            },
-            { (BuildingType.StorageHut, BuildStage.Built), new[]
-                {
-                    ".rrrrrrrr.",
-                    "wwwwwwwwww",
-                    "wwwwwwwwww",
-                    "wwwwwwwwww",
-                    "wwwwwwwwww",
-                    "www....www",
-                    "www....www",
-                    "www....www",
-                    "www....www",
-                    "wwwwwwwwww"
-                }
-            },
-            { (BuildingType.HousingHut, BuildStage.Planned), new[]
-                {
-                    "pppppppppp",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "p........p",
-                    "pppppppppp"
-                }
-            },
-            { (BuildingType.HousingHut, BuildStage.Framed), new[]
-                {
-                    "ffffffffff",
-                    "f........f",
-                    "f........f",
-                    "ffffffffff",
-                    "f........f",
-                    "f........f",
-                    "ffffffffff",
-                    "f........f",
-                    "f........f",
-                    "ffffffffff"
-                }
-            },
-            { (BuildingType.HousingHut, BuildStage.Built), new[]
-                {
-                    ".rrrrrrrr.",
-                    "wwwwwwwwww",
-                    "wwwwwwwwww",
-                    "wwwwwwwwww",
-                    "wwwwwwwwww",
-                    "wwww..wwww",
-                    "wwww..wwww",
-                    "wwww..wwww",
-                    "wwww..wwww",
-                    "wwwwwwwwww"
-                }
-            }
+            { (BuildingType.StorageHut, BuildStage.Built), Tile(0, 0) },
+            { (BuildingType.HousingHut, BuildStage.Built), Tile(1, 0) },
+            { (BuildingType.CarpenterHut, BuildStage.Built), Tile(2, 0) },
         };
     }
 }
+
