@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
 namespace PixelTowerDefense.Entities
@@ -11,6 +12,7 @@ namespace PixelTowerDefense.Entities
         public float vz;
         public float WanderTimer;
         public float ShadowY;
+        public Queue<Point> Path;
 
         // survival & lifecycle
         public float Hunger;

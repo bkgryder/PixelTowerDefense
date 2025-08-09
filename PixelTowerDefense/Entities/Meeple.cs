@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Utils;
 
@@ -43,6 +44,7 @@ namespace PixelTowerDefense.Entities
         // planar
         public Vector2 Pos, Vel;
         public float WanderTimer;
+        public Queue<Point> Path;
 
         // rotation / ragdoll
         public float Angle, AngularVel;
@@ -98,6 +100,7 @@ namespace PixelTowerDefense.Entities
             Pos = spawn;
             Vel = Vector2.Zero;
             WanderTimer = 1f;
+            Path = new Queue<Point>();
             Angle = 0f;
             AngularVel = 0f;
             z = 0f;
