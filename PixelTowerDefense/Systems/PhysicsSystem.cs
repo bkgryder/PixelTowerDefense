@@ -84,6 +84,15 @@ namespace PixelTowerDefense.Systems
                         continue;
                     }
                 }
+                if (e.Path.Count > 0 && e.z <= 0f && e.vz == 0f)
+                {
+                    if (PathUtil.FollowPath(ref e.Pos, ref e.Vel, e.Path, e.MoveSpeed, dt))
+                    {
+                        e.Angle = 0f;
+                        meeples[i] = e;
+                        continue;
+                    }
+                }
 
                 switch (e.State)
                 {
@@ -910,6 +919,12 @@ namespace PixelTowerDefense.Systems
                 }
                 else
                 {
+                    if (PathUtil.FollowPath(ref r.Pos, ref r.Vel, r.Path, Constants.RABBIT_SPEED, dt))
+                    {
+                        rabbits[i] = r;
+                        continue;
+                    }
+
                     r.WanderTimer -= dt;
                     if (r.WanderTimer <= 0f)
                     {
@@ -1091,6 +1106,12 @@ namespace PixelTowerDefense.Systems
                 }
                 else
                 {
+                    if (PathUtil.FollowPath(ref w.Pos, ref w.Vel, w.Path, Constants.WOLF_SPEED, dt))
+                    {
+                        wolves[i] = w;
+                        continue;
+                    }
+
                     if (w.Hunger >= Constants.WOLF_HUNGER_THRESHOLD)
                     {
                         int midx = FindNearestMeeple(w.Pos, meeples, Constants.WOLF_SEEK_RADIUS);
