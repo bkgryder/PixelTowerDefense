@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 
 namespace PixelTowerDefense.Entities
@@ -48,6 +49,19 @@ namespace PixelTowerDefense.Entities
                     FootprintH = 1;
                     RequiredResources = 0;
                     break;
+            }
+        }
+
+        public Rectangle Bounds
+        {
+            get
+            {
+                int tileSize = BuildingSprites.TILE_SIZE;
+                int width = FootprintW * tileSize;
+                int height = FootprintH * tileSize;
+                int startX = (int)MathF.Round(Pos.X) - width / 2;
+                int startY = (int)MathF.Round(Pos.Y) - height / 2;
+                return new Rectangle(startX, startY, width, height);
             }
         }
     }

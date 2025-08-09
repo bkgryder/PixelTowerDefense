@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 
 namespace PixelTowerDefense.Entities
@@ -19,5 +20,12 @@ namespace PixelTowerDefense.Entities
 
         // home reference (-1 = none)
         public int HomeId;
+
+        public Rectangle Bounds => new Rectangle(
+            (int)MathF.Round(Pos.X) - 1,
+            (int)MathF.Round(Pos.Y) - 1,
+            2,
+            2
+        );
     }
 }
