@@ -17,7 +17,6 @@ public class PathUtilTests
         Assert.Equal(new Vector2(Constants.CELL_PIXELS * 1 + Constants.CELL_PIXELS / 2f,
                                  Constants.CELL_PIXELS / 2f), pos);
     }
-
     [Fact]
     public void HandlesNullPath()
     {
