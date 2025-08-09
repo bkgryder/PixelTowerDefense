@@ -16,6 +16,20 @@ namespace PixelTowerDefense.Systems
             List<Pixel> debris,
             List<BerryBush> bushes,
             List<Building> buildings,
+            List<BuildingSeed> seeds,
+            List<Tree> trees,
+            List<Wood> logs,
+            WaterMap water,
+            float dt)
+        {
+            SimulateAll(meeples, debris, bushes, buildings, trees, logs, water, dt);
+        }
+
+        public static void SimulateAll(
+            List<Meeple> meeples,
+            List<Pixel> debris,
+            List<BerryBush> bushes,
+            List<Building> buildings,
             List<Tree> trees,
             List<Wood> logs,
             WaterMap water,
@@ -556,6 +570,14 @@ namespace PixelTowerDefense.Systems
                             diff = new Vector2(0f, -1f);
                         e.Pos = t.Pos + diff * t.CollisionRadius;
                     }
+                }
+
+                foreach (var b in buildings)
+                {
+                    if (b.Stage == BuildingStage.Ghost) continue;
+                    var rect = GetBuildingTopRect(b);
+                    if (rect.Contains((int)e.Pos.X, (int)e.Pos.Y))
+                        e.Pos.Y = rect.Bottom;
                 }
 
                 if (e.Health <= 0f && e.State != MeepleState.Dead && e.State != MeepleState.Ragdoll)
@@ -1675,6 +1697,16 @@ namespace PixelTowerDefense.Systems
                 }
             }
             return idx;
+        }
+
+        private static Rectangle GetBuildingTopRect(Building b)
+        {
+            int tileSize = BuildingSprites.TILE_SIZE;
+            int baseX = (int)MathF.Round(b.Pos.X) - tileSize / 2;
+            int baseY = (int)MathF.Round(b.Pos.Y) - tileSize / 2;
+            int bottomHeight = tileSize / 3;
+            int topHeight = tileSize - bottomHeight;
+            return new Rectangle(baseX, baseY, tileSize, topHeight);
         }
 
         private static int FindNearestMeeple(Vector2 pos, List<Meeple> meeples, float radius)
