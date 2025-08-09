@@ -7,7 +7,13 @@ namespace PixelTowerDefense.Utils
     {
         public static bool FollowPath(ref Vector2 pos, ref Vector2 vel, Queue<Point> path, float speed, float dt)
         {
-            if (path == null || path.Count == 0)
+            if (path == null)
+            {
+                vel = Vector2.Zero;
+                return false;
+            }
+
+            if (path.Count == 0)
             {
                 vel = Vector2.Zero;
                 return false;
