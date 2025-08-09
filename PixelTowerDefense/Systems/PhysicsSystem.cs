@@ -1704,7 +1704,9 @@ namespace PixelTowerDefense.Systems
             int tileSize = BuildingSprites.TILE_SIZE;
             int baseX = (int)MathF.Round(b.Pos.X) - tileSize / 2;
             int baseY = (int)MathF.Round(b.Pos.Y) - tileSize / 2;
-            return new Rectangle(baseX, baseY, tileSize, tileSize / 2);
+            int bottomHeight = tileSize / 3;
+            int topHeight = tileSize - bottomHeight;
+            return new Rectangle(baseX, baseY, tileSize, topHeight);
         }
 
         private static int FindNearestMeeple(Vector2 pos, List<Meeple> meeples, float radius)

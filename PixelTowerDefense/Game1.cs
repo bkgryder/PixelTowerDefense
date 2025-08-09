@@ -1397,7 +1397,9 @@ namespace PixelTowerDefense
         {
             int tileSize = BuildingSprites.TILE_SIZE;
             var bounds = GetBuildingBounds(b.Pos);
-            return new Rectangle(bounds.X, bounds.Y, bounds.Width, tileSize / 2);
+            int bottomHeight = tileSize / 3;
+            int topHeight = tileSize - bottomHeight;
+            return new Rectangle(bounds.X, bounds.Y, bounds.Width, topHeight);
         }
 
         private bool BuildingCollides(Vector2 pos)
@@ -1417,8 +1419,10 @@ namespace PixelTowerDefense
                 return;
             int tileSize = BuildingSprites.TILE_SIZE;
             var bounds = GetBuildingBounds(b.Pos);
-            var dest = new Rectangle(bounds.X, bounds.Y + tileSize / 2, tileSize, tileSize / 2);
-            var srcRect = new Rectangle(src.X, src.Y + tileSize / 2, tileSize, tileSize / 2);
+            int bottomHeight = tileSize / 3;
+            int topHeight = tileSize - bottomHeight;
+            var dest = new Rectangle(bounds.X, bounds.Y + topHeight, tileSize, bottomHeight);
+            var srcRect = new Rectangle(src.X, src.Y + topHeight, tileSize, bottomHeight);
             var tint = b.Stage == BuildingStage.Ghost ? new Color(Color.White, 0.5f) : Color.White;
             _sb.Draw(_tiles, dest, srcRect, tint);
         }
@@ -1429,7 +1433,8 @@ namespace PixelTowerDefense
                 return;
             int tileSize = BuildingSprites.TILE_SIZE;
             var bounds = GetBuildingBounds(b.Pos);
-
+            int bottomHeight = tileSize / 3;
+            int topHeight = tileSize - bottomHeight;
             if (b.Stage == BuildingStage.Built && b.Kind == BuildingType.StorageHut)
             {
                 int stackH = b.BerryCapacity / 3;
@@ -1451,8 +1456,8 @@ namespace PixelTowerDefense
                 }
             }
 
-            var dest = new Rectangle(bounds.X, bounds.Y, tileSize, tileSize / 2);
-            var srcRect = new Rectangle(src.X, src.Y, tileSize, tileSize / 2);
+            var dest = new Rectangle(bounds.X, bounds.Y, tileSize, topHeight);
+            var srcRect = new Rectangle(src.X, src.Y, tileSize, topHeight);
             var tint = b.Stage == BuildingStage.Ghost ? new Color(Color.White, 0.5f) : Color.White;
             _sb.Draw(_tiles, dest, srcRect, tint);
         }
