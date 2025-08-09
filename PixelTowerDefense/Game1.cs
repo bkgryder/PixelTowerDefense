@@ -76,6 +76,10 @@ namespace PixelTowerDefense
         bool _raining;
         List<Pixel> _cloudPixels = new();
         Vector2 _cloudCenter;
+        Texture2D _cloudNoise;
+        Vector2 _cloudOffset;
+        Vector2 _cloudDir;
+        float _cloudDirTimer;
 
         float _mana = Constants.MANA_MAX;
 
@@ -109,6 +113,9 @@ namespace PixelTowerDefense
             _raining = false;
             _cloudPixels.Clear();
             _cloudCenter = Vector2.Zero;
+            _cloudOffset = Vector2.Zero;
+            _cloudDir = Vector2.UnitX;
+            _cloudDirTimer = 0f;
             _hoverIdx = -1;
             base.Initialize();
         }
@@ -119,6 +126,7 @@ namespace PixelTowerDefense
             _px = new Texture2D(GraphicsDevice, 1, 1);
             _px.SetData(new[] { Color.White });
             _font = Content.Load<SpriteFont>("PixelFont");
+            _cloudNoise = Perlin.GenerateTexture(GraphicsDevice, 128, 128, _rng.Next(), 4f, 4, Constants.CLOUD_PIXEL_SIZE);
 
             int arenaW = Constants.ARENA_RIGHT - Constants.ARENA_LEFT;
             int arenaH = Constants.ARENA_BOTTOM - Constants.ARENA_TOP;
@@ -226,6 +234,22 @@ namespace PixelTowerDefense
             var ms = Mouse.GetState();
             _mana = MathF.Min(Constants.MANA_MAX, _mana + Constants.MANA_REGEN * dt);
             if (kb.IsKeyDown(Keys.Escape)) Exit();
+
+            _cloudDirTimer -= dt;
+            if (_cloudDirTimer <= 0f)
+            {
+                float ang = _rng.NextFloat(0f, MathHelper.TwoPi);
+                _cloudDir = new Vector2(MathF.Cos(ang), MathF.Sin(ang));
+                _cloudDirTimer = _rng.NextFloat(Constants.CLOUD_DIR_CHANGE_MIN, Constants.CLOUD_DIR_CHANGE_MAX);
+            }
+            _cloudOffset += _cloudDir * Constants.CLOUD_SHADOW_SPEED * dt;
+            if (_cloudNoise != null)
+            {
+                float w = _cloudNoise.Width;
+                float h = _cloudNoise.Height;
+                _cloudOffset.X = _cloudOffset.X % w;
+                _cloudOffset.Y = _cloudOffset.Y % h;
+            }
 
             // zoom
             if (Edge(kb, Keys.OemPlus) || Edge(kb, Keys.Add))
@@ -715,6 +739,8 @@ namespace PixelTowerDefense
             // --- airborne soldiers/entities ---
             foreach (var e in _meeples.Where(m => m.z > 0f).OrderBy(m => m.ShadowY))
                 DrawMeepleSprite(e);
+
+            DrawCloudShadows(visible);
 
             if (_debugOverlay)
                 DrawChunkBorders();
@@ -1912,6 +1938,31 @@ namespace PixelTowerDefense
                     float nx = x / 2f;
                     if (nx * nx + y * y <= 1f)
                         _sb.Draw(_px, new Rectangle(gx + x, gy + y, 1, 1), col);
+                }
+            }
+        }
+
+        private void DrawCloudShadows(Rectangle visible)
+        {
+            if (_cloudNoise == null) return;
+            var col = new Color(1f, 1f, 1f, Constants.CLOUD_SHADOW_ALPHA);
+            int texW = _cloudNoise.Width;
+            int texH = _cloudNoise.Height;
+            int startX = (int)MathF.Floor((visible.Left + _cloudOffset.X) / texW);
+            int endX = (int)MathF.Ceiling((visible.Right + _cloudOffset.X) / texW);
+            int startY = (int)MathF.Floor((visible.Top + _cloudOffset.Y) / texH);
+            int endY = (int)MathF.Ceiling((visible.Bottom + _cloudOffset.Y) / texH);
+
+            for (int y = startY; y < endY; y++)
+            {
+                for (int x = startX; x < endX; x++)
+                {
+                    var dest = new Rectangle(
+                        x * texW - (int)_cloudOffset.X,
+                        y * texH - (int)_cloudOffset.Y,
+                        texW,
+                        texH);
+                    _sb.Draw(_cloudNoise, dest, col);
                 }
             }
         }
