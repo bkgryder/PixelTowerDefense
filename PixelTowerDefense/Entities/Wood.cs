@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
@@ -31,6 +32,27 @@ namespace PixelTowerDefense.Entities
                 shape.Add(new Point(x, offset + 1));
             }
             Shape = shape.ToArray();
+        }
+
+        public Rectangle Bounds
+        {
+            get
+            {
+                int minX = int.MaxValue, maxX = int.MinValue;
+                int minY = int.MaxValue, maxY = int.MinValue;
+                foreach (var p in Shape)
+                {
+                    if (p.X < minX) minX = p.X;
+                    if (p.X > maxX) maxX = p.X;
+                    if (p.Y < minY) minY = p.Y;
+                    if (p.Y > maxY) maxY = p.Y;
+                }
+                return new Rectangle(
+                    (int)MathF.Round(Pos.X) + minX,
+                    (int)MathF.Round(Pos.Y) + minY,
+                    maxX - minX + 1,
+                    maxY - minY + 1);
+            }
         }
     }
 }

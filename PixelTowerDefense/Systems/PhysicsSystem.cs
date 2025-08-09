@@ -16,6 +16,20 @@ namespace PixelTowerDefense.Systems
             List<Pixel> debris,
             List<BerryBush> bushes,
             List<Building> buildings,
+            List<BuildingSeed> seeds,
+            List<Tree> trees,
+            List<Wood> logs,
+            WaterMap water,
+            float dt)
+        {
+            SimulateAll(meeples, debris, bushes, buildings, trees, logs, water, dt);
+        }
+
+        public static void SimulateAll(
+            List<Meeple> meeples,
+            List<Pixel> debris,
+            List<BerryBush> bushes,
+            List<Building> buildings,
             List<Tree> trees,
             List<Wood> logs,
             WaterMap water,
@@ -67,6 +81,15 @@ namespace PixelTowerDefense.Systems
                         EmitSmoke(e.GetPartPos(0) - new Vector2(0, e.z), Constants.DEATH_SMOKE_COUNT, debris);
                         AshEnemy(e, debris);
                         meeples.RemoveAt(i);
+                        continue;
+                    }
+                }
+                if (e.Path.Count > 0 && e.z <= 0f && e.vz == 0f)
+                {
+                    if (PathUtil.FollowPath(ref e.Pos, ref e.Vel, e.Path, e.MoveSpeed, dt))
+                    {
+                        e.Angle = 0f;
+                        meeples[i] = e;
                         continue;
                     }
                 }
@@ -558,6 +581,14 @@ namespace PixelTowerDefense.Systems
                     }
                 }
 
+                foreach (var b in buildings)
+                {
+                    if (b.Stage == BuildingStage.Ghost) continue;
+                    var rect = b.Bounds;
+                    if (rect.Contains((int)e.Pos.X, (int)e.Pos.Y))
+                        e.Pos.Y = rect.Bottom;
+                }
+
                 if (e.Health <= 0f && e.State != MeepleState.Dead && e.State != MeepleState.Ragdoll)
                 {
                     AshEnemy(e, debris);
@@ -888,6 +919,12 @@ namespace PixelTowerDefense.Systems
                 }
                 else
                 {
+                    if (PathUtil.FollowPath(ref r.Pos, ref r.Vel, r.Path, Constants.RABBIT_SPEED, dt))
+                    {
+                        rabbits[i] = r;
+                        continue;
+                    }
+
                     r.WanderTimer -= dt;
                     if (r.WanderTimer <= 0f)
                     {
@@ -1069,6 +1106,12 @@ namespace PixelTowerDefense.Systems
                 }
                 else
                 {
+                    if (PathUtil.FollowPath(ref w.Pos, ref w.Vel, w.Path, Constants.WOLF_SPEED, dt))
+                    {
+                        wolves[i] = w;
+                        continue;
+                    }
+
                     if (w.Hunger >= Constants.WOLF_HUNGER_THRESHOLD)
                     {
                         int midx = FindNearestMeeple(w.Pos, meeples, Constants.WOLF_SEEK_RADIUS);

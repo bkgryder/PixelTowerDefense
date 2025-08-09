@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
 namespace PixelTowerDefense.Entities
@@ -10,6 +12,7 @@ namespace PixelTowerDefense.Entities
         public float vz;
         public float WanderTimer;
         public float ShadowY;
+        public Queue<Point> Path;
 
         // survival & lifecycle
         public float Hunger;
@@ -19,5 +22,12 @@ namespace PixelTowerDefense.Entities
 
         // home reference (-1 = none)
         public int HomeId;
+
+        public Rectangle Bounds => new Rectangle(
+            (int)MathF.Round(Pos.X) - 1,
+            (int)MathF.Round(Pos.Y) - 1,
+            2,
+            2
+        );
     }
 }

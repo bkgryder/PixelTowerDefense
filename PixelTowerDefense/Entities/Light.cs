@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 
 namespace PixelTowerDefense.Entities
@@ -16,5 +17,12 @@ namespace PixelTowerDefense.Entities
             Intensity = intensity;
             Lifetime = lifetime;
         }
+
+        public Rectangle Bounds => new Rectangle(
+            (int)MathF.Round(Pos.X - Radius),
+            (int)MathF.Round(Pos.Y - Radius),
+            (int)MathF.Ceiling(Radius * 2),
+            (int)MathF.Ceiling(Radius * 2)
+        );
     }
 }

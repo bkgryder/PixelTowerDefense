@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using PixelTowerDefense.Utils;
 
@@ -43,6 +44,7 @@ namespace PixelTowerDefense.Entities
         // planar
         public Vector2 Pos, Vel;
         public float WanderTimer;
+        public Queue<Point> Path;
 
         // rotation / ragdoll
         public float Angle, AngularVel;
@@ -98,6 +100,7 @@ namespace PixelTowerDefense.Entities
             Pos = spawn;
             Vel = Vector2.Zero;
             WanderTimer = 1f;
+            Path = new Queue<Point>();
             Angle = 0f;
             AngularVel = 0f;
             z = 0f;
@@ -157,5 +160,12 @@ namespace PixelTowerDefense.Entities
             m.Health = Constants.ENEMY_MAX_HEALTH + (m.Grit - 5) * 10f;
             return m;
         }
+
+        public Rectangle Bounds => new Rectangle(
+            (int)MathF.Round(Pos.X) - Constants.ENEMY_W / 2,
+            (int)MathF.Round(Pos.Y) - Constants.ENEMY_H / 2,
+            Constants.ENEMY_W,
+            Constants.ENEMY_H
+        );
     }
 }

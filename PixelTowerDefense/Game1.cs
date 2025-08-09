@@ -17,6 +17,7 @@ namespace PixelTowerDefense
         SpriteBatch _sb;
         Texture2D _px;
         SpriteFont _font;
+        Texture2D _tiles;
 
         List<Meeple> _meeples = new();
         List<Rabbit> _rabbits = new();
@@ -128,6 +129,7 @@ namespace PixelTowerDefense
             _font = Content.Load<SpriteFont>("PixelFont");
             _cloudNoise = Perlin.GenerateTexture(GraphicsDevice, 128, 128, _rng.Next(), 4f,
                 Constants.CLOUD_NOISE_OCTAVES, Constants.CLOUD_PIXEL_SIZE);
+            _tiles = Content.Load<Texture2D>("Mediveval_tilesheet");
 
             int arenaW = Constants.ARENA_RIGHT - Constants.ARENA_LEFT;
             int arenaH = Constants.ARENA_BOTTOM - Constants.ARENA_TOP;
@@ -366,23 +368,30 @@ namespace PixelTowerDefense
                               _prevMs.LeftButton == ButtonState.Released;
                 if (mPress)
                 {
-                    _buildings.Add(new Building
+                    var snapped = new Vector2(
+                        MathF.Round(mworld.X),
+                        MathF.Round(mworld.Y));
+
+                    if (!BuildingCollides(snapped))
                     {
-                        Pos = mworld,
-                        Kind = BuildingType.StorageHut,
-                        Stage = BuildingStage.Ghost,
-                        StoredBerries = 0,
-                        StoredWood = 0,
-                        HousedMeeples = 0,
-                        ReservedBy = null,
-                        BerryCapacity = Constants.STORAGE_BERRY_CAPACITY,
-                        LogCapacity = Constants.STORAGE_LOG_CAPACITY,
-                        PlankCapacity = Constants.STORAGE_PLANK_CAPACITY,
-                        BedSlots = 0,
-                        RequiredLogs = Constants.STORAGE_HUT_COSTS[0],
-                        RequiredPlanks = Constants.STORAGE_HUT_COSTS[1],
-                        WorkProgress = 0f
-                    });
+                        _buildings.Add(new Building
+                        {
+                            Pos = snapped,
+                            Kind = BuildingType.StorageHut,
+                            Stage = BuildingStage.Ghost,
+                            StoredBerries = 0,
+                            StoredWood = 0,
+                            HousedMeeples = 0,
+                            ReservedBy = null,
+                            BerryCapacity = Constants.STORAGE_BERRY_CAPACITY,
+                            LogCapacity = Constants.STORAGE_LOG_CAPACITY,
+                            PlankCapacity = Constants.STORAGE_PLANK_CAPACITY,
+                            BedSlots = 0,
+                            RequiredLogs = Constants.STORAGE_HUT_COSTS[0],
+                            RequiredPlanks = Constants.STORAGE_HUT_COSTS[1],
+                            WorkProgress = 0f
+                        });
+                    }
                 }
             }
             else if (_currentAbility == Ability.Fire)
@@ -706,9 +715,9 @@ namespace PixelTowerDefense
             foreach (var t in _trees)
                 DrawTreeBottom(t);
 
-            // --- buildings ---
+            // --- buildings (bottom half) ---
             foreach (var b in _buildings)
-                DrawBuilding(b);
+                DrawBuildingBottom(b);
 
             // --- shadows ---
             foreach (var e in _meeples.OrderBy(s => s.ShadowY))
@@ -740,6 +749,10 @@ namespace PixelTowerDefense
             // --- airborne soldiers/entities ---
             foreach (var e in _meeples.Where(m => m.z > 0f).OrderBy(m => m.ShadowY))
                 DrawMeepleSprite(e);
+
+            // --- building tops ---
+            foreach (var b in _buildings)
+                DrawBuildingTop(b);
 
             DrawCloudShadows(visible);
 
@@ -1372,36 +1385,56 @@ namespace PixelTowerDefense
             }
         }
 
-        private void DrawBuilding(Building b)
+        private static Rectangle GetBuildingBounds(Vector2 pos)
         {
-            if (!BuildingSprites.Sprites.TryGetValue((b.Kind, BuildStage.Built), out var sprite))
-                return;
+            int tileSize = BuildingSprites.TILE_SIZE;
+            int baseX = (int)MathF.Round(pos.X) - tileSize / 2;
+            int baseY = (int)MathF.Round(pos.Y) - tileSize / 2;
+            return new Rectangle(baseX, baseY, tileSize, tileSize);
+        }
 
-            int baseX = (int)MathF.Round(b.Pos.X) - sprite[0].Length / 2;
-            int baseY = (int)MathF.Round(b.Pos.Y) - 2;
+        private static Rectangle GetBuildingTopRect(Building b)
+        {
+            int tileSize = BuildingSprites.TILE_SIZE;
+            var bounds = GetBuildingBounds(b.Pos);
+            int bottomHeight = tileSize / 3;
+            int topHeight = tileSize - bottomHeight;
+            return new Rectangle(bounds.X, bounds.Y, bounds.Width, topHeight);
+        }
 
-            for (int gy = 0; gy < sprite.Length; gy++)
+        private bool BuildingCollides(Vector2 pos)
+        {
+            var bounds = GetBuildingBounds(pos);
+            foreach (var b in _buildings)
             {
-                string row = sprite[gy];
-                for (int gx = 0; gx < row.Length; gx++)
-                {
-                    char ch = row[gx];
-                    if (ch == '.') continue;
-
-                    Color col;
-                    if (b.Stage == BuildingStage.Ghost)
-                    {
-                        col = new Color(Color.Gray, 0.5f);
-                    }
-                    else if (ch == 'r')
-                        col = b.Kind == BuildingType.StorageHut ? Color.BurlyWood : Color.Peru;
-                    else
-                        col = b.Kind == BuildingType.StorageHut ? Color.SaddleBrown : Color.Sienna;
-
-                    _sb.Draw(_px, new Rectangle(baseX + gx, baseY + gy, 1, 1), col);
-                }
+                if (bounds.Intersects(GetBuildingBounds(b.Pos)))
+                    return true;
             }
+            return false;
+        }
 
+        private void DrawBuildingBottom(Building b)
+        {
+            if (!BuildingSprites.Sprites.TryGetValue((b.Kind, BuildStage.Built), out var src))
+                return;
+            int tileSize = BuildingSprites.TILE_SIZE;
+            var bounds = GetBuildingBounds(b.Pos);
+            int bottomHeight = tileSize / 3;
+            int topHeight = tileSize - bottomHeight;
+            var dest = new Rectangle(bounds.X, bounds.Y + topHeight, tileSize, bottomHeight);
+            var srcRect = new Rectangle(src.X, src.Y + topHeight, tileSize, bottomHeight);
+            var tint = b.Stage == BuildingStage.Ghost ? new Color(Color.White, 0.5f) : Color.White;
+            _sb.Draw(_tiles, dest, srcRect, tint);
+        }
+
+        private void DrawBuildingTop(Building b)
+        {
+            if (!BuildingSprites.Sprites.TryGetValue((b.Kind, BuildStage.Built), out var src))
+                return;
+            int tileSize = BuildingSprites.TILE_SIZE;
+            var bounds = GetBuildingBounds(b.Pos);
+            int bottomHeight = tileSize / 3;
+            int topHeight = tileSize - bottomHeight;
             if (b.Stage == BuildingStage.Built && b.Kind == BuildingType.StorageHut)
             {
                 int stackH = b.BerryCapacity / 3;
@@ -1422,6 +1455,11 @@ namespace PixelTowerDefense
                     _sb.Draw(_px, new Rectangle(x, y, 1, 1), Color.SaddleBrown);
                 }
             }
+
+            var dest = new Rectangle(bounds.X, bounds.Y, tileSize, topHeight);
+            var srcRect = new Rectangle(src.X, src.Y, tileSize, topHeight);
+            var tint = b.Stage == BuildingStage.Ghost ? new Color(Color.White, 0.5f) : Color.White;
+            _sb.Draw(_tiles, dest, srcRect, tint);
         }
 
         
