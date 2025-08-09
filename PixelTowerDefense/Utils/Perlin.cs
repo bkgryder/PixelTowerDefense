@@ -79,7 +79,14 @@ namespace PixelTowerDefense.Utils
                         freq *= 2f;
                     }
                     float val = sum / norm;
-                    byte a = (byte)(val * 255);
+                    float alpha;
+                    if (val < 1f / 3f)
+                        alpha = Constants.CLOUD_LIGHT_ALPHA;
+                    else if (val < 2f / 3f)
+                        alpha = Constants.CLOUD_MEDIUM_ALPHA;
+                    else
+                        alpha = Constants.CLOUD_HEAVY_ALPHA;
+                    byte a = (byte)(alpha * 255f);
                     data[y * width + x] = new Color((byte)0, (byte)0, (byte)0, a);
                 }
             }

@@ -14,11 +14,14 @@ namespace PixelTowerDefense.Utils
         public const float GROUND_SHADE_ALPHA_MID = 0.10f;
         public const float GROUND_BORDER_ALPHA = 0.15f;
 
-        public const float CLOUD_SHADOW_ALPHA = 0.3f;
+        public const float CLOUD_LIGHT_ALPHA = 0.1f;
+        public const float CLOUD_MEDIUM_ALPHA = 0.2f;
+        public const float CLOUD_HEAVY_ALPHA = 0.3f;
         public const float CLOUD_SHADOW_SPEED = 5f;
         public const float CLOUD_DIR_CHANGE_MIN = 3f;
         public const float CLOUD_DIR_CHANGE_MAX = 7f;
         public const int CLOUD_PIXEL_SIZE = 16;
+        public const int CLOUD_NOISE_OCTAVES = 8;
 
         public const int ARENA_LEFT = 0;
         public const int ARENA_RIGHT = CHUNK_PIXEL_SIZE;

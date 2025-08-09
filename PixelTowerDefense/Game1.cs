@@ -127,8 +127,8 @@ namespace PixelTowerDefense
             _px = new Texture2D(GraphicsDevice, 1, 1);
             _px.SetData(new[] { Color.White });
             _font = Content.Load<SpriteFont>("PixelFont");
-            _cloudNoise = Perlin.GenerateTexture(GraphicsDevice, 128, 128, _rng.Next(), 4f, 4, Constants.CLOUD_PIXEL_SIZE);
-            _tiles = Content.Load<Texture2D>("Mediveval_tilesheet");
+            _cloudNoise = Perlin.GenerateTexture(GraphicsDevice, 128, 128, _rng.Next(), 4f,
+                Constants.CLOUD_NOISE_OCTAVES, Constants.CLOUD_PIXEL_SIZE);
 
             int arenaW = Constants.ARENA_RIGHT - Constants.ARENA_LEFT;
             int arenaH = Constants.ARENA_BOTTOM - Constants.ARENA_TOP;
@@ -1928,7 +1928,7 @@ namespace PixelTowerDefense
         private void DrawCloudShadows(Rectangle visible)
         {
             if (_cloudNoise == null) return;
-            var col = new Color(1f, 1f, 1f, Constants.CLOUD_SHADOW_ALPHA);
+            var col = Color.White;
             int texW = _cloudNoise.Width;
             int texH = _cloudNoise.Height;
             int startX = (int)MathF.Floor((visible.Left + _cloudOffset.X) / texW);
