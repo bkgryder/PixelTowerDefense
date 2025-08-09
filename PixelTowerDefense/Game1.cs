@@ -1377,11 +1377,10 @@ namespace PixelTowerDefense
         {
             if (!BuildingSprites.Sprites.TryGetValue((b.Kind, BuildStage.Built), out var src))
                 return;
-
-            int baseX = (int)MathF.Round(b.Pos.X) - Constants.HUT_FOOTPRINT_W / 2;
-            int baseY = (int)MathF.Round(b.Pos.Y) - 2;
-            var dest = new Rectangle(baseX, baseY, Constants.HUT_FOOTPRINT_W, Constants.HUT_FOOTPRINT_H);
-
+            int tileSize = BuildingSprites.TILE_SIZE;
+            int baseX = (int)MathF.Round(b.Pos.X) - tileSize / 2;
+            int baseY = (int)MathF.Round(b.Pos.Y) - tileSize / 2;
+            var dest = new Rectangle(baseX, baseY, tileSize, tileSize);
             var tint = b.Stage == BuildingStage.Ghost ? new Color(Color.White, 0.5f) : Color.White;
             _sb.Draw(_tiles, dest, src, tint);
 
