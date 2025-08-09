@@ -17,6 +17,7 @@ namespace PixelTowerDefense
         SpriteBatch _sb;
         Texture2D _px;
         SpriteFont _font;
+        Texture2D _tiles;
 
         List<Meeple> _meeples = new();
         List<Rabbit> _rabbits = new();
@@ -119,6 +120,7 @@ namespace PixelTowerDefense
             _px = new Texture2D(GraphicsDevice, 1, 1);
             _px.SetData(new[] { Color.White });
             _font = Content.Load<SpriteFont>("PixelFont");
+            _tiles = Content.Load<Texture2D>("Mediveval_tilesheet");
 
             int arenaW = Constants.ARENA_RIGHT - Constants.ARENA_LEFT;
             int arenaH = Constants.ARENA_BOTTOM - Constants.ARENA_TOP;
@@ -1347,33 +1349,16 @@ namespace PixelTowerDefense
 
         private void DrawBuilding(Building b)
         {
-            if (!BuildingSprites.Sprites.TryGetValue((b.Kind, BuildStage.Built), out var sprite))
+            if (!BuildingSprites.Sprites.TryGetValue((b.Kind, BuildStage.Built), out var src))
                 return;
 
-            int baseX = (int)MathF.Round(b.Pos.X) - sprite[0].Length / 2;
-            int baseY = (int)MathF.Round(b.Pos.Y) - 2;
+            int tileSize = BuildingSprites.TILE_SIZE;
+            int baseX = (int)MathF.Round(b.Pos.X) - tileSize / 2;
+            int baseY = (int)MathF.Round(b.Pos.Y) - tileSize / 2;
+            var dest = new Rectangle(baseX, baseY, tileSize, tileSize);
 
-            for (int gy = 0; gy < sprite.Length; gy++)
-            {
-                string row = sprite[gy];
-                for (int gx = 0; gx < row.Length; gx++)
-                {
-                    char ch = row[gx];
-                    if (ch == '.') continue;
-
-                    Color col;
-                    if (b.Stage == BuildingStage.Ghost)
-                    {
-                        col = new Color(Color.Gray, 0.5f);
-                    }
-                    else if (ch == 'r')
-                        col = b.Kind == BuildingType.StorageHut ? Color.BurlyWood : Color.Peru;
-                    else
-                        col = b.Kind == BuildingType.StorageHut ? Color.SaddleBrown : Color.Sienna;
-
-                    _sb.Draw(_px, new Rectangle(baseX + gx, baseY + gy, 1, 1), col);
-                }
-            }
+            var tint = b.Stage == BuildingStage.Ghost ? new Color(Color.White, 0.5f) : Color.White;
+            _sb.Draw(_tiles, dest, src, tint);
 
             if (b.Stage == BuildingStage.Built && b.Kind == BuildingType.StorageHut)
             {
