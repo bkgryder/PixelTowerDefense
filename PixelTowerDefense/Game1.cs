@@ -129,6 +129,7 @@ namespace PixelTowerDefense
             _font = Content.Load<SpriteFont>("PixelFont");
             _cloudNoise = Perlin.GenerateTexture(GraphicsDevice, 128, 128, _rng.Next(), 4f,
                 Constants.CLOUD_NOISE_OCTAVES, Constants.CLOUD_PIXEL_SIZE);
+            _tiles = Content.Load<Texture2D>("Mediveval_tilesheet");
 
             int arenaW = Constants.ARENA_RIGHT - Constants.ARENA_LEFT;
             int arenaH = Constants.ARENA_BOTTOM - Constants.ARENA_TOP;
@@ -1434,7 +1435,6 @@ namespace PixelTowerDefense
             var bounds = GetBuildingBounds(b.Pos);
             int bottomHeight = tileSize / 3;
             int topHeight = tileSize - bottomHeight;
-
             if (b.Stage == BuildingStage.Built && b.Kind == BuildingType.StorageHut)
             {
                 int stackH = b.BerryCapacity / 3;
