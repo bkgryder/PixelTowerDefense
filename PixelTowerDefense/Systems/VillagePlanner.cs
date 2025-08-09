@@ -62,6 +62,7 @@ namespace PixelTowerDefense.Systems
                 float dist = rng.Next(6, 11) + System.MathF.Max(w, h) / 2f;
                 float ang = rng.NextFloat(0f, System.MathF.Tau);
                 Vector2 pos = origin + new Vector2(System.MathF.Cos(ang), System.MathF.Sin(ang)) * dist;
+                pos = SnapToGrid(pos);
                 if (!Collides(pos, w, h, buildings, seeds))
                     return pos;
             }
@@ -97,6 +98,13 @@ namespace PixelTowerDefense.Systems
         {
             return System.MathF.Abs(aPos.X - bPos.X) * 2 < (aw + bw) &&
                    System.MathF.Abs(aPos.Y - bPos.Y) * 2 < (ah + bh);
+        }
+
+        private static Vector2 SnapToGrid(Vector2 pos)
+        {
+            return new Vector2(
+                System.MathF.Round(pos.X),
+                System.MathF.Round(pos.Y));
         }
 
         private static int GetFootprintW(BuildingType kind)
