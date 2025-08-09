@@ -575,7 +575,7 @@ namespace PixelTowerDefense.Systems
                 foreach (var b in buildings)
                 {
                     if (b.Stage == BuildingStage.Ghost) continue;
-                    var rect = GetBuildingTopRect(b);
+                    var rect = b.Bounds;
                     if (rect.Contains((int)e.Pos.X, (int)e.Pos.Y))
                         e.Pos.Y = rect.Bottom;
                 }
@@ -1697,16 +1697,6 @@ namespace PixelTowerDefense.Systems
                 }
             }
             return idx;
-        }
-
-        private static Rectangle GetBuildingTopRect(Building b)
-        {
-            int tileSize = BuildingSprites.TILE_SIZE;
-            int baseX = (int)MathF.Round(b.Pos.X) - tileSize / 2;
-            int baseY = (int)MathF.Round(b.Pos.Y) - tileSize / 2;
-            int bottomHeight = tileSize / 3;
-            int topHeight = tileSize - bottomHeight;
-            return new Rectangle(baseX, baseY, tileSize, topHeight);
         }
 
         private static int FindNearestMeeple(Vector2 pos, List<Meeple> meeples, float radius)

@@ -158,5 +158,16 @@ namespace PixelTowerDefense.Entities
                 BurnTimer -= dt;
             }
         }
+
+        public Rectangle Bounds
+        {
+            get
+            {
+                int r = (int)MathF.Ceiling(ShadowRadius);
+                int x = (int)MathF.Round(Pos.X) - r;
+                int y = (int)MathF.Round(Pos.Y) - r;
+                return new Rectangle(x, y, r * 2, r * 2);
+            }
+        }
     }
 }

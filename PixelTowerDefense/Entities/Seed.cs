@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 
 namespace PixelTowerDefense.Entities
@@ -30,5 +31,12 @@ namespace PixelTowerDefense.Entities
                 Utils.Constants.SEED_GROW_TIME_MAX);
             Kind = kind;
         }
+
+        public Rectangle Bounds => new Rectangle(
+            (int)MathF.Round(Pos.X),
+            (int)MathF.Round(Pos.Y),
+            1,
+            1
+        );
     }
 }

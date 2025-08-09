@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 
 namespace PixelTowerDefense.Entities
@@ -14,5 +15,12 @@ namespace PixelTowerDefense.Entities
             z = height;
             vz = speed;
         }
+
+        public Rectangle Bounds => new Rectangle(
+            (int)MathF.Round(Pos.X),
+            (int)MathF.Round(Pos.Y),
+            1,
+            1
+        );
     }
 }

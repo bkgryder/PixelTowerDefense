@@ -157,5 +157,12 @@ namespace PixelTowerDefense.Entities
             m.Health = Constants.ENEMY_MAX_HEALTH + (m.Grit - 5) * 10f;
             return m;
         }
+
+        public Rectangle Bounds => new Rectangle(
+            (int)MathF.Round(Pos.X) - Constants.ENEMY_W / 2,
+            (int)MathF.Round(Pos.Y) - Constants.ENEMY_H / 2,
+            Constants.ENEMY_W,
+            Constants.ENEMY_H
+        );
     }
 }
