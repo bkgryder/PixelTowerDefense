@@ -840,7 +840,8 @@ namespace PixelTowerDefense
                     Age = Constants.RABBIT_GROW_TIME,
                     Hunger = 0f,
                     FullTimer = 0f,
-                    HomeId = -1
+                    HomeId = -1,
+                    Path = new Queue<Point>()
                 });
             }
         }
@@ -864,7 +865,8 @@ namespace PixelTowerDefense
                     Age = Constants.WOLF_GROW_TIME,
                     Hunger = 0f,
                     FullTimer = 0f,
-                    HomeId = -1
+                    HomeId = -1,
+                    Path = new Queue<Point>()
                 });
             }
         }

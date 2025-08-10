@@ -7,13 +7,7 @@ namespace PixelTowerDefense.Utils
     {
         public static bool FollowPath(ref Vector2 pos, ref Vector2 vel, Queue<Point> path, float speed, float dt)
         {
-            if (path == null)
-            {
-                vel = Vector2.Zero;
-                return false;
-            }
-
-            if (path.Count == 0)
+            if (path == null || path.Count == 0)
             {
                 vel = Vector2.Zero;
                 return false;
@@ -21,9 +15,10 @@ namespace PixelTowerDefense.Utils
 
             while (path.Count > 0)
             {
+                var cell = path.Peek();
                 var target = new Vector2(
-                    path.Peek().X * Constants.CELL_PIXELS + Constants.CELL_PIXELS / 2f,
-                    path.Peek().Y * Constants.CELL_PIXELS + Constants.CELL_PIXELS / 2f);
+                    cell.X * Constants.CELL_PIXELS + Constants.CELL_PIXELS / 2f,
+                    cell.Y * Constants.CELL_PIXELS + Constants.CELL_PIXELS / 2f);
 
                 Vector2 diff = target - pos;
                 float dist = diff.Length();

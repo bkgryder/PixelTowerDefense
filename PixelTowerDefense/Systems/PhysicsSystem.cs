@@ -1005,19 +1005,20 @@ namespace PixelTowerDefense.Systems
                             {
                                 if (_rng.NextDouble() < Constants.RABBIT_BABY_CHANCE)
                                 {
-                                    rabbits.Add(new Rabbit
-                                    {
-                                        Pos = (r.Pos + mate.Pos) / 2f,
-                                        Vel = Vector2.Zero,
-                                        z = 0f,
-                                        vz = 0f,
-                                        WanderTimer = 0f,
-                                        GrowthDuration = Constants.RABBIT_GROW_TIME,
-                                        Age = 0f,
-                                        Hunger = 0f,
-                                        FullTimer = 0f,
-                                        HomeId = r.HomeId
-                                    });
+                                      rabbits.Add(new Rabbit
+                                      {
+                                          Pos = (r.Pos + mate.Pos) / 2f,
+                                          Vel = Vector2.Zero,
+                                          z = 0f,
+                                          vz = 0f,
+                                          WanderTimer = 0f,
+                                          GrowthDuration = Constants.RABBIT_GROW_TIME,
+                                          Age = 0f,
+                                          Hunger = 0f,
+                                          FullTimer = 0f,
+                                          HomeId = r.HomeId,
+                                          Path = new Queue<Point>()
+                                      });
                                     count = rabbits.Count; // update in case list resized
                                 }
                                 r.FullTimer = 0f;
@@ -1221,19 +1222,20 @@ namespace PixelTowerDefense.Systems
                             {
                                 if (_rng.NextDouble() < Constants.WOLF_PUP_CHANCE)
                                 {
-                                    wolves.Add(new Wolf
-                                    {
-                                        Pos = (w.Pos + mate.Pos) / 2f,
-                                        Vel = Vector2.Zero,
-                                        z = 0f,
-                                        vz = 0f,
-                                        WanderTimer = 0f,
-                                        GrowthDuration = Constants.WOLF_GROW_TIME,
-                                        Age = 0f,
-                                        Hunger = 0f,
-                                        FullTimer = 0f,
-                                        HomeId = w.HomeId
-                                    });
+                                      wolves.Add(new Wolf
+                                      {
+                                          Pos = (w.Pos + mate.Pos) / 2f,
+                                          Vel = Vector2.Zero,
+                                          z = 0f,
+                                          vz = 0f,
+                                          WanderTimer = 0f,
+                                          GrowthDuration = Constants.WOLF_GROW_TIME,
+                                          Age = 0f,
+                                          Hunger = 0f,
+                                          FullTimer = 0f,
+                                          HomeId = w.HomeId,
+                                          Path = new Queue<Point>()
+                                      });
                                 }
                                 w.FullTimer = 0f;
                                 mate.FullTimer = 0f;
